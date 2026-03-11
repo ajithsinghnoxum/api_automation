@@ -119,7 +119,7 @@
 ### 3.3 Data-Driven / Parameterized Tests
 - [x] Define a `dataSet` array in a test case
 - [x] Each entry in the dataset creates a separate test run with substituted values
-- [ ] Example:
+- Example:
   ```json
   {
     "name": "get user by id",
@@ -317,25 +317,127 @@
 - [ ] Drag-and-drop reordering within chain view
 - [ ] Export flow as a standard test suite JSON
 
+### 6.13 Webhook Triggers / CI Integration
+- [ ] `POST /api/webhook/run/:projectId` endpoint for external triggers (CI/CD pipelines)
+- [ ] API key authentication for webhook endpoints
+- [ ] Return run results as JSON response (synchronous) or run ID (async polling)
+- [ ] GitHub Actions / GitLab CI / Jenkins integration examples
+
+### 6.14 Test Dependencies / Conditional Flow
+- [ ] `"dependsOn": "test-name"` — run test only if dependency passed
+- [ ] Skip dependent tests automatically when parent fails
+- [ ] Visual dependency indicators in the UI
+
+### 6.15 OAuth 2.0 / Token Refresh
+- [ ] Auth type `oauth2` with client credentials flow
+- [ ] Auto-refresh expired tokens before test execution
+- [ ] Token caching within a test run to avoid redundant auth calls
+
 ---
 
-## 7. Developer Experience
+## 7. New Validation Types (Phase 2)
 
-### 7.1 CLI Improvements
+### 7.1 Response Performance Assertions
+- [ ] `responseTime` — assert response time is under a threshold: `{ "type": "responseTime", "max": 2000 }`
+- [ ] SLA validation: warn vs fail modes for performance thresholds
+
+### 7.2 Header Validations
+- [ ] `headerEquals` — check response header value: `{ "type": "headerEquals", "header": "content-type", "value": "application/json" }`
+- [ ] `headerExists` — check response header presence
+- [ ] `headerContains` — partial match on header value
+
+### 7.3 Advanced Validations
+- [ ] Custom JavaScript assertion functions (user-defined validators)
+- [ ] Checksum / hash validation (MD5, SHA256 of response body)
+- [ ] JWT decode and claim validation
+- [ ] Response size assertion (max bytes)
+
+---
+
+## 8. Usability & UX
+
+### 8.1 Quick Single-Test Run
+- [ ] "Play" button on each test card to run it instantly
+- [ ] Inline result display (pass/fail + response) without opening runner modal
+- [ ] Quick re-run for failed tests from the test card
+
+### 8.2 Run History Improvements
+- [ ] Filter run results by status (show only failures)
+- [ ] Search within run output
+- [ ] Paginated run history (currently loads all 50 at once)
+- [ ] Run retention policy (auto-purge runs older than N days)
+
+### 8.3 Test Flakiness Detection
+- [ ] Track pass/fail ratio per test across recent runs
+- [ ] Flag tests as "flaky" when they intermittently pass/fail
+- [ ] Flakiness badge on test cards in the UI
+- [ ] Flakiness report in run history
+
+### 8.4 Performance Regression Detection
+- [ ] Track response time trends per test across runs
+- [ ] Alert when a test consistently gets slower (e.g., >20% increase over last 5 runs)
+- [ ] Performance trend sparkline on test cards
+
+### 8.5 Request Preview in Editor
+- [ ] Live preview of resolved request (full URL, headers, body with variables substituted)
+- [ ] Show what the cURL command would look like as you edit
+
+### 8.6 Keyboard Shortcuts Help
+- [ ] Press `?` to show keyboard shortcuts overlay
+- [ ] Discoverable shortcut hints on buttons (tooltips)
+
+### 8.7 Inline Form Validation
+- [ ] Red borders + inline error messages on invalid fields (not just toasts)
+- [ ] Validate test config before save (required fields, valid JSON body, valid endpoint)
+
+---
+
+## 9. Security & Enterprise
+
+### 9.1 Web UI Authentication
+- [ ] Basic login (username/password) to protect the web UI
+- [ ] API key authentication for all server endpoints
+- [ ] Session management with configurable timeout
+
+### 9.2 Credential Encryption
+- [ ] Encrypt auth tokens and passwords at rest in SQLite
+- [ ] Master key configuration via environment variable
+- [ ] Mask sensitive fields in project export (redact tokens)
+
+### 9.3 Audit Log
+- [ ] Track all changes to tests, suites, and project config
+- [ ] Log who changed what and when
+- [ ] Audit log viewer in the web UI
+
+### 9.4 Role-Based Access Control
+- [ ] Define user roles (admin, editor, viewer)
+- [ ] Viewers can see results but not modify tests or credentials
+- [ ] Editors can modify tests but not project settings
+
+---
+
+## 10. Developer Experience
+
+### 10.1 CLI Improvements
 - [ ] Interactive project creation wizard: `npm run create-project`
 - [ ] Generate test stubs from OpenAPI spec: `npm run generate -- --spec openapi.yaml`
 - [ ] Validate all test JSON files: `npm run validate-configs`
 
-### 7.2 VS Code Extension
+### 10.2 VS Code Extension
 - [ ] JSON schema for test config files (auto-complete in VS Code)
 - [ ] Inline validation type suggestions
 - [ ] Run individual tests from VS Code
 - [ ] View report inline in VS Code
 
-### 7.3 Documentation
+### 10.3 Documentation
 - [ ] Add interactive examples in docs (try validation types live)
 - [ ] Video tutorials for common workflows
 - [ ] Searchable documentation
+
+### 10.4 API Mock Server
+- [ ] Built-in mock endpoints for contract testing
+- [ ] Define expected responses per endpoint when real API is unavailable
+- [ ] Record & replay mode: capture real responses, serve as mocks later
 
 ---
 
@@ -349,16 +451,36 @@
 5. ~~**Schema Drift Detection** (6.9)~~ — **DONE** (baseline capture, drift report with field-level changes)
 6. ~~**Notification Integration** (5.4)~~ — **DONE** (Slack/Teams webhooks, SMTP email, per-project config, failure-only mode)
 
-### UI & Polish
-8. **Custom Color Themes** (1.2) — accent color picker, preset themes (Ocean, Forest, Sunset)
-9. **Responsive Design** (1.4) — tablet/mobile layout improvements
-10. **Drag Tests Between Suites** (2.4) — cross-suite drag & drop
-11. **Configurable Logo in Reports** (1.3) — company/project branding
+### High Impact — Automation & Testing
+7. **Response Time / SLA Assertions** (7.1) — `responseTime` validation, performance thresholds
+8. **Header Validations** (7.2) — `headerEquals`, `headerExists`, `headerContains`
+9. **Webhook Triggers / CI Integration** (6.13) — REST endpoint for CI pipelines to trigger runs
+10. **Quick Single-Test Run** (8.1) — play button on test cards, inline result display
+11. **Test Flakiness Detection** (8.3) — track intermittent failures, flag flaky tests
+12. **Performance Regression Detection** (8.4) — response time trend alerts
 
-### Nice to Have
-12. **GraphQL Support** (6.1) — query/variables fields, GraphQL-specific validation
-13. **WebSocket Testing** (6.2) — connect, send, and validate messages
-14. **API Response Caching** (6.6) — cache repeated requests within a run
-15. **CLI Wizard** (7.1) — interactive project creation, config validation
-16. **VS Code Extension** (7.2) — JSON schema, inline suggestions, run from editor
-17. **Interactive Docs** (7.3) — searchable docs, live validation examples
+### Security & Enterprise
+13. **Web UI Authentication** (9.1) — login, API keys, session management
+14. **Credential Encryption** (9.2) — encrypt tokens/passwords at rest
+15. **Audit Log** (9.3) — track changes to tests and config
+16. **Run Retention Policy** (8.2) — auto-purge old runs, paginated history
+
+### UI & Polish
+17. **Custom Color Themes** (1.2) — accent color picker, preset themes (Ocean, Forest, Sunset)
+18. **Responsive Design** (1.4) — tablet/mobile layout improvements
+19. **Drag Tests Between Suites** (2.4) — cross-suite drag & drop
+20. **Configurable Logo in Reports** (1.3) — company/project branding
+21. **Inline Form Validation** (8.7) — red borders + inline errors instead of toasts
+22. **Keyboard Shortcuts Help** (8.6) — `?` overlay, tooltip hints
+23. **Request Preview in Editor** (8.5) — live preview of resolved request
+
+### Advanced Features
+24. **Test Dependencies** (6.14) — `dependsOn` for conditional test flow
+25. **OAuth 2.0 / Token Refresh** (6.15) — auto-refresh expired tokens
+26. **GraphQL Support** (6.1) — query/variables fields, GraphQL-specific validation
+27. **WebSocket Testing** (6.2) — connect, send, and validate messages
+28. **API Mock Server** (10.4) — contract testing, record & replay
+29. **API Response Caching** (6.6) — cache repeated requests within a run
+30. **CLI Wizard** (10.1) — interactive project creation, config validation
+31. **VS Code Extension** (10.2) — JSON schema, inline suggestions, run from editor
+32. **Interactive Docs** (10.3) — searchable docs, live validation examples
