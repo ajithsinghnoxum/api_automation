@@ -361,7 +361,9 @@
           <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
             JSON array of objects. Each entry creates a separate test. Use <code style="background:var(--surface-alt); padding:1px 5px; border-radius:3px; font-size:12px; color:var(--accent);">{{key}}</code> in endpoint, body, params, or validations.
           </div>
-          <textarea id="tm-dataset" placeholder='[{ "id": 1, "expected": "Alice" }, { "id": 2, "expected": "Bob" }]' rows="3" style="font-family: monospace; font-size: 12px;"></textarea>
+          <div class="form-group" style="margin:0;">
+            <textarea id="tm-dataset" placeholder='[&#10;  { "id": 1, "expected": "Alice" },&#10;  { "id": 2, "expected": "Bob" }&#10;]' rows="4" style="font-family: monospace; font-size: 12px;"></textarea>
+          </div>
         </div>
 
         <details style="margin-top: 16px;">
