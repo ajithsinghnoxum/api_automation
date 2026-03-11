@@ -414,6 +414,292 @@ function generateValueChecks(obj: any, prefix: string, validations: any[]): void
   }
 }
 
+// --- Quick Single-Test Run ---
+
+function substituteVariables(str: string, vars: Record<string, unknown> = {}): string {
+  if (typeof str !== "string") return str;
+  return str.replace(/\{\{(\$?\w+)\}\}/g, (_, key) => {
+    if (key === "$timestamp") return String(Date.now());
+    if (key === "$isoDate") return new Date().toISOString();
+    if (key === "$guid") return globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+    if (key === "$randomInt") return String(Math.floor(Math.random() * 10000) + 1);
+    if (key === "$randomEmail") return `test${Date.now()}@example.com`;
+    if (key in vars) return String(vars[key]);
+    return `{{${key}}}`;
+  });
+}
+
+function substituteDeep(obj: unknown, vars: Record<string, unknown> = {}): unknown {
+  if (typeof obj === "string") return substituteVariables(obj, vars);
+  if (Array.isArray(obj)) return obj.map(item => substituteDeep(item, vars));
+  if (obj && typeof obj === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(obj)) {
+      result[k] = substituteDeep(v, vars);
+    }
+    return result;
+  }
+  return obj;
+}
+
+function getByPath(obj: unknown, path?: string): unknown {
+  if (!path) return obj;
+  const parts = path.replace(/\[(\d+)\]/g, ".$1").split(".").filter(Boolean);
+  let current: unknown = obj;
+  for (const part of parts) {
+    if (current === null || current === undefined) return undefined;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
+}
+
+function runServerValidation(data: unknown, v: any): { status: "passed" | "failed"; message: string; actual?: unknown } {
+  const val = getByPath(data, v.path);
+  const pathLabel = v.path || "response";
+
+  switch (v.type) {
+    case "equals":
+      return val == v.value
+        ? { status: "passed", message: `${pathLabel} equals ${JSON.stringify(v.value)}` }
+        : { status: "failed", message: `${pathLabel} equals ${JSON.stringify(v.value)}`, actual: val };
+    case "notEquals":
+      return val != v.value
+        ? { status: "passed", message: `${pathLabel} does not equal ${JSON.stringify(v.value)}` }
+        : { status: "failed", message: `${pathLabel} does not equal ${JSON.stringify(v.value)}`, actual: val };
+    case "exists":
+      return val !== undefined && val !== null
+        ? { status: "passed", message: `${pathLabel} exists` }
+        : { status: "failed", message: `${pathLabel} exists`, actual: val };
+    case "notExists":
+      return val === undefined || val === null
+        ? { status: "passed", message: `${pathLabel} does not exist` }
+        : { status: "failed", message: `${pathLabel} does not exist`, actual: val };
+    case "contains":
+      return typeof val === "string" && val.includes(v.value)
+        ? { status: "passed", message: `${pathLabel} contains "${v.value}"` }
+        : { status: "failed", message: `${pathLabel} contains "${v.value}"`, actual: val };
+    case "notContains":
+      return typeof val === "string" && !val.includes(v.value)
+        ? { status: "passed", message: `${pathLabel} does not contain "${v.value}"` }
+        : { status: "failed", message: `${pathLabel} does not contain "${v.value}"`, actual: val };
+    case "typeOf": {
+      const actualType = Array.isArray(val) ? "array" : typeof val;
+      return actualType === v.expected
+        ? { status: "passed", message: `${pathLabel} is type "${v.expected}"` }
+        : { status: "failed", message: `${pathLabel} is type "${v.expected}"`, actual: actualType };
+    }
+    case "isArray":
+      return Array.isArray(val)
+        ? { status: "passed", message: `${pathLabel} is an array` }
+        : { status: "failed", message: `${pathLabel} is an array`, actual: typeof val };
+    case "arrayLength": {
+      if (!Array.isArray(val)) return { status: "failed", message: `${pathLabel} array length check`, actual: "not an array" };
+      let ok = true;
+      if (v.exact !== undefined && val.length !== v.exact) ok = false;
+      if (v.min !== undefined && val.length < v.min) ok = false;
+      if (v.max !== undefined && val.length > v.max) ok = false;
+      return ok
+        ? { status: "passed", message: `${pathLabel} array length check` }
+        : { status: "failed", message: `${pathLabel} array length check`, actual: val.length };
+    }
+    case "greaterThan":
+      return typeof val === "number" && val > v.value
+        ? { status: "passed", message: `${pathLabel} > ${v.value}` }
+        : { status: "failed", message: `${pathLabel} > ${v.value}`, actual: val };
+    case "lessThan":
+      return typeof val === "number" && val < v.value
+        ? { status: "passed", message: `${pathLabel} < ${v.value}` }
+        : { status: "failed", message: `${pathLabel} < ${v.value}`, actual: val };
+    case "between":
+      return typeof val === "number" && val >= v.min && val <= v.max
+        ? { status: "passed", message: `${pathLabel} between ${v.min}-${v.max}` }
+        : { status: "failed", message: `${pathLabel} between ${v.min}-${v.max}`, actual: val };
+    case "matches":
+    case "regex": {
+      const pattern = v.pattern || v.value;
+      const matches = typeof val === "string" && new RegExp(pattern).test(val);
+      return matches
+        ? { status: "passed", message: `${pathLabel} matches /${pattern}/` }
+        : { status: "failed", message: `${pathLabel} matches /${pattern}/`, actual: val };
+    }
+    case "startsWith":
+      return typeof val === "string" && val.startsWith(v.value)
+        ? { status: "passed", message: `${pathLabel} starts with "${v.value}"` }
+        : { status: "failed", message: `${pathLabel} starts with "${v.value}"`, actual: val };
+    case "endsWith":
+      return typeof val === "string" && val.endsWith(v.value)
+        ? { status: "passed", message: `${pathLabel} ends with "${v.value}"` }
+        : { status: "failed", message: `${pathLabel} ends with "${v.value}"`, actual: val };
+    case "isEmpty":
+      return val === "" || val === null || val === undefined || (Array.isArray(val) && val.length === 0) || (typeof val === "object" && Object.keys(val as object).length === 0)
+        ? { status: "passed", message: `${pathLabel} is empty` }
+        : { status: "failed", message: `${pathLabel} is empty`, actual: val };
+    case "isNotEmpty":
+      return !(val === "" || val === null || val === undefined || (Array.isArray(val) && val.length === 0))
+        ? { status: "passed", message: `${pathLabel} is not empty` }
+        : { status: "failed", message: `${pathLabel} is not empty`, actual: val };
+    case "schema": {
+      if (!v.properties || typeof val !== "object" || val === null) {
+        return { status: "failed", message: `${pathLabel} matches schema`, actual: typeof val };
+      }
+      for (const [key, expectedType] of Object.entries(v.properties)) {
+        const fieldVal = (val as Record<string, unknown>)[key];
+        const actualType = Array.isArray(fieldVal) ? "array" : typeof fieldVal;
+        if (actualType !== expectedType) {
+          return { status: "failed", message: `${pathLabel}.${key} expected ${expectedType}`, actual: actualType };
+        }
+      }
+      return { status: "passed", message: `${pathLabel} matches schema` };
+    }
+    case "arrayContains":
+      return Array.isArray(val) && val.includes(v.value)
+        ? { status: "passed", message: `${pathLabel} contains ${JSON.stringify(v.value)}` }
+        : { status: "failed", message: `${pathLabel} contains ${JSON.stringify(v.value)}`, actual: val };
+    case "arrayUnique": {
+      if (!Array.isArray(val)) return { status: "failed", message: `${pathLabel} has unique values`, actual: "not an array" };
+      const items = v.field ? val.map((i: any) => i?.[v.field]) : val;
+      const unique = new Set(items.map((i: any) => JSON.stringify(i))).size === items.length;
+      return unique
+        ? { status: "passed", message: `${pathLabel} has unique values` }
+        : { status: "failed", message: `${pathLabel} has unique values` };
+    }
+    case "isDate": {
+      const d = new Date(val as string);
+      return !isNaN(d.getTime())
+        ? { status: "passed", message: `${pathLabel} is a valid date` }
+        : { status: "failed", message: `${pathLabel} is a valid date`, actual: val };
+    }
+    case "dateBefore": {
+      const d = new Date(val as string);
+      return !isNaN(d.getTime()) && d < new Date(v.value)
+        ? { status: "passed", message: `${pathLabel} is before ${v.value}` }
+        : { status: "failed", message: `${pathLabel} is before ${v.value}`, actual: val };
+    }
+    case "dateAfter": {
+      const d = new Date(val as string);
+      return !isNaN(d.getTime()) && d > new Date(v.value)
+        ? { status: "passed", message: `${pathLabel} is after ${v.value}` }
+        : { status: "failed", message: `${pathLabel} is after ${v.value}`, actual: val };
+    }
+    default:
+      return { status: "passed", message: `${v.type} (not validated server-side)` };
+  }
+}
+
+app.post("/api/projects/:id/quick-run", async (req, res) => {
+  if (!validateId(req.params.id)) {
+    return res.status(400).json({ error: "Invalid project ID" });
+  }
+
+  const project = getProject(req.params.id);
+  if (!project) return res.status(404).json({ error: "Project not found" });
+
+  const testConfig = req.body;
+  if (!testConfig?.method || !testConfig?.endpoint) {
+    return res.status(400).json({ error: "Test config with method and endpoint is required" });
+  }
+
+  // Resolve environment
+  const envName = req.query.env as string;
+  let baseUrl = ((project as any).baseUrl || "").replace(/\/?$/, "/");
+  let authType = (project as any).authType;
+  let creds = (project as any).credentials;
+  if (envName) {
+    const env = ((project as any).environments || []).find((e: any) => e.name === envName);
+    if (env) {
+      if (env.baseUrl) baseUrl = env.baseUrl.replace(/\/?$/, "/");
+      if (env.authType) { authType = env.authType; creds = env.credentials || creds; }
+    }
+  }
+
+  // Substitute variables
+  const endpoint = substituteVariables(testConfig.endpoint);
+  const body = substituteDeep(testConfig.body);
+  const queryParams = substituteDeep(testConfig.queryParams) as Record<string, string> | undefined;
+  const extraHeaders = substituteDeep(testConfig.headers) as Record<string, string> | undefined;
+
+  // Build URL
+  let url = baseUrl + endpoint.replace(/^\//, "");
+  if (queryParams && typeof queryParams === "object" && Object.keys(queryParams).length > 0) {
+    const qs = new URLSearchParams(queryParams).toString();
+    url += (url.includes("?") ? "&" : "?") + qs;
+  }
+
+  // Build headers
+  const requestHeaders: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    ...(extraHeaders || {}),
+  };
+
+  if (authType === "bearer" && creds?.token) {
+    requestHeaders["Authorization"] = `Bearer ${creds.token}`;
+  } else if (authType === "basic" && creds?.username && creds?.password) {
+    const encoded = Buffer.from(`${creds.username}:${creds.password}`).toString("base64");
+    requestHeaders["Authorization"] = `Basic ${encoded}`;
+  } else if (authType === "api-key" && creds?.apiKey) {
+    requestHeaders[creds.apiKeyHeader || "X-API-Key"] = creds.apiKey;
+  }
+
+  const startTime = Date.now();
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), testConfig.timeout || 30000);
+
+    const fetchOpts: RequestInit = {
+      method: testConfig.method.toUpperCase(),
+      headers: requestHeaders,
+      signal: controller.signal,
+    };
+    if (body && ["POST", "PUT", "PATCH"].includes(testConfig.method.toUpperCase())) {
+      fetchOpts.body = typeof body === "string" ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(url, fetchOpts);
+    clearTimeout(timeout);
+
+    const duration = Date.now() - startTime;
+    const status = response.status;
+    let data: any;
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      data = await response.text();
+    }
+
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((v, k) => { responseHeaders[k] = v; });
+
+    // Check expected status
+    const expectedStatus = testConfig.expectedStatus || 200;
+    const statusPassed = status === expectedStatus;
+
+    // Run validations
+    const validationResults = (testConfig.validations || []).map((v: any) => runServerValidation(data, v));
+    const allValidationsPassed = validationResults.every((r: any) => r.status === "passed");
+    const passed = statusPassed && allValidationsPassed;
+
+    res.json({
+      passed,
+      duration,
+      status,
+      expectedStatus,
+      statusPassed,
+      data,
+      headers: responseHeaders,
+      validations: validationResults,
+    });
+  } catch (err: any) {
+    const duration = Date.now() - startTime;
+    if (err.name === "AbortError") {
+      return res.json({ passed: false, duration, error: `Request timed out after ${testConfig.timeout || 30000}ms`, status: null, expectedStatus: testConfig.expectedStatus || 200 });
+    }
+    return res.json({ passed: false, duration, error: `Request failed: ${err.message}`, status: null, expectedStatus: testConfig.expectedStatus || 200 });
+  }
+});
+
 // --- Import / Export ---
 
 app.post("/api/import/project", (req, res) => {

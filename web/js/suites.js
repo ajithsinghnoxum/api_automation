@@ -57,6 +57,7 @@ function renderProjectView() {
               ${skipBadge}${timeoutBadge}${dataSetBadge}${tagBadges}${timingBadge}
             </div>
             <div style="display:flex; gap:4px;">
+              <button class="icon-btn quick-run-btn" onclick="event.stopPropagation(); quickRunTest(${si}, ${ti}, this)" title="Quick Run" id="qr-btn-${si}-${ti}"><span class="material-symbols-rounded">play_arrow</span></button>
               <button class="icon-btn" onclick="event.stopPropagation(); copyAsCurl(${si}, ${ti})" title="Copy as cURL"><span class="material-symbols-rounded">terminal</span></button>
               <button class="icon-btn" onclick="event.stopPropagation(); duplicateTest(${si}, ${ti})" title="Duplicate"><span class="material-symbols-rounded">content_copy</span></button>
               <button class="icon-btn" onclick="event.stopPropagation(); editTest(${si}, ${ti})" title="Edit"><span class="material-symbols-rounded">edit</span></button>
@@ -72,6 +73,7 @@ function renderProjectView() {
               ${t.validations?.length ? '<strong>Validations (' + t.validations.length + '):</strong><pre style="margin:4px 0;padding:8px;background:var(--bg);border-radius:6px;font-size:12px;">' + esc(JSON.stringify(t.validations, null, 2)) + '</pre>' : ''}
             </div>
           </div>
+          <div class="quick-run-result" id="qr-result-${si}-${ti}"></div>
         </div>`}).join('');
 
       return `
@@ -325,6 +327,106 @@ function collapseAllSuites(collapse) {
       icon.textContent = 'expand_more';
     }
   });
+}
+
+// --- Copy as cURL ---
+
+// --- Quick Single-Test Run ---
+
+async function quickRunTest(suiteIdx, testIdx, btn) {
+  const test = currentSuites[suiteIdx]?.tests?.[testIdx];
+  if (!test || !currentProject) return;
+
+  const resultEl = document.getElementById(`qr-result-${suiteIdx}-${testIdx}`);
+  if (!resultEl) return;
+
+  // Toggle off if already showing results — clicking play again hides them
+  if (resultEl.classList.contains('open') && !resultEl.classList.contains('qr-loading')) {
+    resultEl.classList.remove('open');
+    resultEl.innerHTML = '';
+    return;
+  }
+
+  // Show loading state
+  btn.disabled = true;
+  btn.querySelector('span').textContent = 'progress_activity';
+  btn.querySelector('span').classList.add('spin');
+  resultEl.innerHTML = '<div class="qr-loading-bar"><span class="material-symbols-rounded spin" style="font-size:16px;">progress_activity</span> Running test...</div>';
+  resultEl.classList.add('open', 'qr-loading');
+
+  try {
+    const envParam = selectedEnvironment ? `?env=${encodeURIComponent(selectedEnvironment)}` : '';
+    const result = await api('POST', `/api/projects/${currentProject.id}/quick-run${envParam}`, test);
+
+    resultEl.classList.remove('qr-loading');
+
+    if (result.error) {
+      resultEl.innerHTML = `
+        <div class="qr-summary qr-fail">
+          <span class="material-symbols-rounded">error</span>
+          <span class="qr-status-text">Error</span>
+          <span class="qr-duration">${result.duration}ms</span>
+          <button class="icon-btn qr-close" onclick="closeQuickRunResult(${suiteIdx}, ${testIdx})"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="qr-detail"><span class="qr-error-msg">${esc(result.error)}</span></div>`;
+      return;
+    }
+
+    const passedCount = (result.validations || []).filter(v => v.status === 'passed').length;
+    const failedCount = (result.validations || []).filter(v => v.status === 'failed').length;
+    const totalValidations = (result.validations || []).length;
+
+    const validationRows = (result.validations || []).map(v => `
+      <div class="qr-validation ${v.status}">
+        <span class="material-symbols-rounded" style="font-size:14px;">${v.status === 'passed' ? 'check_circle' : 'cancel'}</span>
+        <span class="qr-val-msg">${esc(v.message)}</span>
+        ${v.status === 'failed' && v.actual !== undefined ? '<span class="qr-val-actual">got: ' + esc(JSON.stringify(v.actual)) + '</span>' : ''}
+      </div>`).join('');
+
+    resultEl.innerHTML = `
+      <div class="qr-summary ${result.passed ? 'qr-pass' : 'qr-fail'}">
+        <span class="material-symbols-rounded">${result.passed ? 'check_circle' : 'cancel'}</span>
+        <span class="qr-status-text">${result.passed ? 'PASSED' : 'FAILED'}</span>
+        <span class="qr-http-status ${result.statusPassed ? '' : 'qr-status-mismatch'}">HTTP ${result.status}${!result.statusPassed ? ' (expected ' + result.expectedStatus + ')' : ''}</span>
+        <span class="qr-duration">${result.duration}ms</span>
+        ${totalValidations > 0 ? '<span class="qr-val-count">' + passedCount + '/' + totalValidations + ' validations</span>' : ''}
+        <button class="icon-btn qr-close" onclick="closeQuickRunResult(${suiteIdx}, ${testIdx})"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      ${validationRows ? '<div class="qr-validations">' + validationRows + '</div>' : ''}
+      <details class="qr-response-details">
+        <summary style="cursor:pointer;font-size:12px;color:var(--text-muted);padding:6px 10px;">Response Body</summary>
+        <pre class="qr-response-body">${esc(typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2))}</pre>
+      </details>`;
+
+    // Update the status dot on the test card
+    const testItem = btn.closest('.test-item');
+    if (testItem) {
+      testItem.classList.remove('test-passed', 'test-failed');
+      testItem.classList.add(result.passed ? 'test-passed' : 'test-failed');
+    }
+
+  } catch (err) {
+    resultEl.classList.remove('qr-loading');
+    resultEl.innerHTML = `
+      <div class="qr-summary qr-fail">
+        <span class="material-symbols-rounded">error</span>
+        <span class="qr-status-text">Error</span>
+        <button class="icon-btn qr-close" onclick="closeQuickRunResult(${suiteIdx}, ${testIdx})"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="qr-detail"><span class="qr-error-msg">${esc(err.message || 'Unknown error')}</span></div>`;
+  } finally {
+    btn.disabled = false;
+    btn.querySelector('span').textContent = 'play_arrow';
+    btn.querySelector('span').classList.remove('spin');
+  }
+}
+
+function closeQuickRunResult(suiteIdx, testIdx) {
+  const el = document.getElementById(`qr-result-${suiteIdx}-${testIdx}`);
+  if (el) {
+    el.classList.remove('open');
+    el.innerHTML = '';
+  }
 }
 
 // --- Copy as cURL ---

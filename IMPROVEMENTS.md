@@ -356,10 +356,13 @@
 
 ## 8. Usability & UX
 
-### 8.1 Quick Single-Test Run
-- [ ] "Play" button on each test card to run it instantly
-- [ ] Inline result display (pass/fail + response) without opening runner modal
-- [ ] Quick re-run for failed tests from the test card
+### 8.1 Quick Single-Test Run ✅
+- [x] "Play" button on each test card to run it instantly
+- [x] Inline result display (pass/fail + response) without opening runner modal
+- [x] Quick re-run for failed tests from the test card
+- [x] Server-side validation engine (standalone, no Playwright dependency)
+- [x] Environment-aware — respects selected environment overrides
+- [x] Shows HTTP status, response time, validation results, and response body
 
 ### 8.2 Run History Improvements
 - [ ] Filter run results by status (show only failures)
