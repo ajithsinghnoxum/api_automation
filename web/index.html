@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Test Manager</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='18' fill='%233b82f6'/><text x='50' y='68' text-anchor='middle' font-size='52' font-weight='bold' fill='white' font-family='Arial'>API</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/material-symbols@0.27.0/rounded.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+  <!-- Full-page loading skeleton -->
+  <div id="app-loader">
+    <div class="loader-topnav">
+      <div class="shimmer" style="width:180px;height:24px;border-radius:6px;"></div>
+      <div style="display:flex;gap:8px;">
+        <div class="shimmer" style="width:80px;height:32px;border-radius:6px;"></div>
+        <div class="shimmer" style="width:60px;height:32px;border-radius:6px;"></div>
+        <div class="shimmer" style="width:80px;height:32px;border-radius:6px;"></div>
+      </div>
+    </div>
+    <div class="loader-layout">
+      <div class="loader-sidebar">
+        <div class="shimmer" style="width:60%;height:14px;border-radius:4px;margin-bottom:16px;"></div>
+        <div style="display:flex;gap:6px;margin-bottom:20px;">
+          <div class="shimmer" style="flex:1;height:34px;border-radius:6px;"></div>
+          <div class="shimmer" style="flex:1;height:34px;border-radius:6px;"></div>
+          <div class="shimmer" style="flex:1;height:34px;border-radius:6px;"></div>
+        </div>
+        <div class="shimmer skeleton-project"></div>
+        <div class="shimmer skeleton-project"></div>
+        <div class="shimmer skeleton-project"></div>
+        <div class="shimmer skeleton-project"></div>
+      </div>
+      <div class="loader-main">
+        <div class="shimmer" style="width:280px;height:28px;border-radius:8px;margin-bottom:24px;"></div>
+        <div class="shimmer" style="width:100%;height:160px;border-radius:10px;margin-bottom:16px;"></div>
+        <div class="shimmer" style="width:100%;height:120px;border-radius:10px;margin-bottom:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- App shell (hidden until loaded) -->
+  <div id="app-shell" style="display:none;">
+
+  <!-- Top Nav -->
+  <nav class="topnav">
+    <h1><span class="material-symbols-rounded icon-filled" style="font-size:24px;vertical-align:-4px;margin-right:6px;">api</span>API Test Manager</h1>
+    <div class="topnav-links">
+      <button class="topnav-btn" onclick="window.open('/report/index.html?t=' + Date.now(), '_blank')"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">assessment</span>Report</button>
+      <a href="/docs/index.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">menu_book</span>Docs</button></a>
+      <a href="/docs/examples.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">science</span>Examples</button></a>
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" title="Toggle dark/light mode"></button>
+    </div>
+  </nav>
+
+  <!-- Breadcrumb -->
+  <div class="breadcrumb-bar" id="breadcrumb-bar" style="display:none;">
+    <span class="breadcrumb-item" onclick="deselectProject()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;">home</span> Projects</span>
+    <span class="breadcrumb-sep" id="bc-project-sep" style="display:none;">›</span>
+    <span class="breadcrumb-item breadcrumb-current" id="bc-project" style="display:none;"></span>
+    <span class="breadcrumb-sep" id="bc-suite-sep" style="display:none;">›</span>
+    <span class="breadcrumb-item" id="bc-suite" style="display:none;"></span>
+    <span class="breadcrumb-sep" id="bc-test-sep" style="display:none;">›</span>
+    <span class="breadcrumb-item breadcrumb-current" id="bc-test" style="display:none;"></span>
+  </div>
+
+  <!-- Layout -->
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-label" style="padding:0;margin:0;">Projects</div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+          <span class="material-symbols-rounded" id="sidebar-toggle-icon">menu_open</span>
+        </button>
+      </div>
+      <div class="sidebar-actions">
+        <button class="sidebar-action-btn" onclick="openProjectModal()" title="New Project">
+          <span class="material-symbols-rounded" style="font-size:16px;">add</span><span class="btn-text">New</span>
+        </button>
+        <button class="sidebar-action-btn" onclick="triggerImportProject()" title="Import Project">
+          <span class="material-symbols-rounded" style="font-size:16px;">upload</span><span class="btn-text">Import</span>
+        </button>
+        <button class="sidebar-action-btn" onclick="triggerImportPostman()" title="Import Postman Collection">
+          <span class="material-symbols-rounded" style="font-size:16px;">swap_horiz</span><span class="btn-text">Postman</span>
+        </button>
+        <button class="sidebar-action-btn" onclick="triggerImportOpenAPI()" title="Import OpenAPI/Swagger Spec">
+          <span class="material-symbols-rounded" style="font-size:16px;">description</span><span class="btn-text">OpenAPI</span>
+        </button>
+      </div>
+      <div class="sidebar-project-list" id="project-list"></div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content" id="main-content">
+      <div class="empty-state" id="empty-state">
+        <span class="material-symbols-rounded" style="font-size:64px;color:var(--text-muted);margin-bottom:16px;display:block;">rocket_launch</span>
+        <h3>Welcome to API Test Manager</h3>
+        <p>Create a project to get started, or select one from the sidebar.</p>
+        <button class="btn btn-primary" onclick="openProjectModal()"><span class="material-symbols-rounded" style="font-size:18px;vertical-align:-4px;margin-right:4px;">add_circle</span>Create Project</button>
+      </div>
+      <div id="project-view" style="display:none"></div>
+    </main>
+  </div>
+
+  <!-- Project Modal -->
+  <div class="modal-overlay" id="project-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="project-modal-title">New Project</h3>
+        <button class="icon-btn" onclick="closeProjectModal()"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Project Name</label>
+            <input type="text" id="pm-name" placeholder="My API Project">
+          </div>
+          <div class="form-group">
+            <label>Project ID (auto-generated)</label>
+            <input type="text" id="pm-id" placeholder="auto-generated" readonly style="background: var(--surface-input);">
+          </div>
+          <div class="form-group full">
+            <label>Base URL</label>
+            <input type="text" id="pm-baseUrl" placeholder="https://api.example.com/v1">
+          </div>
+          <div class="form-group">
+            <label>Auth Type</label>
+            <select id="pm-authType" onchange="toggleAuthFields()">
+              <option value="none">No Authentication</option>
+              <option value="basic">Basic Auth</option>
+              <option value="bearer">Bearer Token</option>
+              <option value="api-key">API Key</option>
+            </select>
+          </div>
+          <div class="form-group" id="pm-token-group" style="display:none">
+            <label>Bearer Token</label>
+            <input type="text" id="pm-token" placeholder="eyJhbGci...">
+          </div>
+          <div class="form-group" id="pm-username-group" style="display:none">
+            <label>Username</label>
+            <input type="text" id="pm-username">
+          </div>
+          <div class="form-group" id="pm-password-group" style="display:none">
+            <label>Password</label>
+            <input type="password" id="pm-password">
+          </div>
+          <div class="form-group" id="pm-apikey-group" style="display:none">
+            <label>API Key</label>
+            <input type="text" id="pm-apikey">
+          </div>
+          <div class="form-group" id="pm-apikeyheader-group" style="display:none">
+            <label>API Key Header</label>
+            <input type="text" id="pm-apikeyheader" value="X-API-Key">
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <label style="font-size:13px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">
+            Environments <span style="font-weight:400;color:var(--text-muted);">(optional overrides for dev/staging/prod)</span>
+          </label>
+          <div id="pm-environments"></div>
+          <button class="add-btn" onclick="addEnvironmentRow()" style="margin-top:8px;">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> Add Environment
+          </button>
+        </div>
+
+        <div style="margin-top:16px;">
+          <label style="font-size:13px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:4px;">notifications</span>
+            Notifications <span style="font-weight:400;color:var(--text-muted);">(get notified on test results)</span>
+          </label>
+          <div class="notif-config">
+            <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="pm-notif-enabled" style="width:auto;margin:0;"> Enable notifications
+              </label>
+              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--text-muted);">
+                <input type="checkbox" id="pm-notif-failure-only" style="width:auto;margin:0;"> Only on failure
+              </label>
+            </div>
+            <div class="notif-channels">
+              <details class="notif-channel">
+                <summary class="notif-channel-header">
+                  <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:4px;">tag</span>
+                  Slack Webhook
+                  <span class="notif-channel-status" id="notif-slack-status"></span>
+                </summary>
+                <div class="notif-channel-body">
+                  <div class="form-group" style="margin:0;">
+                    <label style="font-size:11px;color:var(--text-muted);">Webhook URL</label>
+                    <input type="text" id="pm-notif-slack-url" placeholder="https://hooks.slack.com/services/T.../B.../xxx" style="font-family:monospace;font-size:12px;">
+                  </div>
+                </div>
+              </details>
+              <details class="notif-channel">
+                <summary class="notif-channel-header">
+                  <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:4px;">groups</span>
+                  Microsoft Teams Webhook
+                  <span class="notif-channel-status" id="notif-teams-status"></span>
+                </summary>
+                <div class="notif-channel-body">
+                  <div class="form-group" style="margin:0;">
+                    <label style="font-size:11px;color:var(--text-muted);">Webhook URL</label>
+                    <input type="text" id="pm-notif-teams-url" placeholder="https://outlook.office.com/webhook/..." style="font-family:monospace;font-size:12px;">
+                  </div>
+                </div>
+              </details>
+              <details class="notif-channel">
+                <summary class="notif-channel-header">
+                  <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:4px;">mail</span>
+                  Email (SMTP)
+                  <span class="notif-channel-status" id="notif-email-status"></span>
+                </summary>
+                <div class="notif-channel-body">
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <div class="form-group" style="margin:0;flex:2;min-width:200px;">
+                      <label style="font-size:11px;color:var(--text-muted);">To (email address)</label>
+                      <input type="email" id="pm-notif-email-to" placeholder="team@example.com">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:140px;">
+                      <label style="font-size:11px;color:var(--text-muted);">From</label>
+                      <input type="text" id="pm-notif-email-from" placeholder="api-tests@example.com">
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+                    <div class="form-group" style="margin:0;flex:2;min-width:160px;">
+                      <label style="font-size:11px;color:var(--text-muted);">SMTP Host</label>
+                      <input type="text" id="pm-notif-smtp-host" placeholder="smtp.gmail.com">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:80px;">
+                      <label style="font-size:11px;color:var(--text-muted);">Port</label>
+                      <input type="number" id="pm-notif-smtp-port" placeholder="587">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:120px;">
+                      <label style="font-size:11px;color:var(--text-muted);">Username</label>
+                      <input type="text" id="pm-notif-smtp-user" placeholder="user@gmail.com">
+                    </div>
+                    <div class="form-group" style="margin:0;flex:1;min-width:120px;">
+                      <label style="font-size:11px;color:var(--text-muted);">Password</label>
+                      <input type="password" id="pm-notif-smtp-pass" placeholder="app-password">
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+            <button class="btn btn-sm" onclick="testNotification()" style="margin-top:8px;">
+              <span class="material-symbols-rounded" style="font-size:15px;vertical-align:-3px;margin-right:4px;">send</span> Send Test Notification
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeProjectModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Modal -->
+  <div class="modal-overlay" id="test-modal">
+    <div class="modal" style="width: 680px;">
+      <div class="modal-header">
+        <h3 id="test-modal-title">New Test Case</h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="editor-toggle">
+            <button class="editor-toggle-btn active" id="toggle-visual" onclick="setEditorMode('visual')"><span class="material-symbols-rounded" style="font-size:16px;">view_list</span> Visual</button>
+            <button class="editor-toggle-btn" id="toggle-json" onclick="setEditorMode('json')"><span class="material-symbols-rounded" style="font-size:16px;">code</span> JSON</button>
+          </div>
+          <button class="icon-btn" onclick="closeTestModal()"><span class="material-symbols-rounded">close</span></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <!-- JSON Editor (hidden by default) -->
+        <div id="tm-json-mode" style="display:none;">
+          <div id="tm-codemirror-wrap"></div>
+          <textarea id="tm-json-editor" spellcheck="false" placeholder='Paste or edit test case JSON here...' style="display:none;"></textarea>
+          <div id="tm-json-error" class="json-error" style="display:none;"></div>
+        </div>
+        <!-- Visual Editor -->
+        <div id="tm-visual-mode">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Test Name</label>
+            <input type="text" id="tm-name" placeholder="should return all items">
+          </div>
+          <div class="form-group">
+            <label>HTTP Method</label>
+            <select id="tm-method">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="PATCH">PATCH</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Endpoint</label>
+            <input type="text" id="tm-endpoint" placeholder="items/{{userId}}">
+            <div class="var-hint" style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+              Variables: <code>{{varName}}</code> <code>{{$timestamp}}</code> <code>{{$guid}}</code> <code>{{$randomInt}}</code> <code>{{$isoDate}}</code> <code>{{$randomEmail}}</code>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Expected Status</label>
+            <input type="number" id="tm-status" value="200">
+          </div>
+          <div class="form-group">
+            <label>Query Params (key=value, one per line)</label>
+            <textarea id="tm-params" placeholder="page=1&#10;limit=10" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Timeout (ms)</label>
+            <input type="number" id="tm-timeout" placeholder="30000 (default)">
+          </div>
+          <div class="form-group">
+            <label>Tags (comma-separated)</label>
+            <input type="text" id="tm-tags" placeholder="smoke, regression, auth">
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;">
+              <input type="checkbox" id="tm-skip" style="width:auto;">
+              Skip this test
+            </label>
+          </div>
+          <div class="form-group full" id="tm-body-group">
+            <label>Request Body (JSON)</label>
+            <textarea id="tm-body" placeholder='{ "name": "Test" }' rows="4" style="font-family: monospace;"></textarea>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">
+            Validations
+          </label>
+          <div id="tm-validations"></div>
+          <button class="add-btn" onclick="addValidationRow()" style="margin-top: 8px;"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> Add Validation</button>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">
+            Extract Variables <span style="font-weight:400; color:var(--text-muted);">(save values from response for use in later tests)</span>
+          </label>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+            Use <code style="background:var(--surface-alt); padding:1px 5px; border-radius:3px; font-size:12px; color:var(--accent);">{{variableName}}</code> in endpoint, body, or query params of subsequent tests.
+          </div>
+          <div id="tm-extract"></div>
+          <button class="add-btn" onclick="addExtractRow()" style="margin-top: 8px;"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> Add Variable</button>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 4px;">
+            Data Set <span style="font-weight:400; color:var(--text-muted);">(run this test once per data entry)</span>
+          </label>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+            JSON array of objects. Each entry creates a separate test. Use <code style="background:var(--surface-alt); padding:1px 5px; border-radius:3px; font-size:12px; color:var(--accent);">{{key}}</code> in endpoint, body, params, or validations.
+          </div>
+          <textarea id="tm-dataset" placeholder='[{ "id": 1, "expected": "Alice" }, { "id": 2, "expected": "Bob" }]' rows="3" style="font-family: monospace; font-size: 12px;"></textarea>
+        </div>
+
+        <details style="margin-top: 16px;">
+          <summary style="font-size: 13px; font-weight: 600; color: var(--text-secondary); cursor: pointer; user-select: none;">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">tune</span> Advanced Options
+          </summary>
+          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-group" style="margin:0;">
+              <label>Only If <span style="font-weight:400; color:var(--text-muted);">(run only in specific environment)</span></label>
+              <input type="text" id="tm-onlyif-env" placeholder="e.g. production, staging (leave empty to always run)">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Before Request Hook <span style="font-weight:400; color:var(--text-muted);">(JavaScript)</span></label>
+              <textarea id="tm-before-hook" placeholder='request.headers["X-Timestamp"] = Date.now();' rows="2" style="font-family: monospace; font-size: 12px;"></textarea>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>After Response Hook <span style="font-weight:400; color:var(--text-muted);">(JavaScript)</span></label>
+              <textarea id="tm-after-hook" placeholder='vars.token = response.data.token;' rows="2" style="font-family: monospace; font-size: 12px;"></textarea>
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label>Poll Mode <span style="font-weight:400; color:var(--text-muted);">(JSON: { interval, timeout, condition })</span></label>
+              <textarea id="tm-poll" placeholder='{ "interval": 2000, "timeout": 30000, "condition": { "type": "equals", "path": "status", "value": "done" } }' rows="3" style="font-family: monospace; font-size: 12px;"></textarea>
+            </div>
+          </div>
+        </details>
+        </div><!-- /tm-visual-mode -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeTestModal()">Cancel</button>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);cursor:pointer;user-select:none;" title="When checked, generates equals validations for actual response values (nested fields, array items, etc.)">
+          <input type="checkbox" id="tm-autogen-values" style="width:auto;margin:0;"> Include value checks
+        </label>
+        <button class="btn btn-accent" id="tm-autogen-btn" onclick="tryAndAutoGenerate()" title="Send the request and auto-generate validations from the response">
+          <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">auto_fix_high</span> Try &amp; Auto-Generate
+        </button>
+        <button class="btn btn-primary" onclick="saveTest()">Save Test</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chain View Modal -->
+  <div class="modal-overlay" id="chain-modal">
+    <div class="modal" style="width: 780px; max-height: 90vh;">
+      <div class="modal-header">
+        <h3>Chain View</h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-accent" onclick="startChainStepThrough()">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">step</span> Step Through
+          </button>
+          <button class="icon-btn" onclick="closeChainView()"><span class="material-symbols-rounded">close</span></button>
+        </div>
+      </div>
+      <div class="modal-body" style="overflow-y:auto; max-height: calc(90vh - 120px);">
+        <div id="chain-step-controls" style="display:none;">
+          <button class="btn" id="chain-step-prev-btn" onclick="prevChainStep()">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;">arrow_back</span> Prev
+          </button>
+          <span id="chain-step-info" style="font-size:13px;color:var(--text-muted);padding:0 12px;">Step 1 of N</span>
+          <button class="btn btn-primary" id="chain-step-next-btn" onclick="executeChainStep()">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">play_arrow</span> Execute Step
+          </button>
+          <button class="btn" onclick="stopChainStepThrough()" style="margin-left:auto;">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">stop</span> Stop
+          </button>
+        </div>
+        <div id="chain-content"></div>
+        <div id="chain-step-panel" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Modal -->
+  <div class="modal-overlay" id="template-modal">
+    <div class="modal" style="width: 680px; max-height: 90vh;">
+      <div class="modal-header">
+        <h3><span class="material-symbols-rounded" style="vertical-align:-5px;margin-right:6px;">auto_fix_high</span>Generate from Template</h3>
+        <button class="icon-btn" onclick="closeTemplateModal()"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="modal-body" style="overflow-y:auto; max-height: calc(90vh - 120px);">
+        <div id="template-content"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file inputs for import -->
+  <input type="file" id="import-project-input" accept=".json" style="display:none" onchange="handleImportProject(this)">
+  <input type="file" id="import-suite-input" accept=".json" style="display:none" onchange="handleImportSuite(this)">
+  <input type="file" id="import-postman-input" accept=".json" style="display:none" onchange="handleImportPostman(this)">
+  <input type="file" id="import-openapi-input" accept=".json,.yaml,.yml" style="display:none" onchange="handleImportOpenAPI(this)">
+
+  </div><!-- /app-shell -->
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- CodeMirror -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/fold/brace-fold.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/addon/fold/foldgutter.min.css">
+
+  <!-- Scripts (order matters: utilities first, then features, then init) -->
+  <script src="js/api.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/suites.js"></script>
+  <script src="js/test-editor.js"></script>
+  <script src="js/runner.js"></script>
+  <script src="js/import-export.js"></script>
+  <script src="js/drag-reorder.js"></script>
+  <script src="js/chain-builder.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/bulk-ops.js"></script>
+  <script src="js/response-diff.js"></script>
+  <script src="js/schema-drift.js"></script>
+  <script src="js/schedules.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

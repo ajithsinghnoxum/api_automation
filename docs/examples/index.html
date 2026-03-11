@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Automation — Live Examples</title>
+  <link rel="stylesheet" href="../css/shared.css">
+  <style>
+    .lookup-table tr:target td { background: var(--accent-dim); }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>API Automation</h2>
+    <span>Live Examples</span>
+  </div>
+  <nav>
+    <a href="#overview" class="active">Overview</a>
+    <a href="#setup">Setup</a>
+    <a href="#file-structure">File Structure</a>
+
+    <div class="section-title">Find by Validation</div>
+    <a href="test-suites.html#val-equals" class="sub">equals / notEquals</a>
+    <a href="test-suites.html#val-exists" class="sub">exists / notExists</a>
+    <a href="test-suites.html#val-contains" class="sub">contains</a>
+    <a href="test-suites.html#val-notcontains" class="sub">notContains</a>
+    <a href="test-suites.html#val-regex" class="sub">regex</a>
+    <a href="test-suites.html#val-typeof" class="sub">typeOf</a>
+    <a href="test-suites.html#val-isarray" class="sub">isArray / arrayLength</a>
+    <a href="test-suites.html#val-comparison" class="sub">greaterThan / lessThan</a>
+    <a href="test-suites.html#val-hasproperty" class="sub">hasProperty</a>
+    <a href="test-suites.html#val-schema" class="sub">schema</a>
+    <a href="test-suites.html#val-string" class="sub">startsWith / endsWith</a>
+    <a href="test-suites.html#val-isnotempty" class="sub">isEmpty / isNotEmpty</a>
+    <a href="test-suites.html#val-arrayevery" class="sub">arrayEvery</a>
+    <a href="test-suites.html#val-arraysome" class="sub">arraySome</a>
+    <a href="test-suites.html#val-arraynone" class="sub">arrayNone</a>
+    <a href="test-suites.html#val-arrayitemat" class="sub">arrayItemAt</a>
+    <a href="test-suites.html#val-arrayfind" class="sub">arrayFind</a>
+    <a href="test-suites.html#val-arraycontains" class="sub">arrayContains</a>
+    <a href="test-suites.html#val-arraysorted" class="sub">arraySorted / arrayUnique</a>
+    <a href="test-suites.html#val-date" class="sub">isDate / dateBefore / dateAfter</a>
+    <a href="test-suites.html#val-conditional" class="sub">if (conditional)</a>
+
+    <div class="section-title">Find by Feature</div>
+    <a href="features.html#builtin-vars" class="sub">Built-in Variables</a>
+    <a href="features.html#data-driven" class="sub">Data-Driven Tests</a>
+    <a href="features.html#tagged-tests" class="sub">Tags &amp; Filtering</a>
+    <a href="features.html#retry-example" class="sub">Retry Configuration</a>
+    <a href="features.html#hooks-example" class="sub">Pre/Post Hooks</a>
+    <a href="features.html#poll-example" class="sub">Poll Mode</a>
+    <a href="features.html#onlyif-example" class="sub">Conditional Execution</a>
+    <a href="features.html#fixtures-example" class="sub">Shared Fixtures ($ref)</a>
+    <a href="features.html#openapi-example" class="sub">OpenAPI Import</a>
+    <a href="features.html#pdf-example" class="sub">PDF Export</a>
+    <a href="features.html#csv-export-example" class="sub">CSV &amp; JUnit Export</a>
+    <a href="features.html#conditional-example" class="sub">Conditional Validations</a>
+    <a href="features.html#autogen-example" class="sub">Auto-Generate Validations</a>
+    <a href="features.html#chain-builder-example" class="sub">Chain Builder</a>
+    <a href="features.html#templates-example" class="sub">Test Templates</a>
+    <a href="features.html#bulk-ops-example" class="sub">Bulk Operations</a>
+    <a href="features.html#response-diff-example" class="sub">Response Comparison</a>
+    <a href="features.html#schema-drift-example" class="sub">Schema Drift Detection</a>
+    <a href="features.html#scheduled-runs-example" class="sub">Scheduled Runs</a>
+    <a href="features.html#notifications-example" class="sub">Notification Integration</a>
+
+    <div class="section-title">Links</div>
+    <a href="../index.html">Back to Docs</a>
+    <a href="/">Open Web UI</a>
+  </nav>
+</aside>
+
+<!-- ── Main Content ── -->
+<div class="main">
+
+  <h1 id="overview">Live Examples</h1>
+  <p class="subtitle">53 ready-to-run tests using JSONPlaceholder &mdash; a free fake REST API.</p>
+
+  <div class="alert alert-success">
+    <strong>Ready to run!</strong> Every example in this section targets
+    <a href="https://jsonplaceholder.typicode.com" target="_blank">jsonplaceholder.typicode.com</a>,
+    a free public API that requires no authentication. Import any file and hit <strong>Run</strong> &mdash; no setup needed.
+  </div>
+
+  <!-- ── Validation Quick Reference ── -->
+  <h2 id="validation-reference">Validation Quick Reference</h2>
+  <p>Jump directly to the example for any validation type supported by the framework.</p>
+
+  <table class="lookup-table">
+    <thead>
+      <tr>
+        <th>Validation Type</th>
+        <th>Description</th>
+        <th>Example Location</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>equals</code> / <code>notEquals</code></td>
+        <td>Assert a field exactly matches (or does not match) the expected value</td>
+        <td><a href="test-suites.html#val-equals">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>exists</code> / <code>notExists</code></td>
+        <td>Assert a field is present (or absent) in the response</td>
+        <td><a href="test-suites.html#val-exists">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>contains</code></td>
+        <td>Assert a string field contains the given substring</td>
+        <td><a href="test-suites.html#val-contains">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>notContains</code></td>
+        <td>Assert a string field does not contain the given substring</td>
+        <td><a href="test-suites.html#val-notcontains">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>regex</code></td>
+        <td>Assert a field matches a regular expression pattern</td>
+        <td><a href="test-suites.html#val-regex">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>typeOf</code></td>
+        <td>Assert the JavaScript type of a field (string, number, boolean, object, array)</td>
+        <td><a href="test-suites.html#val-typeof">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>isArray</code> / <code>arrayLength</code></td>
+        <td>Assert a field is an array and optionally check its length</td>
+        <td><a href="test-suites.html#val-isarray">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>greaterThan</code> / <code>lessThan</code></td>
+        <td>Assert a numeric field is greater than or less than a threshold</td>
+        <td><a href="test-suites.html#val-comparison">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>greaterThanOrEqual</code> / <code>lessThanOrEqual</code></td>
+        <td>Assert a numeric field is at least or at most the given value</td>
+        <td><a href="test-suites.html#val-comparison">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>between</code></td>
+        <td>Assert a numeric field falls within a specified range</td>
+        <td><a href="test-suites.html#val-comparison">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>hasProperty</code></td>
+        <td>Assert that an object has a specific property (key)</td>
+        <td><a href="test-suites.html#val-hasproperty">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>schema</code></td>
+        <td>Validate the entire response structure against a JSON-Schema-like definition</td>
+        <td><a href="test-suites.html#val-schema">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>startsWith</code> / <code>endsWith</code></td>
+        <td>Assert a string field starts or ends with the given value</td>
+        <td><a href="test-suites.html#val-string">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>stringLength</code></td>
+        <td>Assert the length of a string field matches the expected count</td>
+        <td><a href="test-suites.html#val-string">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>isEmpty</code> / <code>isNotEmpty</code></td>
+        <td>Assert a field is empty or non-empty (works for strings, arrays, objects)</td>
+        <td><a href="test-suites.html#val-isnotempty">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arrayEvery</code></td>
+        <td>Assert every item in an array satisfies a set of validations</td>
+        <td><a href="test-suites.html#val-arrayevery">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arraySome</code></td>
+        <td>Assert at least one item in an array satisfies a set of validations</td>
+        <td><a href="test-suites.html#val-arraysome">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arrayNone</code></td>
+        <td>Assert no items in an array satisfy a set of validations</td>
+        <td><a href="test-suites.html#val-arraynone">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arrayItemAt</code></td>
+        <td>Assert the item at a specific index satisfies a set of validations</td>
+        <td><a href="test-suites.html#val-arrayitemat">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arrayFind</code></td>
+        <td>Find an item matching criteria and validate its properties</td>
+        <td><a href="test-suites.html#val-arrayfind">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arrayContains</code> / <code>arrayNotContains</code></td>
+        <td>Assert an array contains (or does not contain) a specific value</td>
+        <td><a href="test-suites.html#val-arraycontains">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arraySorted</code></td>
+        <td>Assert an array is sorted in ascending or descending order</td>
+        <td><a href="test-suites.html#val-arraysorted">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>arrayUnique</code></td>
+        <td>Assert all items in an array are unique (no duplicates)</td>
+        <td><a href="test-suites.html#val-arraysorted">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>isDate</code></td>
+        <td>Assert a field is a valid date string</td>
+        <td><a href="test-suites.html#val-date">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>dateBefore</code> / <code>dateAfter</code></td>
+        <td>Assert a date field falls before or after a given date</td>
+        <td><a href="test-suites.html#val-date">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>dateWithinLast</code></td>
+        <td>Assert a date field is within a recent time window</td>
+        <td><a href="test-suites.html#val-date">View example</a></td>
+      </tr>
+      <tr>
+        <td><code>if</code> (conditional)</td>
+        <td>Apply validations conditionally based on a runtime condition</td>
+        <td><a href="test-suites.html#val-conditional">View example</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── Feature Quick Reference ── -->
+  <h2 id="feature-reference">Feature Quick Reference</h2>
+  <p>Jump directly to the example for any framework feature.</p>
+
+  <table class="lookup-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Description</th>
+        <th>Example Location</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Variable Extraction &amp; Chaining</td>
+        <td>Extract values from one response and inject them into subsequent requests</td>
+        <td><a href="test-suites.html#crud-workflow">View example</a></td>
+      </tr>
+      <tr>
+        <td>Built-in Variables</td>
+        <td>Use <code>$timestamp</code>, <code>$randomInt</code>, and other built-in variables</td>
+        <td><a href="features.html#builtin-vars">View example</a></td>
+      </tr>
+      <tr>
+        <td>Data-Driven Tests</td>
+        <td>Run the same test with multiple sets of input data</td>
+        <td><a href="features.html#data-driven">View example</a></td>
+      </tr>
+      <tr>
+        <td>Tags &amp; Filtering</td>
+        <td>Tag tests and run only subsets using tag filters</td>
+        <td><a href="features.html#tagged-tests">View example</a></td>
+      </tr>
+      <tr>
+        <td>Retry Configuration</td>
+        <td>Automatically retry failed tests with configurable delay and count</td>
+        <td><a href="features.html#retry-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Pre/Post Hooks</td>
+        <td>Run setup and teardown requests before or after each test</td>
+        <td><a href="features.html#hooks-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Poll Mode</td>
+        <td>Poll an endpoint until a condition is met or a timeout is reached</td>
+        <td><a href="features.html#poll-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Conditional Execution (onlyIf)</td>
+        <td>Skip tests at runtime based on variable or environment conditions</td>
+        <td><a href="features.html#onlyif-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Shared Fixtures ($ref)</td>
+        <td>Reuse common request or validation blocks across test files</td>
+        <td><a href="features.html#fixtures-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>OpenAPI Import</td>
+        <td>Auto-generate test suites from an OpenAPI / Swagger specification</td>
+        <td><a href="features.html#openapi-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>PDF Export</td>
+        <td>Export test results to a formatted PDF report</td>
+        <td><a href="features.html#pdf-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>CSV &amp; JUnit Export</td>
+        <td>Export test results to CSV or JUnit XML for CI integration</td>
+        <td><a href="features.html#csv-export-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Conditional Validations (if/then/else)</td>
+        <td>Apply different validations depending on runtime conditions</td>
+        <td><a href="features.html#conditional-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Auto-Generate Validations</td>
+        <td>Send a real request and auto-generate schema, type, and value validations from the response</td>
+        <td><a href="features.html#autogen-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Chain Builder / Flow Editor</td>
+        <td>Visualize multi-step API workflows with dependency detection, variable flow, and step-through execution</td>
+        <td><a href="features.html#chain-builder-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Test Templates / CRUD Generator</td>
+        <td>Generate complete test suites from built-in templates (CRUD, Auth Flow, Pagination, etc.)</td>
+        <td><a href="features.html#templates-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Bulk Test Operations</td>
+        <td>Multi-select tests to bulk tag, skip, update status, find/replace endpoints, and auto-generate validations</td>
+        <td><a href="features.html#bulk-ops-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Response Comparison / Diff</td>
+        <td>Capture API response snapshots and compare between runs with side-by-side line diff</td>
+        <td><a href="features.html#response-diff-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Schema Drift Detection</td>
+        <td>Save a schema baseline and detect structural changes (new fields, removed fields, type changes)</td>
+        <td><a href="features.html#schema-drift-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Scheduled Test Runs</td>
+        <td>Cron-based automatic test execution with presets, pause/resume, and history integration</td>
+        <td><a href="features.html#scheduled-runs-example">View example</a></td>
+      </tr>
+      <tr>
+        <td>Notification Integration</td>
+        <td>Per-project notifications via Slack, Microsoft Teams, or Email with enable/disable and "only on failure" options</td>
+        <td><a href="features.html#notifications-example">View example</a></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ── Setup ── -->
+  <h2 id="setup">Setup</h2>
+  <p>Choose your preferred way to get started with the examples.</p>
+
+  <h3>Option 1: Web UI</h3>
+  <ol class="steps">
+    <li>Open the Web UI at <a href="/">http://localhost</a></li>
+    <li>Navigate to <strong>File &gt; Import</strong> and select an example YAML file</li>
+    <li>Click <strong>Run</strong> &mdash; results appear in real time</li>
+  </ol>
+
+  <h3>Option 2: CLI</h3>
+  <pre><code># Run a single test suite
+npx api-automation run examples/01-basic-crud.yaml
+
+# Run all examples
+npx api-automation run examples/
+
+# Run with a tag filter
+npx api-automation run examples/ --tags smoke</code></pre>
+
+  <!-- ── File Structure ── -->
+  <h2 id="file-structure">File Structure</h2>
+  <p>The examples directory is organized by topic for easy navigation.</p>
+
+  <div class="file-tree">
+    <span class="folder">examples/</span><br>
+    &nbsp;&nbsp;<span class="file">01-basic-crud.yaml</span> <span class="desc">&mdash; GET, POST, PUT, PATCH, DELETE basics</span><br>
+    &nbsp;&nbsp;<span class="file">02-validation-types.yaml</span> <span class="desc">&mdash; Every validation type in one file</span><br>
+    &nbsp;&nbsp;<span class="file">03-chaining-variables.yaml</span> <span class="desc">&mdash; Variable extraction &amp; request chaining</span><br>
+    &nbsp;&nbsp;<span class="file">04-data-driven.yaml</span> <span class="desc">&mdash; Parameterised tests with datasets</span><br>
+    &nbsp;&nbsp;<span class="file">05-tags-filtering.yaml</span> <span class="desc">&mdash; Tag-based test selection</span><br>
+    &nbsp;&nbsp;<span class="file">06-hooks.yaml</span> <span class="desc">&mdash; Pre/post request hooks</span><br>
+    &nbsp;&nbsp;<span class="file">07-retry-poll.yaml</span> <span class="desc">&mdash; Retry and poll mode examples</span><br>
+    &nbsp;&nbsp;<span class="file">08-conditional.yaml</span> <span class="desc">&mdash; onlyIf and conditional validations</span><br>
+    &nbsp;&nbsp;<span class="file">09-fixtures.yaml</span> <span class="desc">&mdash; Shared fixtures with $ref</span><br>
+    &nbsp;&nbsp;<span class="file">10-openapi-import.yaml</span> <span class="desc">&mdash; Generated from OpenAPI spec</span><br>
+    &nbsp;&nbsp;<span class="folder">fixtures/</span> <span class="desc">&mdash; Reusable shared definitions</span><br>
+  </div>
+
+  <div class="footer">
+    <p>API Automation Framework &mdash; <a href="../index.html">Documentation</a></p>
+  </div>
+
+</div>
+
+<!-- ── Scroll-highlight script ── -->
+<script>
+(function () {
+  const links = document.querySelectorAll('.sidebar nav a[href^="#"]');
+  const sections = [];
+
+  links.forEach(function (link) {
+    const id = link.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, link: link });
+  });
+
+  function highlight() {
+    let current = '';
+    sections.forEach(function (s) {
+      if (s.el.getBoundingClientRect().top <= 120) {
+        current = s.id;
+      }
+    });
+    links.forEach(function (link) { link.classList.remove('active'); });
+    sections.forEach(function (s) {
+      if (s.id === current) s.link.classList.add('active');
+    });
+  }
+
+  window.addEventListener('scroll', highlight);
+  highlight();
+})();
+</script>
+
+</body>
+</html>

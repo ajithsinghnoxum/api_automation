@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Automation — Test Suite Examples</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>API Automation</h2>
+    <span>Test Suite Examples</span>
+  </div>
+  <nav>
+    <div class="section-title">Test Suites</div>
+    <a href="#users">Users API <span class="test-count">21</span></a>
+    <a href="#posts">Posts API <span class="test-count">10</span></a>
+    <a href="#comments">Comments API <span class="test-count">5</span></a>
+    <a href="#todos">Todos API <span class="test-count">6</span></a>
+    <a href="#albums">Albums &amp; Photos <span class="test-count">5</span></a>
+
+    <div class="section-title">Advanced</div>
+    <a href="#crud-workflow">CRUD Workflow <span class="test-count">6</span></a>
+
+    <div class="section-title">Validations Used</div>
+    <a class="sub" href="#val-equals">equals</a>
+    <a class="sub" href="#val-exists">exists</a>
+    <a class="sub" href="#val-contains">contains</a>
+    <a class="sub" href="#val-notcontains">notContains</a>
+    <a class="sub" href="#val-regex">regex</a>
+    <a class="sub" href="#val-typeof">typeOf</a>
+    <a class="sub" href="#val-schema">schema</a>
+    <a class="sub" href="#val-isarray">isArray</a>
+    <a class="sub" href="#val-comparison">comparison (greaterThan etc)</a>
+    <a class="sub" href="#val-string">string (startsWith etc)</a>
+    <a class="sub" href="#val-hasproperty">hasProperty</a>
+    <a class="sub" href="#val-isnotempty">isNotEmpty</a>
+    <a class="sub" href="#val-arrayevery">arrayEvery</a>
+    <a class="sub" href="#val-arraysome">arraySome</a>
+    <a class="sub" href="#val-arraynone">arrayNone</a>
+    <a class="sub" href="#val-arrayitemat">arrayItemAt</a>
+    <a class="sub" href="#val-arrayfind">arrayFind</a>
+    <a class="sub" href="#val-arraycontains">arrayContains</a>
+    <a class="sub" href="#val-arraysorted">arraySorted</a>
+    <a class="sub" href="#val-date">date</a>
+    <a class="sub" href="#val-conditional">conditional (if/then/else)</a>
+    <a class="sub" href="#val-retry">retry</a>
+
+    <div class="section-title">Links</div>
+    <a href="index.html">Back to Examples</a>
+    <a href="../index.html">Back to Docs</a>
+    <a href="/">Open Web UI</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+  <h1>Test Suite Examples</h1>
+  <p class="subtitle">53 ready-to-run tests using <a href="https://jsonplaceholder.typicode.com" target="_blank">JSONPlaceholder</a> — a free fake REST API.</p>
+
+  <div class="alert alert-success">
+    <strong>Ready to run!</strong> These examples are pre-configured as the "JSONPlaceholder (Examples)" project. Start the web UI with <code>npm start</code> and click "Run Tests" to see them in action.
+  </div>
+
+  <!-- USERS -->
+  <h2 id="users">Users API <span class="test-count">21 tests</span></h2>
+  <p>The Users endpoint returns 10 users with nested objects (address, company, geo). These tests demonstrate the widest range of validation types.</p>
+
+  <h3>API Endpoints Used</h3>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-get">GET</span></td><td><code>/users</code></td><td>Returns all 10 users</td></tr>
+      <tr><td><span class="badge badge-get">GET</span></td><td><code>/users/1</code></td><td>Returns a single user</td></tr>
+      <tr><td><span class="badge badge-get">GET</span></td><td><code>/users?username=Bret</code></td><td>Filter by query param</td></tr>
+      <tr><td><span class="badge badge-get">GET</span></td><td><code>/users/9999</code></td><td>Returns 404</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Tests Included</h3>
+
+  <div class="example-card" id="val-isarray">
+    <h4>1. Return all users</h4>
+    <p>Validates the response is an array of exactly 10 users.</p>
+    <pre><code>{
+  "name": "should return all users",
+  "method": "GET",
+  "endpoint": "users",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "isArray" },
+    { "type": "arrayLength", "exact": 10 }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>isArray</code> — Checks that the entire response body is a JSON array (not an object or primitive)</li>
+      <li><code>arrayLength exact: 10</code> — Asserts the array has exactly 10 items (JSONPlaceholder always returns 10 users)</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-equals">
+    <h4 id="val-exists">2. Return user by ID</h4>
+    <p>Checks specific field values with <code>equals</code> and <code>exists</code>.</p>
+    <pre><code>{
+  "name": "should return user by ID",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "equals", "path": "id", "value": 1 },
+    { "type": "equals", "path": "name", "value": "Leanne Graham" },
+    { "type": "exists", "path": "email" },
+    { "type": "exists", "path": "address" },
+    { "type": "exists", "path": "company" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>equals path:"id" value:1</code> — Checks that <code>response.id</code> is exactly <code>1</code> (strict equality)</li>
+      <li><code>equals path:"name" value:"Leanne Graham"</code> — Verifies the user's name matches the expected string exactly</li>
+      <li><code>exists path:"email"</code> — Confirms the <code>email</code> field is present in the response (not null/undefined)</li>
+      <li><code>exists path:"address"</code> — Confirms the <code>address</code> nested object exists</li>
+      <li><code>exists path:"company"</code> — Confirms the <code>company</code> nested object exists</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-schema">
+    <h4>3. Validate user schema</h4>
+    <p>Uses <code>schema</code> to validate types of multiple fields at once.</p>
+    <pre><code>{
+  "name": "should validate user schema",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    {
+      "type": "schema",
+      "properties": {
+        "id": "number",
+        "name": "string",
+        "username": "string",
+        "email": "string",
+        "phone": "string",
+        "website": "string"
+      }
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>schema</code> — Validates multiple fields' types in one check: <code>id</code> must be a number, <code>name</code>/<code>username</code>/<code>email</code>/<code>phone</code>/<code>website</code> must be strings. Fails if any field has the wrong type.</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-hasproperty">
+    <h4>4. Validate nested objects</h4>
+    <p>Uses <code>hasProperty</code> and nested <code>schema</code> to check the address and geo objects.</p>
+    <pre><code>{
+  "name": "should validate nested address object",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "hasProperty", "path": "address", "property": "street" },
+    { "type": "hasProperty", "path": "address", "property": "city" },
+    { "type": "hasProperty", "path": "address", "property": "zipcode" },
+    {
+      "type": "schema",
+      "path": "address.geo",
+      "properties": { "lat": "string", "lng": "string" }
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>hasProperty path:"address" property:"street"</code> — Checks that the <code>address</code> object has a <code>street</code> key</li>
+      <li><code>hasProperty path:"address" property:"city"</code> — Checks that the <code>address</code> object has a <code>city</code> key</li>
+      <li><code>hasProperty path:"address" property:"zipcode"</code> — Checks that the <code>address</code> object has a <code>zipcode</code> key</li>
+      <li><code>schema path:"address.geo"</code> — Validates the nested <code>address.geo</code> object has <code>lat</code> (string) and <code>lng</code> (string)</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-regex">
+    <h4>5. Regex email validation</h4>
+    <p>Uses <code>regex</code> to validate email format.</p>
+    <pre><code>{ "type": "regex", "path": "email", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" }</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>regex path:"email" pattern:"^[^\\s@]+@..."</code> — Tests the <code>email</code> field against a regex pattern that matches standard email format (no spaces, has @, has domain with dot)</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>6. Query parameter filtering</h4>
+    <p>Filters users by <code>username=Bret</code> and validates every result matches.</p>
+    <pre><code>{
+  "name": "should filter users by query param",
+  "method": "GET",
+  "endpoint": "users",
+  "queryParams": { "username": "Bret" },
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "isArray" },
+    { "type": "arrayLength", "min": 1 },
+    {
+      "type": "arrayEvery",
+      "validations": [
+        { "type": "equals", "path": "username", "value": "Bret" }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>isArray</code> — Confirms the filtered response is still an array</li>
+      <li><code>arrayLength min: 1</code> — Ensures at least 1 user matched the filter (not an empty array)</li>
+      <li><code>arrayEvery > equals path:"username" value:"Bret"</code> — Iterates over EVERY item in the array and asserts each one has <code>username</code> equal to <code>"Bret"</code> — guarantees no non-matching results leaked through</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-arrayevery">
+    <h4 id="val-typeof">7. arrayEvery — all users have required fields</h4>
+    <pre><code>{
+  "type": "arrayEvery",
+  "validations": [
+    { "type": "exists", "path": "id" },
+    { "type": "typeOf", "path": "name", "expected": "string" },
+    { "type": "typeOf", "path": "email", "expected": "string" },
+    { "type": "exists", "path": "address" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arrayEvery</code> — Runs the nested validations against EVERY item in the users array</li>
+      <li><code>exists path:"id"</code> — Each user must have an <code>id</code> field</li>
+      <li><code>typeOf path:"name" expected:"string"</code> — Each user's <code>name</code> must be a string (not null, number, etc.)</li>
+      <li><code>typeOf path:"email" expected:"string"</code> — Each user's <code>email</code> must be a string</li>
+      <li><code>exists path:"address"</code> — Each user must have an <code>address</code> object</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-arrayfind">
+    <h4 id="val-contains">8. arrayFind — find user by name</h4>
+    <p>Finds "Ervin Howell" regardless of array position and validates associated fields.</p>
+    <pre><code>{
+  "type": "arrayFind",
+  "where": { "path": "name", "value": "Ervin Howell" },
+  "validations": [
+    { "type": "equals", "path": "id", "value": 2 },
+    { "type": "equals", "path": "username", "value": "Antonette" },
+    { "type": "contains", "path": "email", "value": "@" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arrayFind where:{path:"name", value:"Ervin Howell"}</code> — Searches the array for the first item where <code>name</code> equals <code>"Ervin Howell"</code>, then runs nested validations on THAT item only</li>
+      <li><code>equals path:"id" value:2</code> — The found user's <code>id</code> must be <code>2</code></li>
+      <li><code>equals path:"username" value:"Antonette"</code> — The found user's <code>username</code> must be <code>"Antonette"</code></li>
+      <li><code>contains path:"email" value:"@"</code> — The found user's <code>email</code> must contain an <code>@</code> symbol (substring check)</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-arraynone">
+    <h4>9. arrayNone — no empty names</h4>
+    <pre><code>{
+  "type": "arrayNone",
+  "validations": [
+    { "type": "equals", "path": "name", "value": "" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arrayNone > equals path:"name" value:""</code> — Asserts that NO item in the array has an empty string <code>name</code> — if even one matches, the validation fails</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-arraysome">
+    <h4>10. arraySome — at least one .org website</h4>
+    <pre><code>{
+  "type": "arraySome",
+  "validations": [
+    { "type": "regex", "path": "website", "pattern": "\\.org$" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arraySome > regex path:"website" pattern:"\\.org$"</code> — Asserts that AT LEAST ONE user in the array has a <code>website</code> ending in <code>.org</code> — doesn't require all, just one or more</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-arrayitemat">
+    <h4>11. arrayItemAt — first user check</h4>
+    <pre><code>{
+  "type": "arrayItemAt",
+  "index": 0,
+  "validations": [
+    { "type": "equals", "path": "name", "value": "Leanne Graham" },
+    { "type": "equals", "path": "id", "value": 1 }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arrayItemAt index:0</code> — Targets the item at array position 0 (first item) and runs nested validations on it</li>
+      <li><code>equals path:"name" value:"Leanne Graham"</code> — The first user's name must be "Leanne Graham"</li>
+      <li><code>equals path:"id" value:1</code> — The first user's id must be 1</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-string">
+    <h4>12. String validations: startsWith, endsWith, stringLength, isNotEmpty</h4>
+    <p>New string validation types for detailed text checks.</p>
+    <pre><code>{
+  "name": "user name should start with L and not be empty",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "startsWith", "path": "name", "value": "Leanne" },
+    { "type": "endsWith", "path": "name", "value": "Graham" },
+    { "type": "isNotEmpty", "path": "name" },
+    { "type": "stringLength", "path": "name", "min": 5, "max": 50 }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>startsWith path:"name" value:"Leanne"</code> — Checks that the <code>name</code> string begins with <code>"Leanne"</code></li>
+      <li><code>endsWith path:"name" value:"Graham"</code> — Checks that the <code>name</code> string ends with <code>"Graham"</code></li>
+      <li><code>isNotEmpty path:"name"</code> — Asserts the <code>name</code> is not an empty string, null, or undefined</li>
+      <li><code>stringLength path:"name" min:5 max:50</code> — Checks the string length is between 5 and 50 characters (inclusive)</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-comparison">
+    <h4>13. Numeric validations: between, greaterThanOrEqual, lessThanOrEqual</h4>
+    <p>Range checks and inclusive comparisons for numeric values.</p>
+    <pre><code>{
+  "name": "user ID should be between 1 and 10",
+  "method": "GET",
+  "endpoint": "users/5",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "between", "path": "id", "min": 1, "max": 10 },
+    { "type": "greaterThanOrEqual", "path": "id", "value": 1 },
+    { "type": "lessThanOrEqual", "path": "id", "value": 10 }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>between path:"id" min:1 max:10</code> — Checks that <code>id</code> is >= 1 AND <= 10 (inclusive range)</li>
+      <li><code>greaterThanOrEqual path:"id" value:1</code> — Checks <code>id >= 1</code></li>
+      <li><code>lessThanOrEqual path:"id" value:10</code> — Checks <code>id <= 10</code></li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-notcontains">
+    <h4>14. notContains validation</h4>
+    <pre><code>{
+  "name": "username should not contain spaces",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "notContains", "path": "username", "value": " " }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>notContains path:"username" value:" "</code> — Asserts the <code>username</code> string does NOT contain a space character anywhere</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>15. 404 error testing</h4>
+    <p>Tests that a non-existent user returns a 404 status code.</p>
+    <pre><code>{
+  "name": "should return 404 for non-existent user",
+  "method": "GET",
+  "endpoint": "users/9999",
+  "expectedStatus": 404
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>expectedStatus: 404</code> — Only checks the HTTP status code is 404. No body validations needed — the test passes if the server correctly returns a Not Found response.</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>16. Skip test</h4>
+    <p>Tests can be skipped with <code>"skip": true</code>. They appear as "skipped" in the report without executing.</p>
+    <pre><code>{
+  "name": "skipped test example (placeholder for future test)",
+  "method": "GET",
+  "endpoint": "users",
+  "expectedStatus": 200,
+  "skip": true
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>skip: true</code> — This test is skipped entirely. It won't make any HTTP request. Appears as "skipped" in the report. Useful for temporarily disabling tests or marking placeholders.</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-isnotempty">
+    <h4>17. Custom timeout</h4>
+    <p>Override the default 30s timeout with <code>"timeout"</code> (in milliseconds) for slow endpoints.</p>
+    <pre><code>{
+  "name": "should return users with custom timeout",
+  "method": "GET",
+  "endpoint": "users",
+  "expectedStatus": 200,
+  "timeout": 60000,
+  "validations": [
+    { "type": "isArray" },
+    { "type": "isNotEmpty" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>timeout: 60000</code> — Overrides the default 30-second timeout to 60 seconds for this specific test</li>
+      <li><code>isArray</code> — Confirms the response is an array</li>
+      <li><code>isNotEmpty</code> — Asserts the response array/string is not empty (has at least one element)</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-arraycontains">
+    <h4>18. arrayContains / arrayNotContains</h4>
+    <p>Check if an array contains (or doesn't contain) a specific value using deep equality.</p>
+    <pre><code>{
+  "name": "user tags should contain expected values",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "isArray", "path": "tags" },
+    { "type": "arrayContains", "path": "tags", "value": "active" },
+    { "type": "arrayNotContains", "path": "tags", "value": "banned" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>isArray path:"tags"</code> — Checks that the <code>tags</code> field is an array</li>
+      <li><code>arrayContains path:"tags" value:"active"</code> — Asserts the <code>tags</code> array includes the value <code>"active"</code> (deep equality check)</li>
+      <li><code>arrayNotContains path:"tags" value:"banned"</code> — Asserts the <code>tags</code> array does NOT include <code>"banned"</code></li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-arraysorted">
+    <h4>19. arraySorted / arrayUnique</h4>
+    <p>Validate array ordering and uniqueness. Useful for verifying API sort behavior.</p>
+    <pre><code>{
+  "name": "users should be sorted by ID and have unique IDs",
+  "method": "GET",
+  "endpoint": "users",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "arraySorted", "field": "id", "order": "asc" },
+    { "type": "arrayUnique", "field": "id" },
+    { "type": "arrayUnique", "field": "email" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arraySorted field:"id" order:"asc"</code> — Checks that the array is sorted by the <code>id</code> field in ascending order (each item's id >= previous item's id)</li>
+      <li><code>arrayUnique field:"id"</code> — Asserts every item has a unique <code>id</code> value (no duplicates)</li>
+      <li><code>arrayUnique field:"email"</code> — Asserts every item has a unique <code>email</code> value</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-date">
+    <h4>20. Date validations</h4>
+    <p>Validate date strings: check format, compare dates, and verify recency.</p>
+    <pre><code>{
+  "name": "order dates should be valid and recent",
+  "method": "GET",
+  "endpoint": "orders/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "isDate", "path": "createdAt" },
+    { "type": "dateAfter", "path": "createdAt", "value": "2024-01-01" },
+    { "type": "dateBefore", "path": "expiresAt", "value": "2030-12-31" },
+    { "type": "dateWithinLast", "path": "updatedAt", "amount": 30, "unit": "days" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>isDate path:"createdAt"</code> — Checks that <code>createdAt</code> is a valid, parseable date string</li>
+      <li><code>dateAfter path:"createdAt" value:"2024-01-01"</code> — Asserts the date is after January 1, 2024</li>
+      <li><code>dateBefore path:"expiresAt" value:"2030-12-31"</code> — Asserts the date is before December 31, 2030</li>
+      <li><code>dateWithinLast path:"updatedAt" amount:30 unit:"days"</code> — Asserts the date is within the last 30 days from now</li>
+    </ul>
+  </div>
+
+  <div class="example-card" id="val-retry">
+    <h4>21. Retry on failure</h4>
+    <p>Automatically retry a test up to N times with a delay between attempts. Useful for eventual consistency or flaky endpoints.</p>
+    <pre><code>{
+  "name": "order should eventually be completed",
+  "method": "GET",
+  "endpoint": "orders/{{orderId}}",
+  "expectedStatus": 200,
+  "retry": {
+    "count": 3,
+    "delay": 2000
+  },
+  "validations": [
+    { "type": "equals", "path": "status", "value": "completed" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>retry count:3 delay:2000</code> — If validations fail, retries the entire request up to 3 more times (4 total) with a 2-second pause between attempts</li>
+      <li><code>equals path:"status" value:"completed"</code> — Checks the <code>status</code> field equals <code>"completed"</code> — on each attempt, if this fails, the retry kicks in</li>
+    </ul>
+  </div>
+
+  <!-- POSTS -->
+  <h2 id="posts">Posts API <span class="test-count">10 tests</span></h2>
+  <p>The Posts endpoint supports full CRUD operations. These tests demonstrate all 5 HTTP methods and data mutation.</p>
+
+  <h3>API Endpoints Used</h3>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge badge-get">GET</span></td><td><code>/posts</code></td><td>Returns all 100 posts</td></tr>
+      <tr><td><span class="badge badge-get">GET</span></td><td><code>/posts/1</code></td><td>Returns a single post</td></tr>
+      <tr><td><span class="badge badge-get">GET</span></td><td><code>/posts?userId=1</code></td><td>Filter by user</td></tr>
+      <tr><td><span class="badge badge-post">POST</span></td><td><code>/posts</code></td><td>Create a post</td></tr>
+      <tr><td><span class="badge badge-put">PUT</span></td><td><code>/posts/1</code></td><td>Full update</td></tr>
+      <tr><td><span class="badge badge-patch">PATCH</span></td><td><code>/posts/1</code></td><td>Partial update</td></tr>
+      <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/posts/1</code></td><td>Delete a post</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Key Tests</h3>
+
+  <div class="example-card">
+    <h4>Create a new post (POST)</h4>
+    <p>Sends a JSON body and validates the response contains the same data with a generated <code>id</code>.</p>
+    <pre><code>{
+  "name": "should create a new post",
+  "method": "POST",
+  "endpoint": "posts",
+  "body": {
+    "title": "Test Post Title",
+    "body": "This is the content of the test post.",
+    "userId": 1
+  },
+  "expectedStatus": 201,
+  "validations": [
+    { "type": "equals", "path": "title", "value": "Test Post Title" },
+    { "type": "equals", "path": "body", "value": "This is the content of the test post." },
+    { "type": "equals", "path": "userId", "value": 1 },
+    { "type": "exists", "path": "id" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>equals path:"title" value:"Test Post Title"</code> — Confirms the created post's title matches what was sent in the request body</li>
+      <li><code>equals path:"body" value:"This is the content..."</code> — Confirms the body text was saved correctly</li>
+      <li><code>equals path:"userId" value:1</code> — Confirms the userId was preserved</li>
+      <li><code>exists path:"id"</code> — Confirms the server generated and returned a new <code>id</code> for the created post</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Full update with PUT</h4>
+    <pre><code>{
+  "name": "should update a post with PUT",
+  "method": "PUT",
+  "endpoint": "posts/1",
+  "body": {
+    "id": 1,
+    "title": "Updated Title",
+    "body": "Updated body content",
+    "userId": 1
+  },
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "equals", "path": "title", "value": "Updated Title" },
+    { "type": "equals", "path": "body", "value": "Updated body content" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>equals path:"title" value:"Updated Title"</code> — After PUT (full replacement), the title should be the new value</li>
+      <li><code>equals path:"body" value:"Updated body content"</code> — The body should be fully replaced with the new content</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Partial update with PATCH</h4>
+    <pre><code>{
+  "name": "should partially update a post with PATCH",
+  "method": "PATCH",
+  "endpoint": "posts/1",
+  "body": { "title": "Patched Title Only" },
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "equals", "path": "title", "value": "Patched Title Only" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>equals path:"title" value:"Patched Title Only"</code> — After PATCH (partial update), only the title should be changed. Other fields are preserved by the server.</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Every post has correct schema + positive IDs</h4>
+    <p>Combines <code>schema</code> validation inside <code>arrayEvery</code> with <code>greaterThan</code>.</p>
+    <pre><code>{
+  "type": "arrayEvery",
+  "validations": [
+    {
+      "type": "schema",
+      "properties": {
+        "userId": "number",
+        "id": "number",
+        "title": "string",
+        "body": "string"
+      }
+    },
+    { "type": "greaterThan", "path": "id", "value": 0 },
+    { "type": "greaterThan", "path": "userId", "value": 0 }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arrayEvery</code> — Validates ALL 100 posts in the array</li>
+      <li><code>schema properties:{userId: "number", id: "number", title: "string", body: "string"}</code> — Each post must have the correct field types</li>
+      <li><code>greaterThan path:"id" value:0</code> — Each post's <code>id</code> must be positive (> 0)</li>
+      <li><code>greaterThan path:"userId" value:0</code> — Each post's <code>userId</code> must be positive</li>
+    </ul>
+  </div>
+
+  <!-- COMMENTS -->
+  <h2 id="comments">Comments API <span class="test-count">5 tests</span></h2>
+  <p>Comments are nested under posts (<code>/posts/1/comments</code>) or filterable via query params (<code>/comments?postId=1</code>).</p>
+
+  <div class="example-card">
+    <h4>Nested resource + arrayEvery</h4>
+    <p>Validates every comment belongs to post 1 and has required fields.</p>
+    <pre><code>{
+  "name": "should return comments for post 1",
+  "method": "GET",
+  "endpoint": "posts/1/comments",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "isArray" },
+    { "type": "arrayLength", "min": 1 },
+    {
+      "type": "arrayEvery",
+      "validations": [
+        { "type": "equals", "path": "postId", "value": 1 },
+        { "type": "exists", "path": "email" },
+        { "type": "exists", "path": "body" }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>isArray</code> — Response is an array of comments</li>
+      <li><code>arrayLength min:1</code> — At least one comment exists for this post</li>
+      <li><code>arrayEvery > equals path:"postId" value:1</code> — EVERY comment in the array belongs to post 1 (no cross-post leakage)</li>
+      <li><code>arrayEvery > exists path:"email"</code> — Every comment has an <code>email</code> field</li>
+      <li><code>arrayEvery > exists path:"body"</code> — Every comment has a <code>body</code> field</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>arrayFind — find comment by email</h4>
+    <pre><code>{
+  "type": "arrayFind",
+  "where": { "path": "email", "value": "Eliseo@gardner.biz" },
+  "validations": [
+    { "type": "equals", "path": "id", "value": 1 },
+    { "type": "contains", "path": "name", "value": "id labore" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arrayFind where:{path:"email", value:"Eliseo@gardner.biz"}</code> — Finds the comment with that specific email address</li>
+      <li><code>equals path:"id" value:1</code> — That comment should have <code>id</code> 1</li>
+      <li><code>contains path:"name" value:"id labore"</code> — The comment's <code>name</code> field should contain the substring <code>"id labore"</code></li>
+    </ul>
+  </div>
+
+  <!-- TODOS -->
+  <h2 id="todos">Todos API <span class="test-count">6 tests</span></h2>
+  <p>Todos have a <code>completed</code> boolean field, making them great for testing boolean validations and <code>arraySome</code>/<code>arrayNone</code>.</p>
+
+  <div class="example-card">
+    <h4>Both completed and incomplete exist</h4>
+    <p>Uses two <code>arraySome</code> validations to verify both states are present.</p>
+    <pre><code>{
+  "name": "should have both completed and incomplete todos",
+  "method": "GET",
+  "endpoint": "todos",
+  "queryParams": { "userId": "1" },
+  "expectedStatus": 200,
+  "validations": [
+    {
+      "type": "arraySome",
+      "validations": [
+        { "type": "equals", "path": "completed", "value": true }
+      ]
+    },
+    {
+      "type": "arraySome",
+      "validations": [
+        { "type": "equals", "path": "completed", "value": false }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arraySome > equals path:"completed" value:true</code> — At least one todo is completed (true)</li>
+      <li><code>arraySome > equals path:"completed" value:false</code> — At least one todo is NOT completed (false). Together they prove the array has both states.</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>arrayFind — find todo by ID</h4>
+    <pre><code>{
+  "type": "arrayFind",
+  "where": { "path": "id", "value": 1 },
+  "validations": [
+    { "type": "equals", "path": "title", "value": "delectus aut autem" },
+    { "type": "equals", "path": "completed", "value": false }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>arrayFind where:{path:"id", value:1}</code> — Finds the todo with <code>id</code> 1</li>
+      <li><code>equals path:"title" value:"delectus aut autem"</code> — That todo's title matches the expected text</li>
+      <li><code>equals path:"completed" value:false</code> — That todo is not yet completed</li>
+    </ul>
+  </div>
+
+  <!-- ALBUMS -->
+  <h2 id="albums">Albums &amp; Photos API <span class="test-count">5 tests</span></h2>
+  <p>Photos have URL fields, making them ideal for <code>regex</code> validation of URL formats.</p>
+
+  <div class="example-card">
+    <h4>Every photo has valid HTTPS URLs</h4>
+    <pre><code>{
+  "name": "should return photos for album 1",
+  "method": "GET",
+  "endpoint": "albums/1/photos",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "isArray" },
+    { "type": "arrayLength", "min": 1, "max": 100 },
+    {
+      "type": "arrayEvery",
+      "validations": [
+        { "type": "equals", "path": "albumId", "value": 1 },
+        { "type": "exists", "path": "title" },
+        { "type": "regex", "path": "url", "pattern": "^https://" },
+        { "type": "regex", "path": "thumbnailUrl", "pattern": "^https://" }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>isArray</code> — Response is an array of photos</li>
+      <li><code>arrayLength min:1 max:100</code> — Between 1 and 100 photos exist (sanity bounds check)</li>
+      <li><code>arrayEvery > equals path:"albumId" value:1</code> — Every photo belongs to album 1</li>
+      <li><code>arrayEvery > exists path:"title"</code> — Every photo has a title</li>
+      <li><code>arrayEvery > regex path:"url" pattern:"^https://"</code> — Every photo's <code>url</code> starts with <code>https://</code></li>
+      <li><code>arrayEvery > regex path:"thumbnailUrl" pattern:"^https://"</code> — Every photo's <code>thumbnailUrl</code> starts with <code>https://</code></li>
+    </ul>
+  </div>
+
+  <!-- CRUD WORKFLOW -->
+  <h2 id="crud-workflow">CRUD Workflow with Variable Chaining <span class="test-count">6 tests</span></h2>
+  <p>This is the most advanced example. It demonstrates <strong>variable extraction and chaining</strong> — creating a resource, extracting its ID, then using that ID in subsequent requests.</p>
+
+  <div class="alert alert-info">
+    <strong>Auto-Serial Mode:</strong> When any test in a suite uses <code>extract</code>, the entire suite runs in serial mode (tests execute in order). This ensures the extracted values are available for later tests.
+  </div>
+
+  <h3>The Workflow</h3>
+  <ol>
+    <li><strong>GET</strong> — Fetch an existing post, extract its <code>id</code> as <code>postId</code></li>
+    <li><strong>POST</strong> — Create a new post, extract its <code>id</code> as <code>newPostId</code></li>
+    <li><strong>GET</strong> — Verify the original post using <code>{{postId}}</code></li>
+    <li><strong>PUT</strong> — Full update using <code>{{postId}}</code></li>
+    <li><strong>PATCH</strong> — Partial update using <code>{{postId}}</code></li>
+    <li><strong>DELETE</strong> — Delete using <code>{{postId}}</code></li>
+  </ol>
+
+  <div class="example-card">
+    <h4>Step 1: Fetch and Extract</h4>
+    <p>The <code>extract</code> field captures <code>id</code> from the response as <code>postId</code> and <code>title</code> as <code>originalTitle</code>.</p>
+    <pre><code>{
+  "name": "fetch an existing post to extract its ID",
+  "method": "GET",
+  "endpoint": "posts/1",
+  "expectedStatus": 200,
+  "extract": {
+    "postId": "id",
+    "originalTitle": "title"
+  },
+  "validations": [
+    { "type": "exists", "path": "id" },
+    { "type": "equals", "path": "id", "value": 1 },
+    { "type": "typeOf", "path": "title", "expected": "string" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>extract {"postId": "id", "originalTitle": "title"}</code> — Saves <code>response.id</code> into variable <code>postId</code> and <code>response.title</code> into <code>originalTitle</code> for use in later tests</li>
+      <li><code>exists path:"id"</code> — Confirms the post has an <code>id</code> field</li>
+      <li><code>equals path:"id" value:1</code> — The post's id is exactly 1</li>
+      <li><code>typeOf path:"title" expected:"string"</code> — The title field is a string type</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Step 2: Create a New Post</h4>
+    <p>Demonstrates POST with body and extracting the new post's ID as <code>newPostId</code>.</p>
+    <pre><code>{
+  "name": "create a new post using extracted userId reference",
+  "method": "POST",
+  "endpoint": "posts",
+  "body": {
+    "title": "My Automated Test Post",
+    "body": "This post was created by the API automation framework.",
+    "userId": 1
+  },
+  "expectedStatus": 201,
+  "extract": { "newPostId": "id", "postTitle": "title" },
+  "validations": [
+    { "type": "exists", "path": "id" },
+    { "type": "equals", "path": "title", "value": "My Automated Test Post" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>extract {"newPostId": "id", "postTitle": "title"}</code> — Saves the newly created post's <code>id</code> as <code>newPostId</code> and its <code>title</code> as <code>postTitle</code></li>
+      <li><code>exists path:"id"</code> — Server returned a generated <code>id</code> for the new post</li>
+      <li><code>equals path:"title" value:"My Automated Test Post"</code> — The created post has the correct title</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Step 3: Use Extracted Variable</h4>
+    <p>The <code>{{postId}}</code> placeholder in the endpoint is replaced with the value extracted in Step 1.</p>
+    <pre><code>{
+  "name": "verify original post still exists using chained variable",
+  "method": "GET",
+  "endpoint": "posts/{{postId}}",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "equals", "path": "id", "value": 1 }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>endpoint: "posts/{{postId}}"</code> — The <code>{{postId}}</code> placeholder is replaced with <code>1</code> (extracted in Step 1). The actual request goes to <code>posts/1</code>.</li>
+      <li><code>equals path:"id" value:1</code> — Confirms the fetched post is the same one we extracted</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Step 4: Update with Variable in Body</h4>
+    <p>Variables work in the request body too. <code>{{postId}}</code> preserves its original number type.</p>
+    <pre><code>{
+  "name": "update the original post",
+  "method": "PUT",
+  "endpoint": "posts/{{postId}}",
+  "body": {
+    "id": "{{postId}}",
+    "title": "Updated Automated Post",
+    "body": "This post has been updated by the framework.",
+    "userId": 1
+  },
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "equals", "path": "title", "value": "Updated Automated Post" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>body: { "id": "{{postId}}", ... }</code> — Variable <code>{{postId}}</code> in the body is resolved to the number <code>1</code> (preserving original type, not becoming the string "1")</li>
+      <li><code>equals path:"title" value:"Updated Automated Post"</code> — After full replacement, the title matches the new value</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Step 5: Partial Update</h4>
+    <pre><code>{
+  "name": "partially update the post title",
+  "method": "PATCH",
+  "endpoint": "posts/{{postId}}",
+  "body": { "title": "Final Patched Title" },
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "equals", "path": "title", "value": "Final Patched Title" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>equals path:"title" value:"Final Patched Title"</code> — After partial update (PATCH), only the title changed</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Step 6: Delete</h4>
+    <pre><code>{
+  "name": "delete the post",
+  "method": "DELETE",
+  "endpoint": "posts/{{postId}}",
+  "expectedStatus": 200
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>expectedStatus: 200</code> — The DELETE request should return 200 OK. No body validations — just confirming the server accepted the deletion.</li>
+    </ul>
+  </div>
+
+  <h3>Full JSON File</h3>
+  <p>The complete <code>crud-workflow.json</code> file:</p>
+  <pre><code>{
+  "suite": "CRUD Workflow with Variable Chaining",
+  "tests": [
+    {
+      "name": "fetch an existing post to extract its ID",
+      "method": "GET",
+      "endpoint": "posts/1",
+      "expectedStatus": 200,
+      "extract": { "postId": "id", "originalTitle": "title" },
+      "validations": [
+        { "type": "exists", "path": "id" },
+        { "type": "equals", "path": "id", "value": 1 }
+      ]
+    },
+    {
+      "name": "create a new post using extracted userId reference",
+      "method": "POST",
+      "endpoint": "posts",
+      "body": {
+        "title": "My Automated Test Post",
+        "body": "This post was created by the API automation framework.",
+        "userId": 1
+      },
+      "expectedStatus": 201,
+      "extract": { "newPostId": "id", "postTitle": "title" },
+      "validations": [
+        { "type": "exists", "path": "id" },
+        { "type": "equals", "path": "title", "value": "My Automated Test Post" }
+      ]
+    },
+    {
+      "name": "verify original post still exists using chained variable",
+      "method": "GET",
+      "endpoint": "posts/{{postId}}",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "id", "value": 1 }
+      ]
+    },
+    {
+      "name": "update the original post",
+      "method": "PUT",
+      "endpoint": "posts/{{postId}}",
+      "body": {
+        "id": "{{postId}}",
+        "title": "Updated Automated Post",
+        "body": "This post has been updated by the framework.",
+        "userId": 1
+      },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Updated Automated Post" }
+      ]
+    },
+    {
+      "name": "partially update the post title",
+      "method": "PATCH",
+      "endpoint": "posts/{{postId}}",
+      "body": { "title": "Final Patched Title" },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Final Patched Title" }
+      ]
+    },
+    {
+      "name": "delete the post",
+      "method": "DELETE",
+      "endpoint": "posts/{{postId}}",
+      "expectedStatus": 200
+    }
+  ]
+}</code></pre>
+
+  <div class="alert alert-warn">
+    <strong>Note:</strong> JSONPlaceholder fakes mutations — POST returns 201 with an <code>id</code>, but the data isn't actually persisted. This is perfect for testing the framework without side effects.
+  </div>
+
+  <!-- CONDITIONAL VALIDATIONS -->
+  <h2 id="val-conditional">Conditional Validations (if/then/else)</h2>
+  <p>Run different validations depending on response content. The <code>condition</code> is any validation type — if it passes, the <code>then</code> branch runs; otherwise the <code>else</code> branch runs.</p>
+
+  <div class="example-card">
+    <h4>Conditional based on response field</h4>
+    <p>If the user has a company, validate company fields exist; otherwise ensure they're absent.</p>
+    <pre><code>{
+  "name": "conditional company validation",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "exists", "path": "name" },
+    {
+      "type": "if",
+      "condition": { "type": "exists", "path": "company" },
+      "then": [
+        { "type": "exists", "path": "company.name" },
+        { "type": "exists", "path": "company.catchPhrase" }
+      ],
+      "else": [
+        { "type": "notExists", "path": "company.name" }
+      ]
+    }
+  ]
+}</code></pre>
+    <p>Since JSONPlaceholder users always have a <code>company</code> object, the <code>then</code> branch executes and validates company sub-fields.</p>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>exists path:"name"</code> — First, confirm the name field exists (basic sanity check)</li>
+      <li><code>if condition:{exists path:"company"}</code> — Evaluate: does the <code>company</code> field exist?</li>
+      <li><code>then: [exists "company.name", exists "company.catchPhrase"]</code> — YES path: validate that company sub-fields exist</li>
+      <li><code>else: [notExists "company.name"]</code> — NO path: confirm company sub-fields are absent. Since JSONPlaceholder always has company, the <code>then</code> branch runs.</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Conditional without else branch</h4>
+    <p>If the user has a website, check it contains a dot. If no website, skip silently.</p>
+    <pre><code>{
+  "name": "optional website validation",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    {
+      "type": "if",
+      "condition": { "type": "exists", "path": "website" },
+      "then": [
+        { "type": "contains", "path": "website", "value": "." }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>if condition:{exists path:"website"}</code> — Check if the user has a <code>website</code> field</li>
+      <li><code>then: [contains path:"website" value:"."]</code> — If yes: verify the website contains a dot (basic URL check). If no website field exists, nothing happens — the validation passes silently.</li>
+    </ul>
+  </div>
+
+  <hr>
+  <p class="footer">
+    API Automation Framework &bull; Test Suite Examples &bull; Powered by <a href="https://jsonplaceholder.typicode.com" target="_blank">JSONPlaceholder</a>
+  </p>
+
+</main>
+
+<script>
+  const sections = document.querySelectorAll('h1[id], h2[id]');
+  const navLinks = document.querySelectorAll('.sidebar nav a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const top = section.offsetTop - 100;
+      if (window.scrollY >= top) current = section.getAttribute('id');
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

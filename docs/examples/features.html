@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Automation — Feature Examples</title>
+  <link rel="stylesheet" href="../css/shared.css">
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>API Automation</h2>
+    <span>Feature Examples</span>
+  </div>
+  <nav>
+    <div class="section-title">Features</div>
+    <a href="#builtin-vars">Built-in Variables</a>
+    <a href="#data-driven">Data-Driven Tests</a>
+    <a href="#tagged-tests">Tagged Tests</a>
+    <a href="#retry-example">Retry Configuration</a>
+    <a href="#conditional-example">Conditional Validations</a>
+
+    <div class="section-title">Advanced Features</div>
+    <a href="#hooks-example">Pre/Post Hooks</a>
+    <a href="#poll-example">Poll Mode</a>
+    <a href="#onlyif-example">Conditional Execution</a>
+    <a href="#fixtures-example">Shared Fixtures ($ref)</a>
+    <a href="#openapi-example">OpenAPI Import</a>
+    <a href="#pdf-example">PDF Export</a>
+    <a href="#csv-export-example">CSV &amp; JUnit Export</a>
+
+    <div class="section-title">Auto-Generate</div>
+    <a href="#autogen-example">Try &amp; Auto-Generate</a>
+
+    <div class="section-title">Chain Builder</div>
+    <a href="#chain-builder-example">Chain Builder Flow</a>
+
+    <div class="section-title">Templates</div>
+    <a href="#templates-example">CRUD Generator</a>
+
+    <div class="section-title">Bulk Operations</div>
+    <a href="#bulk-ops-example">Bulk Edit Mode</a>
+
+    <div class="section-title">Response Diff</div>
+    <a href="#response-diff-example">Snapshot & Compare</a>
+
+    <div class="section-title">Schema Drift</div>
+    <a href="#schema-drift-example">Drift Detection</a>
+
+    <div class="section-title">Scheduling</div>
+    <a href="#scheduled-runs-example">Scheduled Runs</a>
+
+    <div class="section-title">Notifications</div>
+    <a href="#notifications-example">Notification Integration</a>
+
+    <div class="section-title">Links</div>
+    <a href="index.html">Back to Examples</a>
+    <a href="../index.html">Back to Docs</a>
+    <a href="/">Open Web UI</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+  <h1>Feature Examples</h1>
+  <p class="subtitle">Comprehensive examples of all framework features — built-in variables, data-driven tests, hooks, polling, and more.</p>
+
+  <!-- Built-in Variables -->
+  <h2 id="builtin-vars">Built-in Variables</h2>
+  <p>Use dynamic built-in variables in endpoints, body, and query params. These generate fresh values on each test run.</p>
+
+  <div class="example-card">
+    <h4>Create a unique resource with generated values</h4>
+    <p>Uses <code>{{$randomEmail}}</code>, <code>{{$randomString}}</code>, and <code>{{$isoDate}}</code> to create unique test data every run.</p>
+    <pre><code>{
+  "name": "create user with unique data",
+  "method": "POST",
+  "endpoint": "users",
+  "body": {
+    "name": "User {{$randomString}}",
+    "email": "{{$randomEmail}}",
+    "createdAt": "{{$isoDate}}"
+  },
+  "expectedStatus": 201,
+  "validations": [
+    { "type": "exists", "path": "id" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>body "name": "User {{$randomString}}"</code> — Generates a name like <code>"User a3f9b2c1d4e5"</code> with a random 12-char string appended each run</li>
+      <li><code>body "email": "{{$randomEmail}}"</code> — Generates a unique email like <code>"test42857@example.com"</code> to avoid duplicate conflicts</li>
+      <li><code>body "createdAt": "{{$isoDate}}"</code> — Inserts the current ISO timestamp (e.g., <code>"2026-03-11T10:30:00.000Z"</code>)</li>
+      <li><code>exists path:"id"</code> — Confirms the server generated and returned an <code>id</code> for the created user</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Available Built-in Variables</h4>
+    <table>
+      <thead><tr><th>Variable</th><th>Output</th></tr></thead>
+      <tbody>
+        <tr><td><code>{{$timestamp}}</code></td><td>Unix timestamp (e.g., <code>1710000000000</code>)</td></tr>
+        <tr><td><code>{{$isoDate}}</code></td><td>ISO date (e.g., <code>2024-03-10T12:00:00Z</code>)</td></tr>
+        <tr><td><code>{{$guid}}</code> / <code>{{$uuid}}</code></td><td>Random UUID v4</td></tr>
+        <tr><td><code>{{$randomInt}}</code></td><td>Random int 1–100000</td></tr>
+        <tr><td><code>{{$randomEmail}}</code></td><td>Random email like <code>test42@example.com</code></td></tr>
+        <tr><td><code>{{$randomString}}</code></td><td>12-char alphanumeric string</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Data-Driven Tests -->
+  <h2 id="data-driven">Data-Driven Tests <span class="test-count">3 tests</span></h2>
+  <p>Run the same test multiple times with different data. Each <code>dataSet</code> entry creates a separate test labeled <code>[data #1]</code>, <code>[data #2]</code>, etc.</p>
+
+  <div class="example-card">
+    <h4>Parameterized user lookup</h4>
+    <p>Fetches 3 different users by ID and validates each has the correct name.</p>
+    <pre><code>{
+  "name": "should return correct user by ID",
+  "method": "GET",
+  "endpoint": "users/{{id}}",
+  "expectedStatus": 200,
+  "dataSet": [
+    { "id": 1, "expectedName": "Leanne Graham" },
+    { "id": 2, "expectedName": "Ervin Howell" },
+    { "id": 3, "expectedName": "Clementine Bauch" }
+  ],
+  "validations": [
+    { "type": "equals", "path": "name", "value": "{{expectedName}}" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>endpoint: "users/{{id}}"</code> — The <code>{{id}}</code> placeholder is replaced with each dataset's <code>id</code> value (1, 2, 3), creating 3 separate test runs</li>
+      <li><code>dataSet</code> — Three entries: each generates its own test labeled <code>[data #1]</code>, <code>[data #2]</code>, <code>[data #3]</code></li>
+      <li><code>equals path:"name" value:"{{expectedName}}"</code> — For each dataset row, checks the response <code>name</code> matches the expected name. E.g., user 1 should be "Leanne Graham"</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Parameterized post filtering</h4>
+    <p>Tests filtering by different user IDs and validates results.</p>
+    <pre><code>{
+  "name": "should filter posts by userId",
+  "method": "GET",
+  "endpoint": "posts",
+  "queryParams": { "userId": "{{userId}}" },
+  "expectedStatus": 200,
+  "dataSet": [
+    { "userId": 1, "minPosts": 5 },
+    { "userId": 2, "minPosts": 5 }
+  ],
+  "validations": [
+    { "type": "isArray" },
+    { "type": "arrayLength", "min": "{{minPosts}}" },
+    {
+      "type": "arrayEvery",
+      "validations": [
+        { "type": "equals", "path": "userId", "value": "{{userId}}" }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>queryParams: { "userId": "{{userId}}" }</code> — Filters posts by userId from each dataset row</li>
+      <li><code>dataSet</code> — Two entries: tests filtering for userId 1 and userId 2</li>
+      <li><code>isArray</code> — Response is an array</li>
+      <li><code>arrayLength min: "{{minPosts}}"</code> — Ensures at least <code>minPosts</code> results (5 for both datasets)</li>
+      <li><code>arrayEvery > equals path:"userId" value:"{{userId}}"</code> — Every returned post belongs to the filtered user — no cross-user results</li>
+    </ul>
+  </div>
+
+  <!-- Tagged Tests -->
+  <h2 id="tagged-tests">Tagged Tests</h2>
+  <p>Tags categorize tests for filtering in the Web UI. Click tag chips to quickly select tests by category.</p>
+
+  <div class="example-card">
+    <h4>Using tags for test categorization</h4>
+    <pre><code>[
+  {
+    "name": "get all users",
+    "method": "GET",
+    "endpoint": "users",
+    "expectedStatus": 200,
+    "tags": ["smoke", "users"],
+    "validations": [{ "type": "isArray" }]
+  },
+  {
+    "name": "create a post",
+    "method": "POST",
+    "endpoint": "posts",
+    "expectedStatus": 201,
+    "tags": ["regression", "posts"],
+    "body": { "title": "Test", "body": "Content", "userId": 1 }
+  },
+  {
+    "name": "get user by ID",
+    "method": "GET",
+    "endpoint": "users/1",
+    "expectedStatus": 200,
+    "tags": ["smoke", "users"],
+    "validations": [{ "type": "equals", "path": "id", "value": 1 }]
+  }
+]</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>tags: ["smoke", "users"]</code> — Categorizes this test under "smoke" and "users" tags. In the web UI, clicking the "smoke" tag chip shows only tests with that tag. Via CLI: <code>TEST_TAGS=smoke npx playwright test</code></li>
+      <li><code>tags: ["regression", "posts"]</code> — This POST test is tagged for regression testing only</li>
+      <li>Combined: You can filter by multiple tags and the UI auto-hides suites with no matching tests</li>
+    </ul>
+    <p>In this example, clicking the "smoke" filter chip shows only the GET tests. Clicking "regression" shows only the POST test.</p>
+  </div>
+
+  <!-- Retry Configuration -->
+  <h2 id="retry-example">Retry Configuration</h2>
+  <p>Retry failed tests automatically with configurable count and delay. Useful for eventual consistency scenarios.</p>
+
+  <div class="example-card">
+    <h4>Retry with delay</h4>
+    <p>Retries the request up to 3 more times (4 total attempts) with 2 seconds between each attempt.</p>
+    <pre><code>{
+  "name": "order should be processed",
+  "method": "GET",
+  "endpoint": "orders/{{orderId}}",
+  "expectedStatus": 200,
+  "retry": {
+    "count": 3,
+    "delay": 2000
+  },
+  "validations": [
+    { "type": "equals", "path": "status", "value": "completed" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>retry count:3 delay:2000</code> — On failure, waits 2 seconds then retries. Up to 3 retries (4 total attempts). If ANY attempt passes, the test passes.</li>
+      <li><code>equals path:"status" value:"completed"</code> — The validation being retried — checks if the order status has changed to "completed". Useful when an async process needs time to finish.</li>
+    </ul>
+    <p>If the first attempt fails (e.g., status is still "pending"), the framework waits 2 seconds and tries again. If any attempt passes, the test passes. If all 4 attempts fail, the error from the last attempt is reported.</p>
+  </div>
+
+  <!-- Conditional Validations -->
+  <h2 id="conditional-example">Conditional Validations (if/then/else)</h2>
+  <p>Run different validations depending on response content. The <code>condition</code> is any validation type — if it passes, the <code>then</code> branch runs; otherwise the <code>else</code> branch runs.</p>
+
+  <div class="example-card">
+    <h4>Conditional based on response field</h4>
+    <p>If the user has a company, validate company fields exist; otherwise ensure they're absent.</p>
+    <pre><code>{
+  "name": "conditional company validation",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "exists", "path": "name" },
+    {
+      "type": "if",
+      "condition": { "type": "exists", "path": "company" },
+      "then": [
+        { "type": "exists", "path": "company.name" },
+        { "type": "exists", "path": "company.catchPhrase" }
+      ],
+      "else": [
+        { "type": "notExists", "path": "company.name" }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>exists path:"name"</code> — Basic sanity check that the response has a <code>name</code> field</li>
+      <li><code>if condition:{exists path:"company"}</code> — Evaluates whether the <code>company</code> field exists in the response</li>
+      <li><code>then</code> — If company EXISTS: checks <code>company.name</code> and <code>company.catchPhrase</code> are present</li>
+      <li><code>else</code> — If company is MISSING: confirms <code>company.name</code> does not exist. The framework picks exactly one branch to execute.</li>
+    </ul>
+    <p>Since JSONPlaceholder users always have a <code>company</code> object, the <code>then</code> branch executes and validates company sub-fields.</p>
+  </div>
+
+  <div class="example-card">
+    <h4>Conditional without else branch</h4>
+    <p>If the user has a website, check it contains a dot. If no website, skip silently.</p>
+    <pre><code>{
+  "name": "optional website validation",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "validations": [
+    {
+      "type": "if",
+      "condition": { "type": "exists", "path": "website" },
+      "then": [
+        { "type": "contains", "path": "website", "value": "." }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>if condition:{exists path:"website"}</code> — Checks if the user has a <code>website</code> field</li>
+      <li><code>then: [contains path:"website" value:"."]</code> — Only runs if website exists: verifies it contains a dot. If no website, this validation is silently skipped (no error, no else branch needed).</li>
+    </ul>
+  </div>
+
+  <!-- Pre/Post Hooks -->
+  <h2 id="hooks-example">Pre/Post Request Hooks</h2>
+  <p>Use <code>beforeRequest</code> to modify the request before it's sent, and <code>afterResponse</code> to extract data or set variables after receiving the response.</p>
+
+  <div class="example-card">
+    <h4>beforeRequest — Add dynamic headers</h4>
+    <p>Inject a timestamp header before the request is sent:</p>
+    <pre><code>{
+  "name": "get users with request ID",
+  "method": "GET",
+  "endpoint": "users",
+  "expectedStatus": 200,
+  "beforeRequest": "request.headers = request.headers || {}; request.headers['X-Request-Time'] = new Date().toISOString();",
+  "validations": [
+    { "type": "isArray" },
+    { "type": "arrayLength", "min": 1 }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>beforeRequest: "request.headers = ..."</code> — JavaScript code that runs BEFORE the HTTP request is sent. Here it adds a custom <code>X-Request-Time</code> header with the current timestamp. The hook has access to <code>request</code> (modifiable), <code>vars</code>, and <code>env</code>.</li>
+      <li><code>isArray</code> — After the request completes, validates the response is an array</li>
+      <li><code>arrayLength min:1</code> — The array has at least 1 item</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>afterResponse — Extract and store variables</h4>
+    <p>Save response data into the shared variable store for use in later tests:</p>
+    <pre><code>{
+  "name": "get first user",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "afterResponse": "vars.userName = response.data.name; vars.userEmail = response.data.email;",
+  "validations": [
+    { "type": "exists", "path": "name" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>afterResponse: "vars.userName = response.data.name; ..."</code> — JavaScript code that runs AFTER the response is received. Saves <code>name</code> and <code>email</code> from the response into the shared variable store. Later tests can use <code>{{userName}}</code> and <code>{{userEmail}}</code>.</li>
+      <li><code>exists path:"name"</code> — Standard validation that the name field exists in the response</li>
+    </ul>
+    <p style="color: var(--text-muted); font-size: 13px;">The hook context provides: <code>request</code> (method, endpoint, headers, body), <code>response</code> (status, data), <code>vars</code> (shared variable store), <code>env</code> (process.env).</p>
+  </div>
+
+  <!-- Poll Mode -->
+  <h2 id="poll-example">Poll Mode</h2>
+  <p>Poll mode repeats a request at intervals until a condition passes or a timeout is reached. Ideal for waiting on async operations.</p>
+
+  <div class="example-card">
+    <h4>Wait for a resource to have expected data</h4>
+    <p>This example polls a user endpoint every 2 seconds for up to 10 seconds, waiting for the <code>name</code> field to exist:</p>
+    <pre><code>{
+  "name": "wait for user data",
+  "method": "GET",
+  "endpoint": "users/1",
+  "expectedStatus": 200,
+  "poll": {
+    "interval": 2000,
+    "timeout": 10000,
+    "condition": { "type": "exists", "path": "name" }
+  },
+  "validations": [
+    { "type": "exists", "path": "name" },
+    { "type": "typeOf", "path": "name", "expected": "string" },
+    { "type": "exists", "path": "email" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>poll interval:2000</code> — Re-sends the request every 2 seconds</li>
+      <li><code>poll timeout:10000</code> — Gives up after 10 seconds total</li>
+      <li><code>poll condition:{exists path:"name"}</code> — The "stop polling" condition — when <code>name</code> exists in the response, polling stops and full validations run</li>
+      <li><code>exists path:"name"</code> — Full validation: name field must be present</li>
+      <li><code>typeOf path:"name" expected:"string"</code> — Full validation: name must be a string type</li>
+      <li><code>exists path:"email"</code> — Full validation: email field must be present. All three must pass after the poll condition is met.</li>
+    </ul>
+    <p style="color: var(--text-muted); font-size: 13px;">Poll mode activates only if the initial request fails validations. The <code>condition</code> is any validation type — when it passes, all validations are re-checked.</p>
+  </div>
+
+  <!-- Conditional Execution -->
+  <h2 id="onlyif-example">Conditional Execution (onlyIf)</h2>
+  <p>Skip tests based on environment or variable values using the <code>onlyIf</code> field.</p>
+
+  <div class="example-card">
+    <h4>Environment-based execution</h4>
+    <p>Only run this test when <code>TEST_ENV=staging</code>:</p>
+    <pre><code>{
+  "name": "staging-only cleanup",
+  "method": "DELETE",
+  "endpoint": "test-data/reset",
+  "expectedStatus": 200,
+  "onlyIf": { "env": "staging" }
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>onlyIf: { "env": "staging" }</code> — This test is ONLY executed when <code>TEST_ENV=staging</code>. In any other environment (or if TEST_ENV is not set), the test is automatically skipped and shows as "skipped" in the report.</li>
+    </ul>
+    <p>Run with: <code>TEST_ENV=staging npx playwright test</code></p>
+  </div>
+
+  <div class="example-card">
+    <h4>Variable-based execution</h4>
+    <p>Only run if a previously extracted variable matches a value:</p>
+    <pre><code>{
+  "name": "verify premium user features",
+  "method": "GET",
+  "endpoint": "users/{{userId}}/premium",
+  "expectedStatus": 200,
+  "onlyIf": { "var": "userRole", "equals": "premium" },
+  "validations": [
+    { "type": "exists", "path": "premiumFeatures" }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>onlyIf: { "var": "userRole", "equals": "premium" }</code> — Only runs if a previously extracted variable named <code>userRole</code> has the value <code>"premium"</code>. If the variable doesn't exist or has a different value, the test is skipped.</li>
+      <li><code>exists path:"premiumFeatures"</code> — If the test runs, validates the premium features field exists</li>
+    </ul>
+    <p style="color: var(--text-muted); font-size: 13px;">If <code>equals</code> is omitted, the test runs when the variable is truthy (any non-empty/non-null value).</p>
+  </div>
+
+  <!-- Shared Fixtures -->
+  <h2 id="fixtures-example">Shared Fixtures ($ref)</h2>
+  <p>Define reusable data in <code>fixtures.json</code> and reference it with <code>$ref</code> in test bodies or anywhere in the test config.</p>
+
+  <div class="example-card">
+    <h4>Project-level fixtures.json</h4>
+    <pre><code>// test-configs/jsonplaceholder/fixtures.json
+{
+  "newPost": {
+    "title": "Test Post",
+    "body": "This is a test post body",
+    "userId": 1
+  },
+  "updatedPost": {
+    "title": "Updated Title",
+    "body": "Updated body content",
+    "userId": 1
+  }
+}</code></pre>
+  </div>
+
+  <div class="example-card">
+    <h4>Using $ref in test cases</h4>
+    <pre><code>{
+  "suite": "Post CRUD with Fixtures",
+  "tests": [
+    {
+      "name": "create post using fixture",
+      "method": "POST",
+      "endpoint": "posts",
+      "expectedStatus": 201,
+      "body": { "$ref": "fixtures.newPost" },
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Test Post" },
+        { "type": "exists", "path": "id" }
+      ]
+    },
+    {
+      "name": "update post using fixture",
+      "method": "PUT",
+      "endpoint": "posts/1",
+      "expectedStatus": 200,
+      "body": { "$ref": "fixtures.updatedPost" },
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Updated Title" }
+      ]
+    }
+  ]
+}</code></pre>
+    <p class="explain-label">What each part does:</p>
+    <ul class="explain">
+      <li><code>body: { "$ref": "fixtures.newPost" }</code> — At runtime, this is replaced with the full <code>newPost</code> object from fixtures.json: <code>{ "title": "Test Post", "body": "...", "userId": 1 }</code>. No need to repeat the data inline.</li>
+      <li><code>equals path:"title" value:"Test Post"</code> — Validates the response title matches what the fixture sent</li>
+      <li><code>exists path:"id"</code> — Server generated an id for the new post</li>
+      <li><code>body: { "$ref": "fixtures.updatedPost" }</code> — Uses the <code>updatedPost</code> fixture for the PUT request body</li>
+      <li><code>equals path:"title" value:"Updated Title"</code> — Validates the update used the fixture data correctly</li>
+    </ul>
+    <p style="color: var(--text-muted); font-size: 13px;">Suite-level <code>fixtures</code> can also be defined inline and take precedence over the shared <code>fixtures.json</code>. Nested paths are supported: <code>"$ref": "fixtures.users.admin"</code>.</p>
+  </div>
+
+  <!-- OpenAPI Import -->
+  <h2 id="openapi-example">OpenAPI / Swagger Import</h2>
+  <p>Automatically generate test suites from an OpenAPI 3.x or Swagger 2.0 spec file.</p>
+
+  <div class="example-card">
+    <h4>How to import</h4>
+    <ul style="margin: 12px 0; padding-left: 24px; color: var(--text-muted);">
+      <li>Click <strong>"Import OpenAPI"</strong> in the web UI sidebar</li>
+      <li>Select your OpenAPI/Swagger JSON file</li>
+      <li>A new project is created with suites grouped by API tags</li>
+      <li>Each endpoint becomes a test case with auto-generated validations</li>
+    </ul>
+    <p><strong>What gets generated:</strong></p>
+    <ul style="margin: 12px 0; padding-left: 24px; color: var(--text-muted);">
+      <li>Base URL from <code>servers[0].url</code> (v3) or <code>host + basePath</code> (v2)</li>
+      <li>Request bodies from schema definitions with example values</li>
+      <li><code>exists</code> + <code>typeOf</code> validations for required response fields</li>
+      <li><code>isArray</code> + <code>arrayEvery</code> for array response schemas</li>
+      <li>Path params converted to <code>{{variable}}</code> syntax</li>
+      <li>Query params from parameter definitions</li>
+    </ul>
+  </div>
+
+  <!-- PDF Export -->
+  <h2 id="pdf-example">PDF Export</h2>
+  <p>Export any test run as a clean, printable PDF report.</p>
+
+  <div class="example-card">
+    <h4>Export options</h4>
+    <ul style="margin: 12px 0; padding-left: 24px; color: var(--text-muted);">
+      <li>From <strong>Run History</strong>: click the <strong>picture_as_pdf</strong> icon next to any run</li>
+      <li>From <strong>Run Detail</strong>: click the PDF button in the run detail panel</li>
+      <li>Via API: <code>GET /api/projects/{projectId}/runs/{runId}/pdf</code></li>
+    </ul>
+    <p>The PDF includes a summary dashboard with pass/fail/skip counts, suite-grouped test tables with durations, and color-coded status indicators. Use your browser's Print dialog (Ctrl+P) to save as PDF.</p>
+  </div>
+
+  <!-- CSV & JUnit Export -->
+  <h2 id="csv-export-example">CSV &amp; JUnit Export</h2>
+  <p>After running tests, export results for external tools.</p>
+
+  <div class="example-card">
+    <h4>Export options</h4>
+    <p>From the <strong>Run History</strong> view in the web UI:</p>
+    <ul style="margin: 12px 0; padding-left: 24px; color: var(--text-muted);">
+      <li><strong>JUnit XML</strong> — click the download icon for CI/CD integration (Jenkins, GitHub Actions, Azure DevOps)</li>
+      <li><strong>CSV</strong> — click the table_chart icon for spreadsheet analysis (Excel, Google Sheets)</li>
+      <li><strong>Trend Chart</strong> — visible at the top of Run History showing pass/fail trends across the last 20 runs</li>
+    </ul>
+    <p>Or use the API directly:</p>
+    <pre><code>GET /api/projects/{projectId}/runs/{runId}/junit   → application/xml
+GET /api/projects/{projectId}/runs/{runId}/csv     → text/csv
+GET /api/projects/{projectId}/trends               → application/json</code></pre>
+  </div>
+
+  <!-- Auto-Generate Validations -->
+  <h2 id="autogen-example">Try &amp; Auto-Generate Validations</h2>
+  <p>Skip writing validations manually &mdash; let the framework learn from a real API response. The <strong>"Try &amp; Auto-Generate"</strong> button in the test editor sends the request and auto-generates validations from the actual response data.</p>
+
+  <div class="example-card">
+    <h4>Step-by-step workflow</h4>
+    <ol class="steps">
+      <li>Open a test case and set the <strong>HTTP method</strong> and <strong>endpoint</strong> (e.g., <code>GET</code> + <code>users/1</code>)</li>
+      <li>Optionally check <strong>"Include value checks"</strong> in the modal footer to also generate <code>equals</code> for every value</li>
+      <li>Click <strong>"Try &amp; Auto-Generate"</strong> &mdash; the server fires the real request with your project's auth</li>
+      <li>Review the populated validations, tweak as needed, and <strong>Save</strong></li>
+    </ol>
+  </div>
+
+  <div class="example-card">
+    <h4>Example: Object response (without value checks)</h4>
+    <p>Given an endpoint that returns:</p>
+    <pre><code>{
+  "meta": { "id": 2683400, "guid": "3d70fcc0-...", "typeRef": 2503539 },
+  "values": [
+    { "attribute": 998, "value": false },
+    { "attribute": 1012, "language": 201, "value": "aasa" }
+  ]
+}</code></pre>
+    <p>Auto-generated validations (structural only):</p>
+    <pre><code>"validations": [
+  { "type": "schema", "properties": { "meta": "object", "values": "array" } },
+  { "type": "exists", "path": "meta" },
+  { "type": "typeOf", "path": "meta", "expected": "object" },
+  { "type": "exists", "path": "values" },
+  { "type": "isArray", "path": "values" },
+  { "type": "arrayLength", "path": "values", "exact": 2 }
+]</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>schema</code> &mdash; Validates top-level structure: <code>meta</code> must be an object and <code>values</code> must be an array</li>
+      <li><code>exists meta</code> &mdash; Confirms the <code>meta</code> field is present in the response</li>
+      <li><code>typeOf meta "object"</code> &mdash; Asserts <code>meta</code> is a JavaScript object (not null, not array)</li>
+      <li><code>isArray values</code> &mdash; Confirms <code>values</code> is an array (uses <code>Array.isArray()</code>, not <code>typeof</code>)</li>
+      <li><code>arrayLength values exact: 2</code> &mdash; Asserts the array has exactly 2 items (adjust to <code>min: 1</code> for flexibility)</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Example: With "Include value checks" enabled</h4>
+    <p>When the checkbox is checked, deep <code>equals</code> validations are added for every primitive value, recursing into nested objects and array items:</p>
+    <pre><code>"validations": [
+  // ... structural validations (schema, exists, typeOf, isArray) ...
+
+  // Deep value checks generated automatically:
+  { "type": "equals", "path": "meta.id", "value": 2683400 },
+  { "type": "equals", "path": "meta.guid", "value": "3d70fcc0-..." },
+  { "type": "equals", "path": "meta.typeRef", "value": 2503539 },
+  { "type": "equals", "path": "values[0].attribute", "value": 998 },
+  { "type": "equals", "path": "values[0].value", "value": false },
+  { "type": "equals", "path": "values[1].attribute", "value": 1012 },
+  { "type": "equals", "path": "values[1].language", "value": 201 },
+  { "type": "equals", "path": "values[1].value", "value": "aasa" }
+]</code></pre>
+    <p class="explain-label">When to use value checks:</p>
+    <ul class="explain">
+      <li><code>Snapshot testing</code> &mdash; Capture the current response as a baseline; any future change is detected immediately</li>
+      <li><code>Static data endpoints</code> &mdash; Perfect for config, metadata, or lookup APIs where values don't change</li>
+      <li><code>Refine after generation</code> &mdash; Remove volatile fields (timestamps, random IDs) and keep the stable ones</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Example: Array response</h4>
+    <p>For a <code>GET /users</code> that returns <code>[{ "id": 1, "name": "Alice" }, ...]</code>:</p>
+    <pre><code>"validations": [
+  { "type": "isArray" },
+  { "type": "arrayLength", "exact": 10 },
+  { "type": "schema", "path": "[0]", "properties": { "id": "number", "name": "string" } },
+  { "type": "arrayEvery", "validations": [
+    { "type": "typeOf", "path": "id", "expected": "number" },
+    { "type": "typeOf", "path": "name", "expected": "string" }
+  ]}
+]</code></pre>
+    <p class="explain-label">What each validation does:</p>
+    <ul class="explain">
+      <li><code>isArray</code> (no path) &mdash; Confirms the entire response body is an array</li>
+      <li><code>arrayLength exact: 10</code> &mdash; The array has exactly 10 items</li>
+      <li><code>schema [0]</code> &mdash; First item has <code>id</code> (number) and <code>name</code> (string)</li>
+      <li><code>arrayEvery</code> &mdash; Ensures every item in the array has a numeric <code>id</code> and string <code>name</code></li>
+    </ul>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Server endpoint:</strong> <code>POST /api/projects/:id/try-request</code> &mdash; accepts <code>method</code>, <code>endpoint</code>, <code>queryParams</code>, <code>body</code>, and <code>includeValues</code>. Returns the response data plus auto-generated validations.
+  </div>
+
+  <!-- Chain Builder / Flow Editor -->
+  <h2 id="chain-builder-example">Chain Builder / Flow Editor</h2>
+  <p>Visualize how tests in a suite pass data to each other. The Chain Builder auto-detects dependencies from <code>extract</code> and <code>{{variable}}</code> usage and renders a connected flow diagram.</p>
+
+  <div class="example-card">
+    <h4>Example: Login → Create → Verify chain</h4>
+    <p>A typical 3-step workflow where each test feeds data to the next:</p>
+    <pre><code>[
+  {
+    "name": "Login",
+    "method": "POST",
+    "endpoint": "auth/login",
+    "body": { "username": "admin", "password": "secret" },
+    "expectedStatus": 200,
+    "extract": { "token": "data.accessToken", "userId": "data.user.id" }
+  },
+  {
+    "name": "Create Post",
+    "method": "POST",
+    "endpoint": "users/{{userId}}/posts",
+    "headers": { "Authorization": "Bearer {{token}}" },
+    "body": { "title": "Hello World" },
+    "expectedStatus": 201,
+    "extract": { "postId": "data.id" }
+  },
+  {
+    "name": "Verify Post",
+    "method": "GET",
+    "endpoint": "posts/{{postId}}",
+    "headers": { "Authorization": "Bearer {{token}}" },
+    "expectedStatus": 200,
+    "validations": [
+      { "type": "equals", "path": "title", "value": "Hello World" }
+    ]
+  }
+]</code></pre>
+    <p class="explain-label">What the Chain Builder shows:</p>
+    <ul class="explain">
+      <li><strong>Login</strong> node with <span style="color: #22c55e;">green badges</span>: <code>token</code>, <code>userId</code> (extracted)</li>
+      <li><strong>Create Post</strong> node with <span style="color: #3b82f6;">blue badges</span>: <code>token</code>, <code>userId</code> (consumed) and <span style="color: #22c55e;">green badge</span>: <code>postId</code> (extracted)</li>
+      <li><strong>Verify Post</strong> node with <span style="color: #3b82f6;">blue badges</span>: <code>postId</code>, <code>token</code> (consumed)</li>
+      <li><span style="color: #a855f7;">Purple connector arrows</span> from Login → Create Post (<code>token</code>, <code>userId</code>) and from Create Post → Verify Post (<code>postId</code>), plus Login → Verify Post (<code>token</code>)</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Step-Through Execution</h4>
+    <p>Click <strong>"Step Through"</strong> in the chain view to execute tests one at a time:</p>
+    <ol class="steps">
+      <li>The first test (Login) is highlighted as <strong>active</strong></li>
+      <li>Click <strong>Next</strong> — the real API request is sent and the response is shown inline</li>
+      <li>Extracted variables are stored and available for subsequent tests</li>
+      <li>Each completed test is marked <span style="color: #22c55e;">passed</span> or <span style="color: #ef4444;">failed</span></li>
+      <li>Use <strong>Previous</strong> to review earlier responses, or <strong>Stop</strong> to exit</li>
+    </ol>
+  </div>
+
+  <div class="alert alert-warn">
+    <strong>Tip:</strong> If a test uses a <code>{{variable}}</code> that no previous test extracts, the chain view displays a warning. Fix these before running the chain to avoid failures.
+  </div>
+
+  <!-- Test Templates / CRUD Generator -->
+  <h2 id="templates-example">Test Templates / CRUD Generator</h2>
+  <p>Generate a complete test suite from a template instead of creating tests one by one. Click <strong>"From Template"</strong> in the project header.</p>
+
+  <div class="example-card">
+    <h4>Example: CRUD Suite for "products"</h4>
+    <p>Fill in: <strong>Resource name</strong> = <code>products</code>, <strong>Singular name</strong> = <code>product</code>, <strong>ID field</strong> = <code>id</code></p>
+    <p>The template generates 6 tests with variable chaining:</p>
+    <pre><code>{
+  "suite": "Products CRUD",
+  "tests": [
+    { "name": "List all products",    "method": "GET",    "endpoint": "products",                "expectedStatus": 200 },
+    { "name": "Create product",       "method": "POST",   "endpoint": "products",                "expectedStatus": 201,
+      "extract": { "productId": "id" } },
+    { "name": "Get product by ID",    "method": "GET",    "endpoint": "products/{{productId}}", "expectedStatus": 200 },
+    { "name": "Update product",       "method": "PUT",    "endpoint": "products/{{productId}}", "expectedStatus": 200 },
+    { "name": "Delete product",       "method": "DELETE", "endpoint": "products/{{productId}}", "expectedStatus": 200 },
+    { "name": "Verify product deleted","method": "GET",    "endpoint": "products/{{productId}}", "expectedStatus": 404 }
+  ]
+}</code></pre>
+    <p class="explain-label">Available templates:</p>
+    <ul class="explain">
+      <li><code>CRUD Suite</code> &mdash; Full resource lifecycle (list, create, get, update, delete, verify)</li>
+      <li><code>Auth Flow</code> &mdash; Register, login, protected access, unauthorized check, logout</li>
+      <li><code>Pagination Check</code> &mdash; First page, second page, large page, custom limit</li>
+      <li><code>Health &amp; Status</code> &mdash; Health check, response time, version endpoint</li>
+      <li><code>Search &amp; Filter</code> &mdash; Keyword search, no results, sort asc/desc</li>
+      <li><code>Error Handling</code> &mdash; 404, 400, invalid path, 405 responses</li>
+    </ul>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Workflow tip:</strong> Generate a CRUD suite from the template, then use <strong>"Try &amp; Auto-Generate"</strong> on each test to add real validations from live API responses.
+  </div>
+
+  <!-- Bulk Operations -->
+  <h2 id="bulk-ops-example">Bulk Test Operations</h2>
+  <p>Perform actions across multiple tests at once without editing them one by one.</p>
+
+  <div class="example-card">
+    <h4>How to use Bulk Edit mode</h4>
+    <ol class="steps">
+      <li>Click <strong>"Bulk Edit"</strong> in the project header (button highlights when active)</li>
+      <li>Checkboxes appear next to each test &mdash; click to select individual tests, or use the suite checkbox to select all tests in a suite</li>
+      <li>A toolbar appears showing the number of selected tests and available actions</li>
+      <li>Click an action button (e.g., <strong>Add Tags</strong>, <strong>Skip</strong>, <strong>Auto-Generate</strong>)</li>
+      <li>Click <strong>"Bulk Edit"</strong> again to exit bulk mode</li>
+    </ol>
+  </div>
+
+  <div class="example-card">
+    <h4>Common bulk workflows</h4>
+    <ul class="explain">
+      <li><strong>Tag all smoke tests:</strong> Select tests &rarr; Add Tags &rarr; type <code>smoke</code></li>
+      <li><strong>Skip flaky tests:</strong> Select tests &rarr; Skip &rarr; enter <code>flaky, investigating</code></li>
+      <li><strong>Migrate endpoints:</strong> Select all &rarr; Find/Replace &rarr; find <code>v1</code> replace with <code>v2</code></li>
+      <li><strong>Re-validate after deploy:</strong> Select all &rarr; Auto-Generate &rarr; rebuilds validations from live responses</li>
+      <li><strong>Clean up:</strong> Select obsolete tests &rarr; Delete</li>
+    </ul>
+  </div>
+
+  <!-- Response Comparison / Diff -->
+  <h2 id="response-diff-example">Response Comparison / Diff</h2>
+  <p>Compare actual API response bodies between two test runs to detect unintended changes.</p>
+
+  <div class="example-card">
+    <h4>Snapshot & Compare workflow</h4>
+    <ol class="steps">
+      <li>Open <strong>History</strong> in the project view</li>
+      <li>Click <strong>"Snapshot"</strong> to capture all current API responses</li>
+      <li>Make your changes (deploy, update config, etc.)</li>
+      <li>Click <strong>"Snapshot"</strong> again to capture the new state</li>
+      <li>Check both snapshots and click <strong>"Compare"</strong></li>
+      <li>Review the diff &mdash; filter by <em>changed</em>, <em>added</em>, or <em>removed</em></li>
+      <li>Expand any changed test to see a <strong>side-by-side line diff</strong> of the response body</li>
+    </ol>
+  </div>
+
+  <div class="example-card">
+    <h4>What the diff shows</h4>
+    <ul class="explain">
+      <li><span style="color:#22c55e;">Green lines</span> &mdash; Added in the newer run</li>
+      <li><span style="color:#ef4444;">Red lines</span> &mdash; Removed from the older run</li>
+      <li>Unmarked lines &mdash; Unchanged between runs</li>
+      <li>Filter buttons let you focus on just the changes</li>
+    </ul>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Use case:</strong> Take a snapshot before and after a deployment to catch unintended API response changes — new fields, missing fields, changed values, or different status codes.
+  </div>
+
+  <!-- Schema Drift Detection -->
+  <h2 id="schema-drift-example">Schema Drift Detection</h2>
+  <p>Detect when API response structures change from a known-good baseline — field additions, removals, and type changes.</p>
+
+  <div class="example-card">
+    <h4>Baseline & Detect workflow</h4>
+    <ol class="steps">
+      <li>Open <strong>History</strong> and click <strong>"Save Baseline"</strong> — captures the schema (field names + types) for every test</li>
+      <li>Deploy or make API changes</li>
+      <li>Click <strong>"Detect Drift"</strong> — re-fetches all endpoints and compares against the baseline</li>
+      <li>The drift report shows a color-coded progress bar and per-test results</li>
+      <li>Expand any drifted test to see field-level changes</li>
+    </ol>
+  </div>
+
+  <div class="example-card">
+    <h4>What the drift report shows</h4>
+    <ul class="explain">
+      <li><span style="color:#22c55e;">Field added</span> &mdash; New field in the response (e.g., <code>user.avatar</code> appeared)</li>
+      <li><span style="color:#ef4444;">Field removed</span> &mdash; Missing field (e.g., <code>user.legacyId</code> gone)</li>
+      <li><span style="color:#f59e0b;">Type changed</span> &mdash; Field type changed (e.g., <code>count</code>: string &rarr; number)</li>
+      <li>Progress bar shows stable (green) vs drifted (red) ratio at a glance</li>
+    </ul>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Best practice:</strong> Save a baseline when your API is in a known-good state. Run drift detection after each deployment to catch unintended structural changes before they reach users.
+  </div>
+
+  <!-- Scheduled Test Runs -->
+  <h2 id="scheduled-runs-example">Scheduled Test Runs</h2>
+  <p>Automatically run your tests at regular intervals without manual triggering.</p>
+
+  <div class="example-card">
+    <h4>Setting up a schedule</h4>
+    <ol class="steps">
+      <li>Click <strong>"Schedules"</strong> in the project header</li>
+      <li>Enter a name (e.g., "Nightly Smoke Tests")</li>
+      <li>Select a preset like <strong>"Daily at 9:00 AM"</strong> or enter a custom cron: <code>0 9 * * 1-5</code></li>
+      <li>Click <strong>"Add"</strong> — the schedule starts immediately</li>
+      <li>Results appear in <strong>History</strong> tagged as <code>[scheduled:name]</code></li>
+    </ol>
+  </div>
+
+  <div class="example-card">
+    <h4>Common scheduling patterns</h4>
+    <ul class="explain">
+      <li><code>*/5 * * * *</code> &mdash; Every 5 minutes (continuous monitoring / smoke tests)</li>
+      <li><code>0 * * * *</code> &mdash; Every hour on the hour</li>
+      <li><code>0 0 * * *</code> &mdash; Daily at midnight (nightly regression)</li>
+      <li><code>0 9 * * 1-5</code> &mdash; Weekdays at 9 AM (business hours only)</li>
+      <li><code>0 */6 * * *</code> &mdash; Every 6 hours (4 times per day)</li>
+    </ul>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Pause/resume schedules without deleting them. Combine with notifications for hands-free monitoring.
+  </div>
+
+  <!-- Notification Integration -->
+  <h2 id="notifications-example">Notification Integration</h2>
+  <p>Configure per-project notifications to get alerted on test run results via Slack, Microsoft Teams, or Email.</p>
+
+  <div class="example-card">
+    <h4>Slack webhook configuration</h4>
+    <pre><code>{
+  "channel": "slack",
+  "enabled": true,
+  "onlyOnFailure": false,
+  "webhookUrl": "https://hooks.example.com/services/YOUR/SLACK/WEBHOOK"
+}</code></pre>
+    <ul class="explain">
+      <li><code>channel</code> &mdash; One of <code>"slack"</code>, <code>"teams"</code>, or <code>"email"</code></li>
+      <li><code>enabled</code> &mdash; Toggle notifications on or off</li>
+      <li><code>onlyOnFailure</code> &mdash; When <code>true</code>, only sends notifications if one or more tests fail</li>
+      <li><code>webhookUrl</code> &mdash; Your Slack incoming webhook URL</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Microsoft Teams webhook configuration</h4>
+    <pre><code>{
+  "channel": "teams",
+  "enabled": true,
+  "onlyOnFailure": true,
+  "webhookUrl": "https://outlook.office.com/webhook/..."
+}</code></pre>
+    <ul class="explain">
+      <li>Teams receives a <strong>MessageCard</strong> format with theme color (green/red)</li>
+      <li><code>onlyOnFailure: true</code> &mdash; Only notifies when tests fail</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Email (SMTP) configuration</h4>
+    <pre><code>{
+  "channel": "email",
+  "enabled": true,
+  "onlyOnFailure": false,
+  "smtp": {
+    "host": "smtp.example.com",
+    "port": 587,
+    "user": "alerts@example.com",
+    "pass": "app-password",
+    "recipients": ["team@example.com", "lead@example.com"]
+  }
+}</code></pre>
+    <ul class="explain">
+      <li>Sends HTML-formatted results via SMTP</li>
+      <li>Multiple recipients supported as an array</li>
+    </ul>
+  </div>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Use the "Test Notification" button in the project settings modal to verify your configuration before enabling notifications.
+  </div>
+
+  <hr>
+  <p style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 48px;">
+    API Automation Framework &bull; Feature Examples
+  </p>
+
+</main>
+
+<script>
+  const sections = document.querySelectorAll('h1[id], h2[id]');
+  const navLinks = document.querySelectorAll('.sidebar nav a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const top = section.offsetTop - 100;
+      if (window.scrollY >= top) current = section.getAttribute('id');
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>

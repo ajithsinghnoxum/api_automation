@@ -1,0 +1,2573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Automation Framework — Documentation</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-alt: #273548;
+      --border: #334155;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dim: #0c4a6e;
+      --green: #4ade80;
+      --green-dim: #064e3b;
+      --orange: #fb923c;
+      --orange-dim: #7c2d12;
+      --red: #f87171;
+      --purple: #a78bfa;
+      --code-bg: #0d1117;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 280px;
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 24px 0;
+      z-index: 10;
+    }
+
+    .sidebar-logo {
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-logo h2 {
+      font-size: 18px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .sidebar-logo span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .sidebar nav a {
+      display: block;
+      padding: 8px 24px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      color: var(--accent);
+      background: var(--accent-dim);
+      border-left-color: var(--accent);
+    }
+
+    .sidebar nav .section-title {
+      padding: 16px 24px 6px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    /* --- Main Content --- */
+    .main {
+      margin-left: 280px;
+      padding: 48px 64px 96px;
+      max-width: 960px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #fff;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+
+    h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 48px 0 16px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      color: #fff;
+    }
+
+    h2:first-of-type { border-top: none; margin-top: 0; }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--accent);
+    }
+
+    p { margin-bottom: 16px; }
+
+    /* --- Code Blocks --- */
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      overflow-x: auto;
+      margin: 16px 0 24px;
+      font-size: 13.5px;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 13.5px;
+    }
+
+    p code, li code, td code {
+      background: var(--surface-alt);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: var(--orange);
+    }
+
+    /* --- Tables --- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--surface);
+      text-align: left;
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--accent);
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:hover td { background: var(--surface-alt); }
+
+    /* --- Cards --- */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .card h4 {
+      font-size: 15px;
+      margin-bottom: 6px;
+      color: var(--green);
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    /* --- Badges --- */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-get { background: var(--green-dim); color: var(--green); }
+    .badge-post { background: var(--accent-dim); color: var(--accent); }
+    .badge-put { background: var(--orange-dim); color: var(--orange); }
+    .badge-patch { background: #4a1d96; color: var(--purple); }
+    .badge-delete { background: #7f1d1d; color: var(--red); }
+
+    /* --- Alerts --- */
+    .alert {
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0 24px;
+      font-size: 14px;
+      border-left: 4px solid;
+    }
+
+    .alert-info {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .alert-warn {
+      background: var(--orange-dim);
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .alert-success {
+      background: var(--green-dim);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    /* --- Steps --- */
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      margin: 16px 0 24px;
+    }
+
+    .steps li {
+      counter-increment: step;
+      padding: 12px 16px 12px 56px;
+      position: relative;
+      margin-bottom: 8px;
+      background: var(--surface);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .steps li::before {
+      content: counter(step);
+      position: absolute;
+      left: 16px;
+      top: 12px;
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    /* --- Misc --- */
+    ul, ol {
+      margin: 8px 0 16px 24px;
+    }
+
+    li { margin-bottom: 6px; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 32px 0;
+    }
+
+    .file-tree {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      margin: 16px 0 24px;
+      color: var(--text-muted);
+    }
+
+    .file-tree .folder { color: var(--accent); }
+    .file-tree .file { color: var(--text); }
+    .file-tree .desc { color: var(--text-muted); font-style: italic; }
+
+    /* Comparison table for array validations */
+    .comparison-table td:first-child { font-weight: 600; color: var(--accent); white-space: nowrap; }
+    .comparison-table td:nth-child(2) { color: var(--green); }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 24px; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>API Automation</h2>
+    <span>Playwright Framework Docs</span>
+  </div>
+  <nav>
+    <div class="section-title">Getting Started</div>
+    <a href="#overview">Overview</a>
+    <a href="#project-structure">Project Structure</a>
+    <a href="#setup">Installation &amp; Setup</a>
+    <a href="#quick-start">Quick Start</a>
+
+    <div class="section-title">Configuration</div>
+    <a href="#multi-project">Multi-Project Setup</a>
+    <a href="#auth-types">Authentication Types</a>
+    <a href="#playwright-config">Playwright Config</a>
+
+    <div class="section-title">Web UI</div>
+    <a href="#web-ui">Web Interface</a>
+    <a href="#web-projects">Managing Projects</a>
+    <a href="#web-tests">Managing Tests</a>
+    <a href="#web-run">Running Tests</a>
+
+    <div class="section-title">Writing Tests (JSON)</div>
+    <a href="#json-structure">JSON Test Structure</a>
+    <a href="#test-case-fields">Test Case Fields</a>
+    <a href="#http-methods">HTTP Methods</a>
+    <a href="#query-params">Query Parameters</a>
+    <a href="#endpoint-format">Endpoint Format</a>
+
+    <div class="section-title">Validations</div>
+    <a href="#validations-overview">Overview</a>
+    <a href="#val-equals">equals / notEquals</a>
+    <a href="#val-exists">exists / notExists</a>
+    <a href="#val-contains">contains</a>
+    <a href="#val-regex">regex</a>
+    <a href="#val-typeof">typeOf</a>
+    <a href="#val-array">isArray / arrayLength</a>
+    <a href="#val-comparison">Numeric Comparisons</a>
+    <a href="#val-string">String Validations</a>
+    <a href="#val-hasproperty">hasProperty</a>
+    <a href="#val-schema">schema</a>
+
+    <div class="section-title">Array Validations</div>
+    <a href="#array-overview">When to Use Which?</a>
+    <a href="#val-arrayevery">arrayEvery</a>
+    <a href="#val-arraysome">arraySome</a>
+    <a href="#val-arraynone">arrayNone</a>
+    <a href="#val-arrayitemat">arrayItemAt</a>
+    <a href="#val-arrayfind">arrayFind</a>
+    <a href="#val-arrayvalue">Array Value Checks</a>
+    <a href="#val-date">Date Validations</a>
+    <a href="#val-conditional">Conditional (if/then/else)</a>
+
+    <div class="section-title">Variable Chaining</div>
+    <a href="#variable-extraction">Extract & Chain Variables</a>
+    <a href="#chaining-example">Chaining Example</a>
+
+    <div class="section-title">Advanced Features</div>
+    <a href="#built-in-variables">Built-in Variables</a>
+    <a href="#data-driven">Data-Driven Tests</a>
+    <a href="#multi-env">Multi-Environment</a>
+    <a href="#tags">Tags &amp; Filtering</a>
+    <a href="#postman-import">Postman Import</a>
+    <a href="#drag-reorder">Drag &amp; Drop Reorder</a>
+    <a href="#retry">Retry Configuration</a>
+    <a href="#hooks">Pre/Post Hooks</a>
+    <a href="#poll-mode">Poll Mode</a>
+    <a href="#conditional-exec">Conditional Execution</a>
+    <a href="#fixtures">Shared Fixtures</a>
+    <a href="#openapi-import">OpenAPI Import</a>
+    <a href="#auto-generate">Auto-Generate Validations</a>
+    <a href="#chain-view">Chain Builder</a>
+    <a href="#templates">Test Templates</a>
+    <a href="#bulk-ops">Bulk Operations</a>
+    <a href="#response-diff">Response Comparison</a>
+    <a href="#schema-drift">Schema Drift Detection</a>
+    <a href="#scheduled-runs">Scheduled Test Runs</a>
+    <a href="#notifications">Notification Integration</a>
+
+    <div class="section-title">Advanced</div>
+    <a href="#path-syntax">Path Syntax</a>
+    <a href="#nested-validations">Combining Validations</a>
+    <a href="#multiple-suites">Multiple Test Suites</a>
+
+    <div class="section-title">Running Tests</div>
+    <a href="#commands">Commands</a>
+    <a href="#reports">HTML Reports</a>
+    <a href="#junit-export">JUnit XML Export</a>
+    <a href="#csv-export">CSV Export</a>
+    <a href="#trend-charts">Trend Charts</a>
+    <a href="#pdf-export">PDF Export</a>
+    <a href="#ci-cd">CI/CD Integration</a>
+
+    <div class="section-title">Examples</div>
+    <a href="examples/index.html">Live Examples (53 tests)</a>
+  </nav>
+</aside>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- Overview -->
+  <h1 id="overview">API Automation Framework</h1>
+  <p class="subtitle">Config-driven API testing with Playwright — no code required.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Zero Code Testing</h4>
+      <p>Define endpoints and validations in JSON. The framework runs and reports everything automatically. No programming required.</p>
+    </div>
+    <div class="card">
+      <h4>Custom HTML Reports</h4>
+      <p>Beautiful, interactive HTML reports with per-validation pass/fail breakdown, summary dashboard, progress bar, filtering, and search.</p>
+    </div>
+    <div class="card">
+      <h4>Multi-Project Support</h4>
+      <p>Test multiple APIs with different base URLs and auth settings. Each project has its own test configs and runs independently.</p>
+    </div>
+    <div class="card">
+      <h4>Web-Based UI</h4>
+      <p>Visual interface to create projects, configure tests, add validations, and run tests — all from your browser.</p>
+    </div>
+    <div class="card">
+      <h4>Multiple Auth Types</h4>
+      <p>Supports Bearer Token, Basic Auth, API Key, or no auth — configured per project.</p>
+    </div>
+    <div class="card">
+      <h4>36 Validation Types</h4>
+      <p>From simple equality checks to nested array iterations, regex patterns, schema validation, date comparisons, and array value checks.</p>
+    </div>
+  </div>
+
+  <!-- Project Structure -->
+  <h2 id="project-structure">Project Structure</h2>
+  <div class="file-tree">
+    <span class="folder">api_automation/</span><br>
+    ├── <span class="file">playwright.config.ts</span> <span class="desc">— Multi-project Playwright configuration</span><br>
+    ├── <span class="file">server.ts</span> <span class="desc">— Express web server for UI</span><br>
+    ├── <span class="file">package.json</span> <span class="desc">— Scripts &amp; dependencies</span><br>
+    ├── <span class="file">projects.config.json</span> <span class="desc">— Project definitions (git-ignored)</span><br>
+    ├── <span class="folder">web/</span><br>
+    │   └── <span class="file">index.html</span> <span class="desc">— Web UI for managing tests</span><br>
+    ├── <span class="folder">test-configs/</span> <span class="desc">— JSON test definitions organized by project</span><br>
+    │   ├── <span class="folder">project-a/</span> <span class="desc">— Tests for Project A</span><br>
+    │   │   ├── <span class="file">fixtures.json</span> <span class="desc">— Shared test data fixtures (optional)</span><br>
+    │   │   ├── <span class="file">users.json</span><br>
+    │   │   └── <span class="file">orders.json</span><br>
+    │   └── <span class="folder">project-b/</span> <span class="desc">— Tests for Project B</span><br>
+    │       └── <span class="file">products.json</span><br>
+    ├── <span class="folder">tests/</span><br>
+    │   └── <span class="file">config-driven.api.spec.ts</span> <span class="desc">— Auto-loads all JSON configs</span><br>
+    ├── <span class="folder">src/</span><br>
+    │   ├── <span class="folder">helpers/</span><br>
+    │   │   ├── <span class="file">api.helper.ts</span> <span class="desc">— HTTP request wrapper (GET, POST, PUT, PATCH, DELETE)</span><br>
+    │   │   ├── <span class="file">validator.ts</span> <span class="desc">— Validation engine (36 validation types)</span><br>
+    │   │   └── <span class="file">test-runner.ts</span> <span class="desc">— JSON to Playwright test generator</span><br>
+    │   ├── <span class="folder">reporters/</span><br>
+    │   │   └── <span class="file">html-reporter.ts</span> <span class="desc">— Custom HTML report generator</span><br>
+    │   └── <span class="folder">types/</span><br>
+    │       └── <span class="file">test-config.types.ts</span> <span class="desc">— TypeScript type definitions</span><br>
+    ├── <span class="folder">playwright-report/</span> <span class="desc">— Generated HTML report output</span><br>
+    └── <span class="folder">docs/</span><br>
+    &nbsp;   └── <span class="file">index.html</span> <span class="desc">— This documentation</span><br>
+  </div>
+
+  <!-- Setup -->
+  <h2 id="setup">Installation &amp; Setup</h2>
+  <ol class="steps">
+    <li>Clone the repository and navigate to the project folder.</li>
+    <li>Install dependencies:
+      <pre><code>npm install</code></pre>
+    </li>
+    <li>Start the web UI to create your first project:
+      <pre><code>npm start</code></pre>
+      <p>Open <code>http://localhost:3000</code> in your browser.</p>
+    </li>
+    <li>Create a project with your API base URL and authentication settings.</li>
+    <li>Add test suites and test cases using the visual editor.</li>
+    <li>Click <strong>Run Tests</strong> to execute and view the HTML report.</li>
+  </ol>
+
+  <div class="alert alert-info">
+    Alternatively, you can skip the web UI and manually create <code>projects.config.json</code> and JSON test files in <code>test-configs/</code>. See the sections below for the JSON format.
+  </div>
+
+  <!-- Quick Start -->
+  <h2 id="quick-start">Quick Start</h2>
+  <p>The fastest way to start testing is through the web UI. But if you prefer working with JSON files directly, here's the manual approach:</p>
+
+  <h3>Step 1: Create projects.config.json</h3>
+  <pre><code>[
+  {
+    "id": "my-api",
+    "name": "My API",
+    "baseUrl": "https://api.example.com/v1",
+    "authType": "bearer",
+    "credentials": {
+      "token": "your-token-here"
+    }
+  }
+]</code></pre>
+
+  <h3>Step 2: Create a test file</h3>
+  <p>Create <code>test-configs/my-api/items.json</code>:</p>
+  <pre><code>{
+  "suite": "Item API Tests",
+  "tests": [
+    {
+      "name": "should return item details",
+      "method": "GET",
+      "endpoint": "items/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "exists", "path": "id" },
+        { "type": "typeOf", "path": "name", "expected": "string" },
+        { "type": "greaterThan", "path": "price", "value": 0 }
+      ]
+    }
+  ]
+}</code></pre>
+
+  <h3>Step 3: Run tests</h3>
+  <pre><code>npx playwright test</code></pre>
+
+  <div class="alert alert-success">
+    Open <code>playwright-report/index.html</code> in your browser to view the detailed report with per-validation pass/fail breakdown.
+  </div>
+
+  <!-- Multi-Project -->
+  <h2 id="multi-project">Multi-Project Setup</h2>
+  <p>The framework supports testing multiple APIs simultaneously. Each project has its own base URL, authentication, and test files.</p>
+
+  <h3>projects.config.json</h3>
+  <p>This file (at the project root) defines all your API projects:</p>
+  <pre><code>[
+  {
+    "id": "user-service",
+    "name": "User Service API",
+    "baseUrl": "https://users.example.com/api/v1",
+    "authType": "bearer",
+    "credentials": {
+      "token": "eyJhbGci..."
+    }
+  },
+  {
+    "id": "order-service",
+    "name": "Order Service API",
+    "baseUrl": "https://orders.example.com/api/v2",
+    "authType": "basic",
+    "credentials": {
+      "username": "admin",
+      "password": "secret"
+    }
+  },
+  {
+    "id": "public-api",
+    "name": "Public API",
+    "baseUrl": "https://public.example.com",
+    "authType": "none",
+    "credentials": {}
+  }
+]</code></pre>
+
+  <h3>Project Config Fields</h3>
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>string</td><td>Unique identifier (used for folder names and filtering)</td></tr>
+      <tr><td><code>name</code></td><td>string</td><td>Human-readable project name (shown in reports)</td></tr>
+      <tr><td><code>baseUrl</code></td><td>string</td><td>Base URL for all API requests in this project</td></tr>
+      <tr><td><code>authType</code></td><td>string</td><td>Authentication method: <code>none</code>, <code>basic</code>, <code>bearer</code>, or <code>api-key</code></td></tr>
+      <tr><td><code>credentials</code></td><td>object</td><td>Auth credentials (varies by auth type, see below)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Test File Organization</h3>
+  <p>Each project's test files live in a subfolder of <code>test-configs/</code> matching the project <code>id</code>:</p>
+  <div class="file-tree">
+    <span class="folder">test-configs/</span><br>
+    ├── <span class="folder">user-service/</span> <span class="desc">— matches project id "user-service"</span><br>
+    │   ├── <span class="file">auth.json</span><br>
+    │   └── <span class="file">profile.json</span><br>
+    ├── <span class="folder">order-service/</span> <span class="desc">— matches project id "order-service"</span><br>
+    │   └── <span class="file">orders.json</span><br>
+    └── <span class="folder">public-api/</span> <span class="desc">— matches project id "public-api"</span><br>
+    &nbsp;   └── <span class="file">health.json</span><br>
+  </div>
+
+  <h3>Running a Specific Project</h3>
+  <p>By default, all projects run. To run only a specific project:</p>
+  <pre><code>TEST_PROJECT=user-service npx playwright test</code></pre>
+
+  <!-- Auth Types -->
+  <h2 id="auth-types">Authentication Types</h2>
+  <p>Each project can use a different authentication method. Set the <code>authType</code> and <code>credentials</code> in the project config.</p>
+
+  <h3>No Authentication</h3>
+  <pre><code>{
+  "authType": "none",
+  "credentials": {}
+}</code></pre>
+  <p>No authentication headers are sent with requests. Use this for public APIs.</p>
+
+  <h3>Bearer Token</h3>
+  <pre><code>{
+  "authType": "bearer",
+  "credentials": {
+    "token": "your-token-here"
+  }
+}</code></pre>
+  <p>Sends header: <code>Authorization: Bearer &lt;token&gt;</code></p>
+  <p>Common for OAuth2, JWT, and session-based APIs.</p>
+
+  <h3>Basic Auth</h3>
+  <pre><code>{
+  "authType": "basic",
+  "credentials": {
+    "username": "your-username",
+    "password": "your-password"
+  }
+}</code></pre>
+  <p>Sends header: <code>Authorization: Basic &lt;base64-encoded-credentials&gt;</code></p>
+  <p>The framework also sets Playwright's <code>httpCredentials</code> with <code>"send": "always"</code> to ensure credentials are sent on every request without waiting for a 401 challenge. This prevents issues with servers that use SSO or redirect-based authentication.</p>
+
+  <h3>API Key</h3>
+  <pre><code>{
+  "authType": "api-key",
+  "credentials": {
+    "apiKey": "your-api-key",
+    "apiKeyHeader": "X-API-Key"
+  }
+}</code></pre>
+  <p>Sends a custom header with your API key. The header name defaults to <code>X-API-Key</code> if <code>apiKeyHeader</code> is not specified.</p>
+
+  <!-- Playwright Config -->
+  <h2 id="playwright-config">Playwright Config</h2>
+  <p>Key settings in <code>playwright.config.ts</code>:</p>
+  <table>
+    <thead><tr><th>Setting</th><th>Value</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>fullyParallel</code></td><td><code>true</code></td><td>Tests run in parallel for speed</td></tr>
+      <tr><td><code>retries</code></td><td><code>1</code></td><td>Retry failed tests once automatically</td></tr>
+      <tr><td><code>workers</code></td><td><code>4</code></td><td>Number of parallel workers</td></tr>
+      <tr><td><code>timeout</code></td><td><code>30000</code></td><td>30-second timeout per test</td></tr>
+      <tr><td><code>reporter</code></td><td><code>custom</code></td><td>Custom HTML reporter with per-validation breakdown</td></tr>
+    </tbody>
+  </table>
+  <p>The config automatically reads <code>projects.config.json</code> and creates Playwright projects for each entry. Each project gets its own <code>baseURL</code>, authentication headers, and test file directory.</p>
+
+  <!-- Web UI -->
+  <h2 id="web-ui">Web Interface</h2>
+  <p>The framework includes a full web-based UI for managing projects and tests without editing JSON files manually. Start the server with:</p>
+  <pre><code>npm start</code></pre>
+  <p>Then open <code>http://localhost:3000</code> in your browser.</p>
+
+  <h3>What You Can Do</h3>
+  <ul>
+    <li>Create, edit, and delete projects with different base URLs and auth settings</li>
+    <li>Create and manage test suites (each suite becomes a JSON file)</li>
+    <li>Add, edit, and delete individual test cases using a visual form</li>
+    <li>Build validations using dropdown-based controls (no JSON editing needed)</li>
+    <li>Configure nested array validations with sub-validation builders</li>
+    <li>Run tests and view live output directly in the browser</li>
+    <li>Open the generated HTML report from the results page</li>
+    <li>Breadcrumb navigation bar (Home > Project > Suite > Test) for easy context tracking</li>
+    <li>Toggle between visual form editor and raw JSON editor with CodeMirror syntax highlighting</li>
+    <li>Drag-and-drop to reorder validations within a test using grip handles</li>
+    <li>Import from Postman collections or OpenAPI/Swagger specs</li>
+    <li>Export test runs as PDF, CSV, or JUnit XML</li>
+    <li>Smooth transition animations for modals, collapsible sections, and theme switching</li>
+    <li>Keyboard shortcuts: Ctrl+S (save), Ctrl+Enter (run), Ctrl+Shift+N (new suite), Ctrl+Shift+F (search)</li>
+  </ul>
+
+  <h2 id="web-projects">Managing Projects</h2>
+  <p>From the home screen, click <strong>"+ New Project"</strong> to create a project. Fill in:</p>
+  <table>
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Project ID</strong></td><td>Unique identifier (lowercase, no spaces). This becomes the folder name in <code>test-configs/</code>.</td></tr>
+      <tr><td><strong>Project Name</strong></td><td>Display name shown in reports and the UI.</td></tr>
+      <tr><td><strong>Base URL</strong></td><td>The root URL for all API endpoints in this project (e.g., <code>https://api.example.com/v1</code>).</td></tr>
+      <tr><td><strong>Auth Type</strong></td><td>Choose from None, Basic Auth, Bearer Token, or API Key.</td></tr>
+      <tr><td><strong>Credentials</strong></td><td>Depends on auth type — token, username/password, or API key fields appear dynamically.</td></tr>
+    </tbody>
+  </table>
+  <p>All project data is saved to <code>projects.config.json</code> and persists across server restarts.</p>
+
+  <h2 id="web-tests">Managing Tests</h2>
+  <p>Click a project to view its test suites. From here you can:</p>
+  <ul>
+    <li><strong>Create a suite</strong> — a suite is a JSON file containing related test cases</li>
+    <li><strong>Add tests to a suite</strong> — each test has a method, endpoint, expected status, and validations</li>
+    <li><strong>Edit existing tests</strong> — click a test to open it in the visual editor</li>
+    <li><strong>Delete tests or suites</strong> — removes the test or the entire JSON file</li>
+    <li><strong>Duplicate a test</strong> — click the copy icon on any test to clone it with a "(copy)" suffix. Great for creating similar tests quickly.</li>
+  </ul>
+
+  <h3>Using the Validation Builder</h3>
+  <p>When editing a test, click <strong>"+ Add Validation"</strong> to add response checks. Select a validation type from the dropdown and fill in the fields that appear.</p>
+  <p>For array validation types (<code>arrayEvery</code>, <code>arraySome</code>, <code>arrayNone</code>, <code>arrayItemAt</code>, <code>arrayFind</code>), a <strong>nested validation builder</strong> appears where you can add sub-validations that run against each array item.</p>
+
+  <h3>Schema Validation Builder</h3>
+  <p>When you select the <code>schema</code> validation type, a visual builder appears to define expected object properties:</p>
+  <ol>
+    <li>Enter the <strong>path</strong> to the object you want to validate</li>
+    <li>Click <strong>"+ Add Property"</strong> to add expected properties</li>
+    <li>For each property, enter the <strong>name</strong> and select the expected <strong>type</strong> (string, number, boolean, object, array)</li>
+    <li>The builder generates the <code>properties</code> object for the schema validation automatically</li>
+  </ol>
+
+  <h3>Extract Variables Builder</h3>
+  <p>To chain API responses across tests, use the Extract Variables section in the test editor:</p>
+  <ol>
+    <li>Click <strong>"+ Add Variable"</strong> in the Extract Variables section</li>
+    <li>Enter a <strong>variable name</strong> (e.g., <code>userId</code>) and the <strong>response path</strong> (e.g., <code>data.id</code>)</li>
+    <li>Use <code>{{userId}}</code> in subsequent tests' endpoints, headers, body, or query parameters</li>
+  </ol>
+  <p>See <a href="#variable-extraction">Variable Extraction & Chaining</a> for full details.</p>
+
+  <h3>Dark / Light Theme</h3>
+  <p>Click the <strong>sun/moon icon</strong> in the top navigation bar to toggle between dark and light themes. Your preference is saved in <code>localStorage</code> and persists across sessions.</p>
+
+  <h2 id="web-run">Running Tests from the UI</h2>
+  <p>Click the <strong>"Run Tests"</strong> button at the top of the project view. The test output appears live in the browser. When complete:</p>
+  <ul>
+    <li>A <strong>PASSED</strong> or <strong>HAS FAILURES</strong> status is shown</li>
+    <li>A link to the <strong>full HTML report</strong> is provided</li>
+    <li>You do <strong>not</strong> need to stop the server to run tests — they execute in a separate process</li>
+  </ul>
+
+  <h3>Selective Test Running</h3>
+  <p>You don't have to run all tests at once. Use the checkboxes to select specific tests:</p>
+  <ul>
+    <li><strong>Suite checkbox</strong> — select/deselect all tests in a suite</li>
+    <li><strong>Individual test checkboxes</strong> — pick specific tests to run</li>
+    <li><strong>"Select All"</strong> button — select every test across all suites</li>
+    <li>A selection info bar shows how many tests are selected</li>
+  </ul>
+  <p>When you click <strong>"Run Tests"</strong>, only the selected tests are executed. If no checkboxes are checked, all tests run by default.</p>
+
+  <!-- JSON Structure -->
+  <h2 id="json-structure">JSON Test Structure</h2>
+  <p>Each JSON file in <code>test-configs/&lt;project-id&gt;/</code> defines one test suite:</p>
+  <pre><code>{
+  "suite": "Suite Name",
+  "tests": [
+    {
+      "name": "test description",
+      "method": "GET",
+      "endpoint": "path/to/resource",
+      "expectedStatus": 200,
+      "description": "optional notes",
+      "headers": {},
+      "queryParams": {},
+      "body": {},
+      "validations": [],
+      "extract": { "varName": "response.path" }
+    }
+  ]
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Field</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>suite</code></td><td>Yes</td><td>Name of the test suite (shown in reports)</td></tr>
+      <tr><td><code>tests</code></td><td>Yes</td><td>Array of test cases</td></tr>
+      <tr><td><code>fixtures</code></td><td>No</td><td>Inline fixtures object. Merged with shared <code>fixtures.json</code> (suite takes precedence). See <a href="#fixtures">Shared Fixtures</a>.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Test Case Fields -->
+  <h2 id="test-case-fields">Test Case Fields</h2>
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>name</code></td><td>string</td><td>Yes</td><td>Human-readable test name (shown in report)</td></tr>
+      <tr><td><code>method</code></td><td>string</td><td>Yes</td><td><code>GET</code>, <code>POST</code>, <code>PUT</code>, <code>PATCH</code>, or <code>DELETE</code></td></tr>
+      <tr><td><code>endpoint</code></td><td>string</td><td>Yes</td><td>API path appended to the project's base URL</td></tr>
+      <tr><td><code>expectedStatus</code></td><td>number</td><td>Yes</td><td>Expected HTTP status code (e.g., 200, 201, 404)</td></tr>
+      <tr><td><code>description</code></td><td>string</td><td>No</td><td>Extra description for documentation</td></tr>
+      <tr><td><code>headers</code></td><td>object</td><td>No</td><td>Additional request headers (merged with project headers)</td></tr>
+      <tr><td><code>queryParams</code></td><td>object</td><td>No</td><td>Query string parameters</td></tr>
+      <tr><td><code>body</code></td><td>object</td><td>No</td><td>JSON request body (for POST, PUT, PATCH)</td></tr>
+      <tr><td><code>validations</code></td><td>array</td><td>No</td><td>Array of validation rules to check the response</td></tr>
+      <tr><td><code>extract</code></td><td>object</td><td>No</td><td>Extract response values into variables for use in later tests. Keys are variable names, values are response paths. See <a href="#variable-extraction">Variable Extraction</a>.</td></tr>
+      <tr><td><code>skip</code></td><td>boolean</td><td>No</td><td>Set to <code>true</code> to skip this test. It will appear as "skipped" in the report without executing.</td></tr>
+      <tr><td><code>timeout</code></td><td>number</td><td>No</td><td>Custom timeout in milliseconds (overrides the default 30s). Use for slow endpoints.</td></tr>
+      <tr><td><code>tags</code></td><td>string[]</td><td>No</td><td>Array of tag strings for categorization. Tests can be filtered by tag in the Web UI. E.g., <code>["smoke", "regression"]</code></td></tr>
+      <tr><td><code>dataSet</code></td><td>array</td><td>No</td><td>Array of objects for data-driven testing. Each entry runs the test with substituted <code>{{key}}</code> variables. See <a href="#data-driven">Data-Driven Tests</a>.</td></tr>
+      <tr><td><code>retry</code></td><td>object</td><td>No</td><td>Retry configuration: <code>{ "count": 3, "delay": 2000 }</code>. Retries the request up to <code>count</code> times on failure with <code>delay</code> ms between attempts. See <a href="#retry">Retry Configuration</a>.</td></tr>
+      <tr><td><code>beforeRequest</code></td><td>string</td><td>No</td><td>JavaScript expression evaluated before the request. Can modify <code>request.headers</code>, <code>request.body</code>, <code>request.endpoint</code>. See <a href="#hooks">Pre/Post Hooks</a>.</td></tr>
+      <tr><td><code>afterResponse</code></td><td>string</td><td>No</td><td>JavaScript expression evaluated after the response. Can read <code>response.data</code> and set <code>vars</code>. See <a href="#hooks">Pre/Post Hooks</a>.</td></tr>
+      <tr><td><code>poll</code></td><td>object</td><td>No</td><td>Poll mode: <code>{ "interval": 2000, "timeout": 30000, "condition": {...} }</code>. Repeats the request until the condition validation passes. See <a href="#poll-mode">Poll Mode</a>.</td></tr>
+      <tr><td><code>onlyIf</code></td><td>object</td><td>No</td><td>Conditional execution: <code>{ "env": "staging" }</code> or <code>{ "var": "role", "equals": "admin" }</code>. Skips the test if the condition is not met. See <a href="#conditional-exec">Conditional Execution</a>.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- HTTP Methods -->
+  <h2 id="http-methods">HTTP Methods</h2>
+
+  <h3><span class="badge badge-get">GET</span> — Read data</h3>
+  <pre><code>{
+  "name": "fetch all items",
+  "method": "GET",
+  "endpoint": "items",
+  "expectedStatus": 200
+}</code></pre>
+
+  <h3><span class="badge badge-post">POST</span> — Create data</h3>
+  <pre><code>{
+  "name": "create an item",
+  "method": "POST",
+  "endpoint": "items",
+  "body": {
+    "name": "New Item",
+    "category": "general"
+  },
+  "expectedStatus": 201
+}</code></pre>
+
+  <h3><span class="badge badge-put">PUT</span> — Full update</h3>
+  <pre><code>{
+  "name": "update an item",
+  "method": "PUT",
+  "endpoint": "items/1",
+  "body": {
+    "name": "Updated Item",
+    "category": "updated"
+  },
+  "expectedStatus": 200
+}</code></pre>
+
+  <h3><span class="badge badge-patch">PATCH</span> — Partial update</h3>
+  <pre><code>{
+  "name": "update item name only",
+  "method": "PATCH",
+  "endpoint": "items/1",
+  "body": { "name": "Renamed Item" },
+  "expectedStatus": 200
+}</code></pre>
+
+  <h3><span class="badge badge-delete">DELETE</span> — Remove data</h3>
+  <pre><code>{
+  "name": "delete an item",
+  "method": "DELETE",
+  "endpoint": "items/1",
+  "expectedStatus": 200
+}</code></pre>
+
+  <!-- Query Params -->
+  <h2 id="query-params">Query Parameters</h2>
+  <pre><code>{
+  "name": "search items by category",
+  "method": "GET",
+  "endpoint": "items",
+  "queryParams": {
+    "category": "electronics",
+    "limit": "10"
+  },
+  "expectedStatus": 200
+}</code></pre>
+  <p>This sends: <code>GET {BASE_URL}/items?category=electronics&amp;limit=10</code></p>
+
+  <!-- Endpoint Format -->
+  <h2 id="endpoint-format">Endpoint Format</h2>
+
+  <div class="alert alert-warn">
+    <strong>Important:</strong> Endpoints should be written <strong>without a leading slash</strong>. This ensures the endpoint is correctly appended to the full base URL path.
+  </div>
+
+  <table>
+    <thead><tr><th>Correct</th><th>Incorrect</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>"items/1"</code></td><td><code>"/items/1"</code></td><td>Leading <code>/</code> resets to domain root</td></tr>
+      <tr><td><code>"orders"</code></td><td><code>"/orders"</code></td><td>Loses the API version path</td></tr>
+      <tr><td><code>"users/5/profile"</code></td><td><code>"/users/5/profile"</code></td><td>Drops everything after the domain</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Example:</strong> If the base URL is <code>https://api.example.com/v1</code>:</p>
+  <ul>
+    <li><code>"endpoint": "items/1"</code> &rarr; <code>https://api.example.com/v1/items/1</code></li>
+    <li><code>"endpoint": "/items/1"</code> &rarr; <code>https://api.example.com/items/1</code> (missing <code>/v1</code>!)</li>
+  </ul>
+
+  <!-- Validations Overview -->
+  <h2 id="validations-overview">Validations Overview</h2>
+  <p>Validations let you check the API response body after confirming the HTTP status code. Each validation is a JSON object with a <code>type</code> field and relevant parameters. <strong>All validations run regardless of failures</strong> — the report shows which passed and which failed individually.</p>
+
+  <div class="alert alert-info">
+    Most validations use a <code>path</code> field to target a specific value in the response JSON. See <a href="#path-syntax">Path Syntax</a> for details on dot notation and array indexing.
+  </div>
+
+  <h3>Simple Validations</h3>
+  <p>These check a single value in the response:</p>
+  <table>
+    <thead><tr><th>Type</th><th>Purpose</th><th>Key Fields</th></tr></thead>
+    <tbody>
+      <tr><td><code>equals</code></td><td>Exact value match</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>notEquals</code></td><td>Value must NOT match</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>exists</code></td><td>Field must be present (not undefined)</td><td><code>path</code></td></tr>
+      <tr><td><code>notExists</code></td><td>Field must be absent (undefined)</td><td><code>path</code></td></tr>
+      <tr><td><code>contains</code></td><td>String contains a substring</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>regex</code></td><td>String matches a regex pattern</td><td><code>path</code>, <code>pattern</code></td></tr>
+      <tr><td><code>typeOf</code></td><td>Checks JavaScript data type</td><td><code>path</code>, <code>expected</code></td></tr>
+      <tr><td><code>isArray</code></td><td>Value is an array</td><td><code>path</code> (optional)</td></tr>
+      <tr><td><code>arrayLength</code></td><td>Array size constraints</td><td><code>path</code>, <code>min</code>, <code>max</code>, <code>exact</code></td></tr>
+      <tr><td><code>greaterThan</code></td><td>Number is greater than</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>lessThan</code></td><td>Number is less than</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>greaterThanOrEqual</code></td><td>Number is &gt;= value</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>lessThanOrEqual</code></td><td>Number is &lt;= value</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>between</code></td><td>Number is within a range (inclusive)</td><td><code>path</code>, <code>min</code>, <code>max</code></td></tr>
+      <tr><td><code>startsWith</code></td><td>String starts with a prefix</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>endsWith</code></td><td>String ends with a suffix</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>notContains</code></td><td>String must NOT contain substring</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>stringLength</code></td><td>String length constraints</td><td><code>path</code>, <code>min</code>, <code>max</code>, <code>exact</code></td></tr>
+      <tr><td><code>isEmpty</code></td><td>Value is empty/null/undefined/[]</td><td><code>path</code></td></tr>
+      <tr><td><code>isNotEmpty</code></td><td>Value is NOT empty</td><td><code>path</code></td></tr>
+      <tr><td><code>hasProperty</code></td><td>Object has a property key</td><td><code>path</code>, <code>property</code></td></tr>
+      <tr><td><code>schema</code></td><td>Validate types of multiple fields</td><td><code>path</code>, <code>properties</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Array Validations</h3>
+  <p>These iterate over arrays and run nested sub-validations against items:</p>
+  <table>
+    <thead><tr><th>Type</th><th>Purpose</th><th>Key Fields</th></tr></thead>
+    <tbody>
+      <tr><td><code>arrayEvery</code></td><td>ALL items must pass</td><td><code>path</code>, <code>validations</code></td></tr>
+      <tr><td><code>arraySome</code></td><td>At least ONE item must pass</td><td><code>path</code>, <code>validations</code></td></tr>
+      <tr><td><code>arrayNone</code></td><td>NO items should pass (negative test)</td><td><code>path</code>, <code>validations</code></td></tr>
+      <tr><td><code>arrayItemAt</code></td><td>Validate a specific item by index</td><td><code>path</code>, <code>index</code>, <code>validations</code></td></tr>
+      <tr><td><code>arrayFind</code></td><td>Find item by field value, then validate</td><td><code>path</code>, <code>where</code>, <code>validations</code></td></tr>
+      <tr><td><code>arrayContains</code></td><td>Array contains a specific value</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>arrayNotContains</code></td><td>Array does NOT contain a value</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>arraySorted</code></td><td>Array is sorted (asc/desc)</td><td><code>path</code>, <code>order</code>, <code>field</code></td></tr>
+      <tr><td><code>arrayUnique</code></td><td>All items have unique values</td><td><code>path</code>, <code>field</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Date Validations</h3>
+  <p>These validate date strings in the response:</p>
+  <table>
+    <thead><tr><th>Type</th><th>Purpose</th><th>Key Fields</th></tr></thead>
+    <tbody>
+      <tr><td><code>isDate</code></td><td>Value is a valid date string</td><td><code>path</code></td></tr>
+      <tr><td><code>dateBefore</code></td><td>Date is before a target date</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>dateAfter</code></td><td>Date is after a target date</td><td><code>path</code>, <code>value</code></td></tr>
+      <tr><td><code>dateWithinLast</code></td><td>Date is within last N time units</td><td><code>path</code>, <code>amount</code>, <code>unit</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Conditional Validations</h3>
+  <table>
+    <thead><tr><th>Type</th><th>Purpose</th><th>Key Fields</th></tr></thead>
+    <tbody>
+      <tr><td><code>if</code></td><td>Run validations conditionally based on a condition</td><td><code>condition</code>, <code>then</code>, <code>else</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Individual Validations -->
+  <h2 id="val-equals">equals / notEquals</h2>
+  <p>Check if a field matches (or doesn't match) an exact value. Works with strings, numbers, booleans, and null.</p>
+  <pre><code>// Exact match
+{ "type": "equals", "path": "id", "value": 1 }
+{ "type": "equals", "path": "name", "value": "John Doe" }
+{ "type": "equals", "path": "active", "value": true }
+{ "type": "equals", "path": "meta.typeRef", "value": 40 }
+
+// Must NOT equal
+{ "type": "notEquals", "path": "status", "value": "error" }
+{ "type": "notEquals", "path": "role", "value": "admin" }</code></pre>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> <code>equals</code> performs a deep equality check. For objects and arrays, all nested values must match exactly.
+  </div>
+
+  <h2 id="val-exists">exists / notExists</h2>
+  <p>Check if a field is present or absent in the response. <code>exists</code> passes if the value is anything other than <code>undefined</code>. A field with value <code>null</code>, <code>0</code>, <code>false</code>, or <code>""</code> still counts as existing.</p>
+  <pre><code>// Field must exist (even if null, 0, false, or empty string)
+{ "type": "exists", "path": "id" }
+{ "type": "exists", "path": "meta.createdAt" }
+{ "type": "exists", "path": "data.config" }
+
+// Field must NOT exist (value must be undefined)
+{ "type": "notExists", "path": "password" }
+{ "type": "notExists", "path": "deletedAt" }
+{ "type": "notExists", "path": "internal.debugInfo" }</code></pre>
+
+  <h2 id="val-contains">contains</h2>
+  <p>Check if a <strong>string</strong> field contains a substring. This is a case-sensitive check.</p>
+  <pre><code>{ "type": "contains", "path": "name", "value": "John" }
+{ "type": "contains", "path": "description", "value": "important" }
+{ "type": "contains", "path": "email", "value": "@company.com" }</code></pre>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> <code>contains</code> works only on strings. For checking if an array contains an element, use <code>arraySome</code> with a nested <code>equals</code> validation.
+  </div>
+
+  <h2 id="val-regex">regex</h2>
+  <p>Check if a <strong>string</strong> field matches a regular expression pattern. The pattern is a standard JavaScript regex (without delimiters).</p>
+  <pre><code>// Email format
+{ "type": "regex", "path": "email", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" }
+
+// UUID format
+{ "type": "regex", "path": "id", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }
+
+// Date format (YYYY-MM-DD)
+{ "type": "regex", "path": "date", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" }
+
+// Starts with a specific prefix
+{ "type": "regex", "path": "code", "pattern": "^PRD-" }
+
+// ISO datetime format
+{ "type": "regex", "path": "timestamp", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}" }</code></pre>
+
+  <h2 id="val-typeof">typeOf</h2>
+  <p>Check the JavaScript data type of a field. Useful for ensuring API contracts are met.</p>
+  <pre><code>{ "type": "typeOf", "path": "id", "expected": "number" }
+{ "type": "typeOf", "path": "name", "expected": "string" }
+{ "type": "typeOf", "path": "active", "expected": "boolean" }
+{ "type": "typeOf", "path": "metadata", "expected": "object" }</code></pre>
+
+  <p>Supported <code>expected</code> values:</p>
+  <table>
+    <thead><tr><th>Value</th><th>Matches</th></tr></thead>
+    <tbody>
+      <tr><td><code>"string"</code></td><td><code>"hello"</code>, <code>""</code></td></tr>
+      <tr><td><code>"number"</code></td><td><code>42</code>, <code>3.14</code>, <code>0</code></td></tr>
+      <tr><td><code>"boolean"</code></td><td><code>true</code>, <code>false</code></td></tr>
+      <tr><td><code>"object"</code></td><td><code>{ ... }</code> (also matches <code>null</code> — use <code>exists</code> to differentiate)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> Arrays are <code>"object"</code> in JavaScript's <code>typeof</code>. To check if something is an array, use <code>isArray</code> instead.
+  </div>
+
+  <h2 id="val-array">isArray / arrayLength</h2>
+  <p>Validate that a value is an array and optionally check its size.</p>
+  <pre><code>// Check root response is an array
+{ "type": "isArray" }
+
+// Check a nested field is an array
+{ "type": "isArray", "path": "data.items" }
+
+// Exact length
+{ "type": "arrayLength", "exact": 10 }
+
+// Minimum length (at least 1 item)
+{ "type": "arrayLength", "min": 1 }
+
+// Maximum length
+{ "type": "arrayLength", "path": "results", "max": 100 }
+
+// Range (between 1 and 50)
+{ "type": "arrayLength", "path": "results", "min": 1, "max": 50 }</code></pre>
+
+  <p>You can combine <code>min</code>, <code>max</code>, and <code>exact</code>. If <code>exact</code> is set, it takes priority.</p>
+
+  <h2 id="val-comparison">Numeric Comparisons</h2>
+  <p>Both strict (&gt; / &lt;) and inclusive (&gt;= / &lt;=) comparisons, plus range checking:</p>
+  <pre><code>// Strict comparisons
+{ "type": "greaterThan", "path": "count", "value": 0 }
+{ "type": "lessThan", "path": "errorCount", "value": 1 }
+
+// Inclusive comparisons
+{ "type": "greaterThanOrEqual", "path": "id", "value": 1 }
+{ "type": "lessThanOrEqual", "path": "id", "value": 10 }
+
+// Range check (inclusive)
+{ "type": "between", "path": "price", "min": 0, "max": 999 }</code></pre>
+
+  <h2 id="val-string">String Validations</h2>
+  <p>Prefix/suffix checks, length constraints, and empty/non-empty checks:</p>
+  <pre><code>// Prefix / suffix
+{ "type": "startsWith", "path": "name", "value": "John" }
+{ "type": "endsWith", "path": "email", "value": ".com" }
+
+// Must NOT contain a substring
+{ "type": "notContains", "path": "username", "value": " " }
+
+// String length constraints (same syntax as arrayLength)
+{ "type": "stringLength", "path": "name", "min": 1, "max": 100 }
+{ "type": "stringLength", "path": "code", "exact": 6 }
+
+// Empty / not empty (works for strings, null, undefined, and empty arrays)
+{ "type": "isEmpty", "path": "errors" }
+{ "type": "isNotEmpty", "path": "name" }</code></pre>
+
+  <h2 id="val-hasproperty">hasProperty</h2>
+  <p>Check if an object has a specific property key, regardless of the property's value.</p>
+  <pre><code>{ "type": "hasProperty", "path": "meta", "property": "id" }
+{ "type": "hasProperty", "path": "config", "property": "theme" }
+{ "type": "hasProperty", "path": "response", "property": "data" }</code></pre>
+
+  <p>This differs from <code>exists</code> — <code>hasProperty</code> checks if an object <em>contains</em> a key, while <code>exists</code> checks if a path resolves to a defined value.</p>
+
+  <h2 id="val-schema">schema</h2>
+  <p>Validate the type of multiple fields at once — like a lightweight schema check. Ensures each property exists and has the correct type.</p>
+  <pre><code>{
+  "type": "schema",
+  "properties": {
+    "id": "number",
+    "name": "string",
+    "email": "string",
+    "active": "boolean",
+    "tags": "array",
+    "address": "object"
+  }
+}</code></pre>
+
+  <p>You can also target a nested object:</p>
+  <pre><code>{
+  "type": "schema",
+  "path": "meta",
+  "properties": {
+    "id": "number",
+    "guid": "string",
+    "typeRef": "number"
+  }
+}</code></pre>
+
+  <p>Supported types: <code>string</code>, <code>number</code>, <code>boolean</code>, <code>object</code>, <code>array</code>.</p>
+
+  <!-- Array Value Validations -->
+  <h2 id="val-arrayvalue">Array Value Checks</h2>
+  <p>These validate array contents without needing nested sub-validations:</p>
+  <pre><code>// Check if array contains a specific value (deep equality)
+{ "type": "arrayContains", "path": "tags", "value": "featured" }
+{ "type": "arrayContains", "path": "ids", "value": 42 }
+
+// Check if array does NOT contain a value
+{ "type": "arrayNotContains", "path": "roles", "value": "admin" }
+
+// Check if array is sorted (ascending by default)
+{ "type": "arraySorted", "path": "scores" }
+{ "type": "arraySorted", "path": "scores", "order": "desc" }
+
+// Sort by a field in an array of objects
+{ "type": "arraySorted", "path": "users", "field": "name", "order": "asc" }
+
+// Check all values are unique
+{ "type": "arrayUnique", "path": "ids" }
+
+// Unique by a specific field in an array of objects
+{ "type": "arrayUnique", "path": "users", "field": "email" }</code></pre>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> <code>arrayContains</code> uses deep equality, so it works with objects and arrays too: <code>{ "type": "arrayContains", "path": "items", "value": { "id": 1, "name": "Alice" } }</code>
+  </div>
+
+  <!-- Date Validations -->
+  <h2 id="val-date">Date Validations</h2>
+  <p>Validate date strings in the response. Accepts any format parseable by JavaScript's <code>Date</code> constructor (ISO 8601, RFC 2822, etc.).</p>
+  <pre><code>// Check if value is a valid date string
+{ "type": "isDate", "path": "createdAt" }
+
+// Date must be before a target date
+{ "type": "dateBefore", "path": "expiresAt", "value": "2025-12-31" }
+
+// Date must be after a target date
+{ "type": "dateAfter", "path": "createdAt", "value": "2024-01-01" }
+
+// Date must be within the last N time units
+{ "type": "dateWithinLast", "path": "lastLogin", "amount": 7, "unit": "days" }
+{ "type": "dateWithinLast", "path": "updatedAt", "amount": 1, "unit": "hours" }</code></pre>
+
+  <p>Supported <code>unit</code> values for <code>dateWithinLast</code>:</p>
+  <table>
+    <thead><tr><th>Unit</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>"seconds"</code></td><td>Within last N seconds</td></tr>
+      <tr><td><code>"minutes"</code></td><td>Within last N minutes</td></tr>
+      <tr><td><code>"hours"</code></td><td>Within last N hours</td></tr>
+      <tr><td><code>"days"</code></td><td>Within last N days</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Conditional Validations -->
+  <h2 id="val-conditional">Conditional Validations (if/then/else)</h2>
+  <p>Run different validations based on a condition. The <code>condition</code> is itself a validation — if it passes, the <code>then</code> branch runs; if it fails, the optional <code>else</code> branch runs.</p>
+  <pre><code>// If user is premium, check for premium features; otherwise check they don't exist
+{
+  "type": "if",
+  "condition": { "type": "equals", "path": "type", "value": "premium" },
+  "then": [
+    { "type": "exists", "path": "premiumFeatures" },
+    { "type": "greaterThan", "path": "quota", "value": 1000 }
+  ],
+  "else": [
+    { "type": "notExists", "path": "premiumFeatures" },
+    { "type": "lessThanOrEqual", "path": "quota", "value": 100 }
+  ]
+}
+
+// If response has pagination, validate pagination fields
+{
+  "type": "if",
+  "condition": { "type": "exists", "path": "meta.pagination" },
+  "then": [
+    { "type": "typeOf", "path": "meta.pagination.page", "expected": "number" },
+    { "type": "typeOf", "path": "meta.pagination.total", "expected": "number" }
+  ]
+}</code></pre>
+
+  <div class="alert alert-info">
+    <strong>How it works:</strong> The <code>condition</code> can be any validation type (equals, exists, typeOf, etc.). If no <code>else</code> branch is provided and the condition fails, the validation passes silently. All validations in the selected branch must pass for the overall <code>if</code> validation to pass.
+  </div>
+
+  <!-- Array Validations Detail -->
+  <h2 id="array-overview">Choosing the Right Array Validation</h2>
+  <p>The framework provides 5 array validation types. Here's when to use each:</p>
+
+  <table class="comparison-table">
+    <thead><tr><th>Type</th><th>Use When...</th><th>Example Scenario</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>arrayEvery</code></td>
+        <td>ALL items must match</td>
+        <td>Every user in the list must have an <code>id</code> and <code>email</code></td>
+      </tr>
+      <tr>
+        <td><code>arraySome</code></td>
+        <td>At least ONE item matches</td>
+        <td>At least one product has category "electronics"</td>
+      </tr>
+      <tr>
+        <td><code>arrayNone</code></td>
+        <td>NO items should match</td>
+        <td>No items in the response have status "deleted"</td>
+      </tr>
+      <tr>
+        <td><code>arrayItemAt</code></td>
+        <td>You know the exact index</td>
+        <td>The first item (index 0) should be the "Name" attribute</td>
+      </tr>
+      <tr>
+        <td><code>arrayFind</code></td>
+        <td>Find by field value, then validate</td>
+        <td>Find the item where <code>attribute = 998</code> and check its value</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-success">
+    <strong>Recommendation:</strong> When the array order is unpredictable, prefer <code>arrayFind</code> over <code>arrayItemAt</code>. <code>arrayFind</code> locates items by their content rather than position, making your tests more resilient to ordering changes.
+  </div>
+
+  <h3>How Nested Validations Work</h3>
+  <p>All array validation types accept a <code>validations</code> array — these are sub-validations that run against individual array items. Inside nested validations, the <code>path</code> is <strong>relative to the array item</strong>, not the root response.</p>
+
+  <p>For example, if your response is:</p>
+  <pre><code>{
+  "values": [
+    { "attribute": 997, "value": true },
+    { "attribute": 998, "value": "hello" },
+    { "attribute": 1000, "language": 201, "value": "Name" }
+  ]
+}</code></pre>
+
+  <p>To check that every item has an <code>attribute</code> field:</p>
+  <pre><code>{
+  "type": "arrayEvery",
+  "path": "values",           // points to the array
+  "validations": [
+    { "type": "exists", "path": "attribute" }   // "attribute" is relative to each item
+  ]
+}</code></pre>
+
+  <h2 id="val-arrayevery">arrayEvery</h2>
+  <p>Runs validations against <strong>every single item</strong> in the array. The test fails if <em>any</em> item fails <em>any</em> nested validation. The error message tells you which item index failed.</p>
+
+  <h3>When to use</h3>
+  <p>Use this to enforce a contract across all items — e.g., every item must have required fields, every item must have the correct data types, or every item must meet certain criteria.</p>
+
+  <h3>Examples</h3>
+  <pre><code>// Every item must have an id and name
+{
+  "type": "arrayEvery",
+  "path": "data.users",
+  "validations": [
+    { "type": "exists", "path": "id" },
+    { "type": "typeOf", "path": "name", "expected": "string" },
+    { "type": "regex", "path": "email", "pattern": "^.+@.+$" }
+  ]
+}
+
+// Every item in the root response array
+{
+  "type": "arrayEvery",
+  "validations": [
+    { "type": "exists", "path": "id" },
+    { "type": "greaterThan", "path": "price", "value": 0 }
+  ]
+}</code></pre>
+
+  <h3>What happens on failure</h3>
+  <p>Error: <code>Array item [3] failed: Expected "email" to match pattern "^.+@.+$"</code></p>
+
+  <h2 id="val-arraysome">arraySome</h2>
+  <p>Checks that <strong>at least one item</strong> in the array passes <strong>all</strong> the nested validations. The test passes as soon as one qualifying item is found.</p>
+
+  <h3>When to use</h3>
+  <p>Use this when you expect a certain type of item to exist in the array but don't know its exact position. For example, checking that a search result contains at least one relevant match.</p>
+
+  <h3>Examples</h3>
+  <pre><code>// At least one item has attribute 998
+{
+  "type": "arraySome",
+  "path": "values",
+  "validations": [
+    { "type": "equals", "path": "attribute", "value": 998 }
+  ]
+}
+
+// At least one product is in the "electronics" category with price > 100
+{
+  "type": "arraySome",
+  "path": "products",
+  "validations": [
+    { "type": "equals", "path": "category", "value": "electronics" },
+    { "type": "greaterThan", "path": "price", "value": 100 }
+  ]
+}</code></pre>
+
+  <h3>What happens on failure</h3>
+  <p>Error: <code>Expected at least one item in "values" to pass all validations, but none did</code></p>
+
+  <h2 id="val-arraynone">arrayNone</h2>
+  <p>Checks that <strong>no items</strong> in the array pass all the nested validations. This is the opposite of <code>arraySome</code> — it's for <strong>negative testing</strong>.</p>
+
+  <h3>When to use</h3>
+  <p>Use this to verify that unwanted data is absent. For example, ensuring no deleted records appear in the response, no items have invalid status values, or no sensitive data is exposed.</p>
+
+  <h3>Examples</h3>
+  <pre><code>// No items should have status "deleted"
+{
+  "type": "arrayNone",
+  "path": "data.items",
+  "validations": [
+    { "type": "equals", "path": "status", "value": "deleted" }
+  ]
+}
+
+// No items should have a negative price
+{
+  "type": "arrayNone",
+  "path": "products",
+  "validations": [
+    { "type": "lessThan", "path": "price", "value": 0 }
+  ]
+}
+
+// No items should expose the password field
+{
+  "type": "arrayNone",
+  "path": "users",
+  "validations": [
+    { "type": "exists", "path": "password" }
+  ]
+}</code></pre>
+
+  <h3>What happens on failure</h3>
+  <p>Error: <code>Expected no items in "data.items" to pass, but item(s) [2, 5] matched</code></p>
+  <p>The error tells you exactly which item indices violated the expectation.</p>
+
+  <h2 id="val-arrayitemat">arrayItemAt</h2>
+  <p>Validates a <strong>specific item by its index</strong> in the array. The index is zero-based (0 = first item, 1 = second, etc.).</p>
+
+  <h3>When to use</h3>
+  <p>Use this when you know the exact position of the item you want to validate. Common scenarios include APIs that return items in a guaranteed order, checking the first or last item, or paginated responses where the position is predictable.</p>
+
+  <h3>Examples</h3>
+  <pre><code>// First item must have attribute 998
+{
+  "type": "arrayItemAt",
+  "path": "values",
+  "index": 0,
+  "validations": [
+    { "type": "equals", "path": "attribute", "value": 998 },
+    { "type": "exists", "path": "value" }
+  ]
+}
+
+// Third item (index 2) must be a string type
+{
+  "type": "arrayItemAt",
+  "path": "data.columns",
+  "index": 2,
+  "validations": [
+    { "type": "equals", "path": "type", "value": "string" }
+  ]
+}</code></pre>
+
+  <h3>What happens on failure</h3>
+  <ul>
+    <li>If the index is out of bounds: <code>Array "values" has no item at index [5] (length: 3)</code></li>
+    <li>If a validation fails: <code>Array item [0] failed: Expected "attribute" to equal 997</code></li>
+  </ul>
+
+  <div class="alert alert-warn">
+    <strong>Caution:</strong> If the array order might change between API calls, use <code>arrayFind</code> instead. It locates items by content rather than position, making tests more stable.
+  </div>
+
+  <h2 id="val-arrayfind">arrayFind</h2>
+  <p>Finds the <strong>first item</strong> in the array where a specified field equals a given value, then runs nested validations on that item. This is the most flexible and reliable array validation.</p>
+
+  <h3>When to use</h3>
+  <p>Use this whenever you need to validate a specific item in an array but the order isn't guaranteed. It's like saying "find the item where X = Y, then check that...". This is the recommended approach for most array item validations.</p>
+
+  <h3>How the <code>where</code> clause works</h3>
+  <table>
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>where.path</code></td><td>The field to match against (relative to each array item)</td></tr>
+      <tr><td><code>where.value</code></td><td>The value to look for (exact match)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Examples</h3>
+  <pre><code>// Find item where attribute = 1001, check its value is "String"
+{
+  "type": "arrayFind",
+  "path": "values",
+  "where": { "path": "attribute", "value": 1001 },
+  "validations": [
+    { "type": "equals", "path": "value", "value": "String" }
+  ]
+}
+
+// Find the admin user and verify their permissions
+{
+  "type": "arrayFind",
+  "path": "users",
+  "where": { "path": "role", "value": "admin" },
+  "validations": [
+    { "type": "exists", "path": "permissions" },
+    { "type": "isArray", "path": "permissions" },
+    { "type": "arrayLength", "path": "permissions", "min": 1 }
+  ]
+}
+
+// Find a product by SKU and validate its details
+{
+  "type": "arrayFind",
+  "path": "products",
+  "where": { "path": "sku", "value": "PRD-001" },
+  "validations": [
+    { "type": "typeOf", "path": "price", "expected": "number" },
+    { "type": "greaterThan", "path": "price", "value": 0 },
+    { "type": "equals", "path": "inStock", "value": true }
+  ]
+}</code></pre>
+
+  <h3>What happens on failure</h3>
+  <ul>
+    <li>If no matching item is found: <code>No item found in "values" where attribute = 1001</code></li>
+    <li>If the item is found but a validation fails: <code>Item where attribute = 1001 failed: Expected "value" to equal "String"</code></li>
+  </ul>
+
+  <!-- Variable Extraction & Chaining -->
+  <h2 id="variable-extraction">Variable Extraction & Chaining</h2>
+  <p>Variable extraction lets you capture values from one API response and use them in subsequent test requests. This is essential for multi-step workflows like "create a resource, then fetch it by ID".</p>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>Add an <code>extract</code> field to a test case — keys are variable names, values are response paths</li>
+    <li>Use <code>{{variableName}}</code> in any subsequent test's <code>endpoint</code>, <code>headers</code>, <code>body</code>, or <code>queryParams</code></li>
+    <li>When any test in a suite uses <code>extract</code>, the suite automatically runs in <strong>serial mode</strong> (tests execute in order, not in parallel)</li>
+  </ol>
+
+  <h3>Extract Syntax</h3>
+  <pre><code>{
+  "name": "create user",
+  "method": "POST",
+  "endpoint": "users",
+  "body": { "name": "Alice" },
+  "expectedStatus": 201,
+  "extract": {
+    "userId": "data.id",
+    "userName": "data.name"
+  }
+}</code></pre>
+  <p>This extracts <code>data.id</code> from the response and stores it as <code>userId</code>, and <code>data.name</code> as <code>userName</code>.</p>
+
+  <h3>Using Extracted Variables</h3>
+  <pre><code>{
+  "name": "get created user",
+  "method": "GET",
+  "endpoint": "users/{{userId}}",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "equals", "path": "data.name", "value": "{{userName}}" }
+  ]
+}</code></pre>
+
+  <div class="alert alert-info">
+    <strong>Type Preservation:</strong> When a placeholder like <code>{{userId}}</code> is the <strong>entire</strong> value (not combined with other text), the original type is preserved. For example, if <code>userId</code> was extracted as the number <code>42</code>, it stays a number — not the string <code>"42"</code>. This is important for numeric comparisons in validations.
+  </div>
+
+  <h3>Where Variables Can Be Used</h3>
+  <table>
+    <thead><tr><th>Field</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>endpoint</code></td><td><code>"users/{{userId}}/profile"</code></td></tr>
+      <tr><td><code>headers</code></td><td><code>{ "Authorization": "Bearer {{token}}" }</code></td></tr>
+      <tr><td><code>body</code></td><td><code>{ "parentId": "{{parentId}}" }</code></td></tr>
+      <tr><td><code>queryParams</code></td><td><code>{ "filter": "{{filterValue}}" }</code></td></tr>
+      <tr><td><code>validations[].value</code></td><td><code>{ "type": "equals", "path": "id", "value": "{{userId}}" }</code></td></tr>
+    </tbody>
+  </table>
+
+  <h2 id="chaining-example">Full Chaining Example</h2>
+  <p>A complete create-read-update-delete workflow:</p>
+  <pre><code>{
+  "suite": "User CRUD Workflow",
+  "tests": [
+    {
+      "name": "create user",
+      "method": "POST",
+      "endpoint": "users",
+      "body": { "name": "Test User", "email": "test@example.com" },
+      "expectedStatus": 201,
+      "extract": { "userId": "data.id" }
+    },
+    {
+      "name": "get created user",
+      "method": "GET",
+      "endpoint": "users/{{userId}}",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "data.name", "value": "Test User" }
+      ]
+    },
+    {
+      "name": "update user",
+      "method": "PUT",
+      "endpoint": "users/{{userId}}",
+      "body": { "name": "Updated User" },
+      "expectedStatus": 200
+    },
+    {
+      "name": "delete user",
+      "method": "DELETE",
+      "endpoint": "users/{{userId}}",
+      "expectedStatus": 204
+    }
+  ]
+}</code></pre>
+
+  <div class="alert alert-warn">
+    <strong>Important:</strong> Variables are scoped to a single suite. Tests in different suites cannot share variables. If you need a multi-step workflow, put all the steps in the same suite.
+  </div>
+
+  <!-- Path Syntax -->
+  <h2 id="path-syntax">Path Syntax</h2>
+  <p>The <code>path</code> field uses <strong>dot notation</strong> to access nested values in the JSON response. Array indices use bracket notation.</p>
+
+  <table>
+    <thead><tr><th>Path</th><th>What It Accesses</th><th>Example Response</th></tr></thead>
+    <tbody>
+      <tr><td><code>id</code></td><td>Root-level field</td><td><code>{ "id": 1 }</code></td></tr>
+      <tr><td><code>meta.name</code></td><td>Nested field</td><td><code>{ "meta": { "name": "Test" } }</code></td></tr>
+      <tr><td><code>data.config.enabled</code></td><td>Deep nesting</td><td><code>{ "data": { "config": { "enabled": true } } }</code></td></tr>
+      <tr><td><code>[0].name</code></td><td>First item in root array</td><td><code>[{ "name": "Item 1" }]</code></td></tr>
+      <tr><td><code>items[2].id</code></td><td>Third item in nested array</td><td><code>{ "items": [.., .., { "id": 3 }] }</code></td></tr>
+      <tr><td><code>values[0].attribute</code></td><td>Field in first array item</td><td><code>{ "values": [{ "attribute": 997 }] }</code></td></tr>
+      <tr><td><em>(omitted or empty)</em></td><td>Entire response body</td><td>Used with <code>isArray</code>, <code>arrayLength</code>, <code>arrayEvery</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Path in Array Validations vs. Simple Validations</h3>
+  <p>An important distinction:</p>
+  <ul>
+    <li><strong>In simple validations</strong> (equals, exists, etc.): <code>path</code> is relative to the <strong>root response</strong>.</li>
+    <li><strong>In array validation's <code>path</code></strong> (arrayEvery, arraySome, etc.): <code>path</code> points to the <strong>array itself</strong> in the response.</li>
+    <li><strong>Inside nested validations</strong>: <code>path</code> is relative to <strong>each array item</strong>.</li>
+  </ul>
+
+  <pre><code>// Response: { "values": [{ "attribute": 997, "value": true }, ...] }
+
+// Simple validation — path from root
+{ "type": "equals", "path": "values[0].attribute", "value": 997 }
+
+// Array validation — path points to array, nested paths are per-item
+{
+  "type": "arrayEvery",
+  "path": "values",              // "values" = the array in the response
+  "validations": [
+    { "type": "exists", "path": "attribute" }   // "attribute" = field in each item
+  ]
+}</code></pre>
+
+  <!-- Nested Validations -->
+  <h2 id="nested-validations">Combining Validations</h2>
+  <p>You can combine multiple validation types in a single test case for thorough API testing. All validations run independently — even if one fails, the rest still execute. The report shows each validation's pass/fail status individually.</p>
+
+  <h3>Example: Complete API response validation</h3>
+  <pre><code>{
+  "name": "should return valid item list",
+  "method": "GET",
+  "endpoint": "items",
+  "expectedStatus": 200,
+  "validations": [
+    { "type": "isArray" },
+    { "type": "arrayLength", "min": 1, "max": 100 },
+    {
+      "type": "arrayEvery",
+      "validations": [
+        {
+          "type": "schema",
+          "properties": {
+            "id": "number",
+            "name": "string",
+            "status": "string"
+          }
+        },
+        { "type": "greaterThan", "path": "id", "value": 0 }
+      ]
+    },
+    {
+      "type": "arraySome",
+      "validations": [
+        { "type": "equals", "path": "status", "value": "active" }
+      ]
+    },
+    {
+      "type": "arrayNone",
+      "validations": [
+        { "type": "exists", "path": "password" }
+      ]
+    }
+  ]
+}</code></pre>
+
+  <p>This single test verifies:</p>
+  <ol>
+    <li>The response is an array with 1–100 items</li>
+    <li>Every item has the correct schema (id=number, name=string, status=string)</li>
+    <li>Every item has a positive id</li>
+    <li>At least one item is "active"</li>
+    <li>No items expose a "password" field</li>
+  </ol>
+
+  <!-- Multiple Suites -->
+  <h2 id="multiple-suites">Multiple Test Suites</h2>
+  <p>Each <code>.json</code> file in a project's <code>test-configs/</code> folder becomes a separate test suite. Organize your tests by feature, module, or however you like:</p>
+  <div class="file-tree">
+    <span class="folder">test-configs/my-project/</span><br>
+    ├── <span class="file">auth.json</span> <span class="desc">— Authentication &amp; login tests</span><br>
+    ├── <span class="file">products.json</span> <span class="desc">— Product API tests</span><br>
+    ├── <span class="file">orders.json</span> <span class="desc">— Order workflow tests</span><br>
+    ├── <span class="file">users.json</span> <span class="desc">— User management tests</span><br>
+    └── <span class="file">search.json</span> <span class="desc">— Search &amp; filtering tests</span><br>
+  </div>
+
+  <div class="alert alert-info">
+    No code changes needed — just add a new JSON file and run <code>npm test</code>. Or use the web UI to create suites visually.
+  </div>
+
+  <!-- Commands -->
+  <h2 id="commands">Commands</h2>
+  <table>
+    <thead><tr><th>Command</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>npm start</code></td><td>Start the web UI server at <code>http://localhost:3000</code></td></tr>
+      <tr><td><code>npm test</code></td><td>Run all tests for all projects and generate HTML report</td></tr>
+      <tr><td><code>TEST_PROJECT=id npx playwright test</code></td><td>Run tests for a specific project only</td></tr>
+      <tr><td><code>npm run test:debug</code></td><td>Run tests in Playwright debug mode</td></tr>
+    </tbody>
+  </table>
+
+  <p>After running tests, open the report at <code>playwright-report/index.html</code> in your browser.</p>
+
+  <!-- Reports -->
+  <h2 id="reports">HTML Reports</h2>
+  <p>After running tests, a custom interactive HTML report is generated in <code>playwright-report/index.html</code>.</p>
+
+  <h3>Report Features</h3>
+  <ul>
+    <li><strong>Summary dashboard</strong> — total, passed, failed, skipped counts with pass rate percentage</li>
+    <li><strong>Visual progress bar</strong> — color-coded proportional bar showing pass/fail/skip ratio</li>
+    <li><strong>Filter buttons</strong> — click to show only passed, failed, or all tests</li>
+    <li><strong>Search box</strong> — type to find specific tests by name</li>
+    <li><strong>Collapsible test suites</strong> — grouped by suite with individual pass/fail counts</li>
+    <li><strong>Per-validation breakdown</strong> — each validation shows as a separate row with pass/fail icon</li>
+    <li><strong>Actual vs. Expected values</strong> — failed validations show what was received vs. what was expected</li>
+    <li><strong>Clean error messages</strong> — ANSI codes are stripped for readable error display</li>
+    <li><strong>Print-friendly</strong> — auto-expands all details when printing</li>
+  </ul>
+
+  <h3>Understanding the Report</h3>
+  <p>Each test case in the report shows:</p>
+  <ol>
+    <li><strong>HTTP Status check</strong> — always the first validation (was the status code correct?)</li>
+    <li><strong>Individual validations</strong> — each validation you configured appears as a row with a green checkmark or red X</li>
+    <li><strong>Failure details</strong> — for failed validations, the actual value and expected value are shown so you can quickly diagnose issues</li>
+  </ol>
+
+  <ol class="steps">
+    <li>Run tests: <code>npm test</code> or click "Run Tests" in the web UI</li>
+    <li>Open <code>playwright-report/index.html</code> in your browser (or click the report link in the web UI)</li>
+    <li>Review the dashboard summary and click on individual tests for per-validation details</li>
+  </ol>
+
+  <!-- CI/CD -->
+  <h2 id="ci-cd">CI/CD Integration</h2>
+  <h3>GitHub Actions</h3>
+  <pre><code>name: API Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright test
+        env:
+          TEST_PROJECT: my-project
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30</code></pre>
+
+  <div class="alert alert-warn">
+    Remember to add <code>projects.config.json</code> to your CI environment (or generate it from CI secrets) since it contains authentication credentials and is git-ignored.
+  </div>
+
+  <h3>Azure DevOps</h3>
+  <pre><code>trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '20.x'
+  - script: npm ci
+  - script: npx playwright test
+    env:
+      TEST_PROJECT: my-project
+  - task: PublishPipelineArtifact@1
+    condition: always()
+    inputs:
+      targetPath: playwright-report
+      artifactName: test-report</code></pre>
+
+  <!-- Built-in Variables -->
+  <h2 id="built-in-variables">Built-in Variables</h2>
+  <p>Use built-in variables in endpoints, body, query params, and validations. They generate fresh values each time they're referenced.</p>
+  <table>
+    <thead><tr><th>Variable</th><th>Output</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>{{$timestamp}}</code></td><td>Current Unix timestamp</td><td><code>1710000000000</code></td></tr>
+      <tr><td><code>{{$isoDate}}</code></td><td>ISO 8601 date string</td><td><code>2024-03-10T12:00:00.000Z</code></td></tr>
+      <tr><td><code>{{$guid}}</code> / <code>{{$uuid}}</code></td><td>Random UUID v4</td><td><code>a1b2c3d4-e5f6-...</code></td></tr>
+      <tr><td><code>{{$randomInt}}</code></td><td>Random integer 1–100000</td><td><code>42857</code></td></tr>
+      <tr><td><code>{{$randomEmail}}</code></td><td>Random test email</td><td><code>test52381@example.com</code></td></tr>
+      <tr><td><code>{{$randomString}}</code></td><td>12-char alphanumeric</td><td><code>a1b2c3d4e5f6</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Variable Resolution Priority</h3>
+  <ol>
+    <li><strong>Extracted variables</strong> — from <code>extract</code> in earlier tests</li>
+    <li><strong>Data-set variables</strong> — from <code>dataSet</code> entries (override extracted vars)</li>
+    <li><strong>Built-in variables</strong> — <code>$timestamp</code>, <code>$guid</code>, etc.</li>
+    <li><strong>Environment variables</strong> — from <code>process.env</code> or <code>.env</code> file</li>
+  </ol>
+
+  <h3>Usage Example</h3>
+  <pre><code>{
+  "name": "create unique user",
+  "method": "POST",
+  "endpoint": "users",
+  "body": {
+    "email": "{{$randomEmail}}",
+    "name": "User {{$randomString}}",
+    "createdAt": "{{$isoDate}}"
+  },
+  "expectedStatus": 201
+}</code></pre>
+
+  <!-- Data-Driven Tests -->
+  <h2 id="data-driven">Data-Driven Tests</h2>
+  <p>Use the <code>dataSet</code> field to run the same test multiple times with different data. Each entry in the array creates a separate test run.</p>
+
+  <pre><code>{
+  "name": "should return user by ID",
+  "method": "GET",
+  "endpoint": "users/{{id}}",
+  "expectedStatus": 200,
+  "dataSet": [
+    { "id": 1, "expectedName": "Leanne Graham" },
+    { "id": 2, "expectedName": "Ervin Howell" },
+    { "id": 3, "expectedName": "Clementine Bauch" }
+  ],
+  "validations": [
+    { "type": "equals", "path": "name", "value": "{{expectedName}}" }
+  ]
+}</code></pre>
+
+  <p>This generates 3 tests in the report: <code>[data #1]</code>, <code>[data #2]</code>, <code>[data #3]</code>.</p>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Data-set variables can be used in endpoints, body, query params, and validation values. They take precedence over extracted variables.
+  </div>
+
+  <!-- Multi-Environment -->
+  <h2 id="multi-env">Multi-Environment Support</h2>
+  <p>Define multiple environments (dev, staging, prod) per project with overridden base URLs and credentials. Select which environment to use when running tests.</p>
+
+  <h3>Setting Up Environments</h3>
+  <p>In the project settings modal, click <strong>"Add Environment"</strong> and fill in:</p>
+  <table>
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Name</strong></td><td>Environment identifier (e.g., <code>staging</code>, <code>prod</code>)</td></tr>
+      <tr><td><strong>Base URL</strong></td><td>Override the project's base URL for this environment</td></tr>
+      <tr><td><strong>Auth Type</strong></td><td>Override authentication type (or "Same as project")</td></tr>
+      <tr><td><strong>Credentials</strong></td><td>JSON object to merge with project credentials (e.g., <code>{"token":"..."}</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Running with an Environment</h3>
+  <p>In the Web UI, select an environment from the dropdown in the project header before clicking "Run Tests".</p>
+  <p>From the command line:</p>
+  <pre><code>TEST_PROJECT=my-api TEST_ENV=staging npx playwright test</code></pre>
+
+  <!-- Tags & Filtering -->
+  <h2 id="tags">Tags &amp; Filtering</h2>
+  <p>Add tags to categorize tests (e.g., <code>smoke</code>, <code>regression</code>, <code>auth</code>). Tags are displayed as badges on test items and can be used to filter which tests to run.</p>
+
+  <pre><code>{
+  "name": "login should return token",
+  "method": "POST",
+  "endpoint": "auth/login",
+  "tags": ["smoke", "auth"],
+  "expectedStatus": 200,
+  "body": { "username": "admin", "password": "secret" },
+  "validations": [
+    { "type": "exists", "path": "token" }
+  ]
+}</code></pre>
+
+  <h3>Filtering by Tags</h3>
+  <p>In the Web UI, tag filter chips appear above the test suites when any test has tags. Click a tag to show only tests with that tag — they are automatically selected for running. Click "Clear" to remove the filter.</p>
+
+  <!-- Postman Import -->
+  <h2 id="postman-import">Import from Postman</h2>
+  <p>Import an existing Postman Collection (v2.1 format) as a new project with test suites.</p>
+
+  <h3>How to Import</h3>
+  <ol>
+    <li>In Postman, go to your collection → <strong>Export</strong> → choose <strong>Collection v2.1</strong></li>
+    <li>In the Web UI sidebar, click the <strong>"Postman"</strong> button</li>
+    <li>Select the exported <code>.json</code> file</li>
+  </ol>
+
+  <h3>What Gets Converted</h3>
+  <table>
+    <thead><tr><th>Postman Feature</th><th>Converted To</th></tr></thead>
+    <tbody>
+      <tr><td>Collection name</td><td>Project name &amp; ID</td></tr>
+      <tr><td>Folders</td><td>Test suites (one per folder)</td></tr>
+      <tr><td>Requests</td><td>Test cases with method, endpoint, body</td></tr>
+      <tr><td>Query parameters</td><td><code>queryParams</code> object</td></tr>
+      <tr><td>Raw JSON body</td><td><code>body</code> object</td></tr>
+      <tr><td><code>{{variables}}</code></td><td>Preserved as-is (same syntax)</td></tr>
+      <tr><td>Top-level requests</td><td>"General" suite</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> All imported tests default to <code>expectedStatus: 200</code>. You'll want to update expected statuses and add validations after importing.
+  </div>
+
+  <!-- Drag & Drop Reorder -->
+  <h2 id="drag-reorder">Drag &amp; Drop Reorder</h2>
+  <p>Reorder tests within a suite by dragging the grip handle (<code>⠿</code>) on the left side of each test item. The new order is saved automatically when you drop.</p>
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Test order matters when using variable extraction (<code>extract</code>). Earlier tests run first in serial mode, so arrange your extraction tests before tests that consume the variables.
+  </div>
+
+  <!-- Retry Configuration -->
+  <h2 id="retry">Retry Configuration</h2>
+  <p>Add a <code>retry</code> object to any test case to automatically retry on failure. This is useful for flaky endpoints, eventual consistency, or APIs that take time to propagate changes.</p>
+  <pre><code>{
+  "name": "check order status",
+  "method": "GET",
+  "endpoint": "orders/{{orderId}}",
+  "expectedStatus": 200,
+  "retry": {
+    "count": 3,
+    "delay": 2000
+  },
+  "validations": [
+    { "type": "equals", "path": "status", "value": "completed" }
+  ]
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>count</code></td><td>number</td><td>—</td><td>Number of additional retry attempts after the first failure</td></tr>
+      <tr><td><code>delay</code></td><td>number</td><td>1000</td><td>Delay in milliseconds between retry attempts</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>How it works:</strong> On failure, the entire request + validation cycle is re-executed. If the test passes on any attempt, it's reported as passed. If all attempts fail, the error from the last attempt is reported.
+  </div>
+
+  <!-- Pre/Post Request Hooks -->
+  <h2 id="hooks">Pre/Post Request Hooks</h2>
+  <p>Run custom JavaScript before or after each request. Hooks receive a context object with <code>request</code>, <code>response</code> (afterResponse only), <code>vars</code>, and <code>env</code>.</p>
+
+  <h3>beforeRequest</h3>
+  <p>Modify request fields (endpoint, headers, body) before the request is sent:</p>
+  <pre><code>{
+  "name": "create item with timestamp",
+  "method": "POST",
+  "endpoint": "items",
+  "expectedStatus": 201,
+  "beforeRequest": "request.headers = request.headers || {}; request.headers['X-Request-Id'] = Date.now().toString();",
+  "body": { "name": "New Item" }
+}</code></pre>
+
+  <h3>afterResponse</h3>
+  <p>Inspect the response, set variables, or perform custom logging:</p>
+  <pre><code>{
+  "name": "get token",
+  "method": "POST",
+  "endpoint": "auth/login",
+  "expectedStatus": 200,
+  "afterResponse": "vars.authToken = response.data.token; vars.userId = response.data.user.id;",
+  "body": { "email": "admin@example.com", "password": "secret" }
+}</code></pre>
+
+  <h3>Context Object</h3>
+  <table>
+    <thead><tr><th>Property</th><th>Available In</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>request.method</code></td><td>Both</td><td>HTTP method</td></tr>
+      <tr><td><code>request.endpoint</code></td><td>Both</td><td>Request endpoint (modifiable in beforeRequest)</td></tr>
+      <tr><td><code>request.headers</code></td><td>Both</td><td>Request headers (modifiable in beforeRequest)</td></tr>
+      <tr><td><code>request.body</code></td><td>Both</td><td>Request body (modifiable in beforeRequest)</td></tr>
+      <tr><td><code>response.status</code></td><td>afterResponse</td><td>HTTP status code</td></tr>
+      <tr><td><code>response.data</code></td><td>afterResponse</td><td>Response body (parsed JSON)</td></tr>
+      <tr><td><code>vars</code></td><td>Both</td><td>Shared variable store (read/write)</td></tr>
+      <tr><td><code>env</code></td><td>Both</td><td>Environment variables (process.env)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> Hook errors are non-fatal — if a hook throws, the test continues. Hooks are JavaScript expressions evaluated with <code>new Function()</code>.
+  </div>
+
+  <!-- Poll Mode -->
+  <h2 id="poll-mode">Poll Mode</h2>
+  <p>Poll mode repeatedly executes a test until a condition passes or a timeout is reached. Useful for async operations like waiting for a job to complete or a resource to become available.</p>
+
+  <pre><code>{
+  "name": "wait for order to be processed",
+  "method": "GET",
+  "endpoint": "orders/{{orderId}}",
+  "expectedStatus": 200,
+  "poll": {
+    "interval": 2000,
+    "timeout": 30000,
+    "condition": { "type": "equals", "path": "status", "value": "completed" }
+  },
+  "validations": [
+    { "type": "equals", "path": "status", "value": "completed" },
+    { "type": "exists", "path": "completedAt" }
+  ]
+}</code></pre>
+
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>interval</code></td><td>number</td><td>Milliseconds between poll attempts</td></tr>
+      <tr><td><code>timeout</code></td><td>number</td><td>Maximum milliseconds to keep polling</td></tr>
+      <tr><td><code>condition</code></td><td>Validation</td><td>A validation rule that must pass to stop polling</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>How it works:</strong> Poll mode activates after the initial request + retry cycle fails. The test is re-executed every <code>interval</code> ms. When the <code>condition</code> validation passes, all validations are re-checked. If all pass, the test succeeds. If timeout is reached, the last failure is reported.
+  </div>
+
+  <!-- Conditional Execution -->
+  <h2 id="conditional-exec">Conditional Execution (onlyIf)</h2>
+  <p>Skip tests based on the current environment or extracted variable values. Tests that don't match the condition are automatically skipped.</p>
+
+  <h3>By Environment</h3>
+  <pre><code>{
+  "name": "delete all test data",
+  "method": "DELETE",
+  "endpoint": "test-data/cleanup",
+  "expectedStatus": 200,
+  "onlyIf": { "env": "staging" }
+}</code></pre>
+  <p>This test only runs when <code>TEST_ENV=staging</code>. In all other environments, it's skipped.</p>
+
+  <h3>By Variable</h3>
+  <pre><code>{
+  "name": "verify premium features",
+  "method": "GET",
+  "endpoint": "users/{{userId}}/features",
+  "expectedStatus": 200,
+  "onlyIf": { "var": "userType", "equals": "premium" }
+}</code></pre>
+  <p>This test only runs if the extracted variable <code>userType</code> equals <code>"premium"</code>. If <code>equals</code> is omitted, the test runs if the variable is truthy.</p>
+
+  <h3>Skip vs. onlyIf</h3>
+  <table>
+    <thead><tr><th>Feature</th><th>Purpose</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td><code>skip: true</code></td><td>Always skip (e.g., temporarily disable)</td><td><code>"skip": true</code> or <code>"skip": "broken endpoint"</code></td></tr>
+      <tr><td><code>onlyIf.env</code></td><td>Run only in a specific environment</td><td><code>"onlyIf": { "env": "production" }</code></td></tr>
+      <tr><td><code>onlyIf.var</code></td><td>Run only when a variable has a specific value</td><td><code>"onlyIf": { "var": "role", "equals": "admin" }</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- Shared Fixtures -->
+  <h2 id="fixtures">Shared Fixtures</h2>
+  <p>Define reusable data blocks in a <code>fixtures.json</code> file per project folder, or as a <code>fixtures</code> field in the suite config. Reference them with <code>$ref</code> in your test cases.</p>
+
+  <h3>fixtures.json (per project)</h3>
+  <p>Create a <code>fixtures.json</code> file in the project's test-configs folder:</p>
+  <pre><code>// test-configs/my-api/fixtures.json
+{
+  "newUser": {
+    "name": "Test User",
+    "email": "test@example.com",
+    "role": "admin"
+  },
+  "newProduct": {
+    "name": "Widget",
+    "price": 29.99,
+    "category": "tools"
+  }
+}</code></pre>
+
+  <h3>Using $ref in tests</h3>
+  <pre><code>{
+  "suite": "User Management",
+  "tests": [
+    {
+      "name": "create a user",
+      "method": "POST",
+      "endpoint": "users",
+      "expectedStatus": 201,
+      "body": { "$ref": "fixtures.newUser" }
+    }
+  ]
+}</code></pre>
+  <p>At runtime, <code>{ "$ref": "fixtures.newUser" }</code> is replaced with the full fixture object. References can be nested: <code>"fixtures.newUser.address"</code>.</p>
+
+  <h3>Suite-level fixtures</h3>
+  <p>You can also define fixtures inline in the suite config. Suite-level fixtures take precedence over shared <code>fixtures.json</code>:</p>
+  <pre><code>{
+  "suite": "Order Tests",
+  "fixtures": {
+    "sampleOrder": {
+      "items": [{ "id": 1, "qty": 2 }],
+      "shipping": "express"
+    }
+  },
+  "tests": [
+    {
+      "name": "create order",
+      "method": "POST",
+      "endpoint": "orders",
+      "expectedStatus": 201,
+      "body": { "$ref": "fixtures.sampleOrder" }
+    }
+  ]
+}</code></pre>
+
+  <div class="alert alert-info">
+    <strong>How it works:</strong> The framework loads <code>fixtures.json</code> from the project folder and merges it with suite-level fixtures. Suite fixtures override shared ones when keys conflict. The <code>$ref</code> references are resolved recursively before test execution.
+  </div>
+
+  <!-- OpenAPI Import -->
+  <h2 id="openapi-import">Import from OpenAPI / Swagger</h2>
+  <p>Import an OpenAPI 3.x or Swagger 2.0 specification to automatically generate test suites. The importer creates test cases for each endpoint with auto-generated validations based on the response schema.</p>
+
+  <h3>How to Import</h3>
+  <ol class="steps">
+    <li>In the web UI sidebar, click <strong>"Import OpenAPI"</strong></li>
+    <li>Select your OpenAPI/Swagger JSON file</li>
+    <li>The framework creates a new project with suites grouped by API tags</li>
+    <li>Review and customize the generated tests as needed</li>
+  </ol>
+
+  <h3>What Gets Generated</h3>
+  <ul>
+    <li><strong>Project:</strong> Named from <code>info.title</code>, base URL from <code>servers[0].url</code> (OpenAPI 3) or <code>host + basePath</code> (Swagger 2)</li>
+    <li><strong>Suites:</strong> One per API tag (or "General" for untagged operations)</li>
+    <li><strong>Tests:</strong> One per path + method combination with expected status from response definitions</li>
+    <li><strong>Request bodies:</strong> Auto-generated from request body schema with example values</li>
+    <li><strong>Validations:</strong> <code>exists</code> and <code>typeOf</code> checks for required response fields, <code>isArray</code> + <code>arrayEvery</code> for array responses</li>
+    <li><strong>Path parameters:</strong> Converted to <code>{{variable}}</code> syntax (e.g., <code>/users/{id}</code> becomes <code>users/{{id}}</code>)</li>
+  </ul>
+
+  <div class="alert alert-info">
+    <strong>Supported formats:</strong> OpenAPI 3.x and Swagger 2.0 in JSON format. YAML files must be converted to JSON first. The importer resolves <code>$ref</code> references within the spec.
+  </div>
+
+  <!-- Auto-Generate Validations -->
+  <h2 id="auto-generate">Auto-Generate Validations</h2>
+  <p>Instead of manually building validations, let the framework learn from a real API response. Click <strong>"Try &amp; Auto-Generate"</strong> in the test editor to send the request and auto-generate validations from the actual response.</p>
+
+  <h3>How It Works</h3>
+  <ol class="steps">
+    <li>Open a test case (new or existing) and set the <strong>HTTP method</strong> and <strong>endpoint</strong></li>
+    <li>Optionally check <strong>"Include value checks"</strong> to generate <code>equals</code> validations for every response value</li>
+    <li>Click <strong>"Try &amp; Auto-Generate"</strong> &mdash; the server sends the actual request using your project's auth config</li>
+    <li>Review the auto-generated validations, adjust as needed, and save</li>
+  </ol>
+
+  <h3>What Gets Generated</h3>
+  <p>The generator analyzes the response structure and produces validations automatically:</p>
+
+  <table>
+    <thead><tr><th>Response Shape</th><th>Generated Validations</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Object response</strong><br><code>{ "id": 1, "name": "..." }</code></td>
+        <td>
+          <code>schema</code> (all property types),
+          <code>exists</code> + <code>typeOf</code> for each field,
+          <code>isArray</code> + <code>arrayLength</code> for nested arrays
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Array response</strong><br><code>[{ "id": 1 }, ...]</code></td>
+        <td>
+          <code>isArray</code>, <code>arrayLength</code>,
+          <code>schema</code> on first item,
+          <code>arrayEvery</code> with <code>typeOf</code> checks
+        </td>
+      </tr>
+      <tr>
+        <td><strong>With "Include value checks"</strong></td>
+        <td>
+          Deep <code>equals</code> for every primitive value, recursing into nested objects and array items
+          (e.g., <code>meta.id = 123</code>, <code>values[0].attribute = 998</code>)
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Auth handled automatically:</strong> The request is sent from the server using your project's configured authentication (Bearer token, Basic auth, or API key). No need to set up auth headers manually.
+  </div>
+
+  <div class="alert alert-warn">
+    <strong>Tip:</strong> Use auto-generate as a starting point, then refine. For example, you might change <code>arrayLength exact: 9</code> to <code>arrayLength min: 1</code> so the test doesn't break when data changes.
+  </div>
+
+  <!-- Chain Builder / Flow Editor -->
+  <h2 id="chain-view">Chain Builder / Flow Editor</h2>
+  <p>The Chain Builder provides a visual representation of multi-step API workflows where tests pass data between each other using <strong>extract</strong> and <strong>{{variable}}</strong> syntax. It automatically detects dependencies and draws the data flow.</p>
+
+  <h3>Opening the Chain View</h3>
+  <p>Click the <span style="font-family: 'Material Symbols Rounded';">account_tree</span> <strong>Chain View</strong> button on any suite card header. The modal shows all tests in the suite as a vertical flow with connector arrows between dependent tests.</p>
+
+  <h3>How Dependencies Are Detected</h3>
+  <table>
+    <thead><tr><th>Feature</th><th>How It Works</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Extracted variables</strong> (producers)</td>
+        <td>Tests with an <code>"extract"</code> field export variables. Shown as <span style="color: #22c55e;">green badges</span> on the producing node.</td>
+      </tr>
+      <tr>
+        <td><strong>Consumed variables</strong> (consumers)</td>
+        <td>Tests referencing <code>{{variableName}}</code> in endpoint, body, headers, or query params. Shown as <span style="color: #3b82f6;">blue badges</span> on the consuming node.</td>
+      </tr>
+      <tr>
+        <td><strong>Connector arrows</strong></td>
+        <td>Purple arrows connect a producer node to each consumer node, with the variable name displayed on the arrow.</td>
+      </tr>
+      <tr>
+        <td><strong>Undefined variable warnings</strong></td>
+        <td>If a test consumes a variable that no previous test extracts, a warning is displayed at the bottom of the chain.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Step-Through Execution</h3>
+  <p>Click <strong>"Step Through"</strong> to execute the chain one test at a time. Each step sends the real API request (using project auth) and displays the response inline. Tests are highlighted as <span style="color: #22c55e;">passed</span> or <span style="color: #ef4444;">failed</span> as they execute.</p>
+  <ul>
+    <li><strong>Next</strong> &mdash; Execute the next test in the chain</li>
+    <li><strong>Previous</strong> &mdash; Go back to review a previous step's result</li>
+    <li><strong>Stop</strong> &mdash; End step-through and return to the static chain view</li>
+  </ul>
+
+  <h3>Summary Panel</h3>
+  <p>The bottom of the chain view shows a summary with the total number of tests, extracted variables, and connections between tests.</p>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> The Chain Builder works best with suites that use variable extraction and chaining. If no tests use <code>extract</code> or <code>{{variables}}</code>, the chain will show all tests as independent nodes with no connections.
+  </div>
+
+  <!-- Test Templates -->
+  <h2 id="templates">Test Templates / CRUD Generator</h2>
+  <p>Instead of creating tests one by one, generate a complete test suite from a pre-built template. Click <strong>"From Template"</strong> in the project header to open the template library.</p>
+
+  <h3>Built-in Templates</h3>
+  <table>
+    <thead><tr><th>Template</th><th>What It Generates</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>CRUD Suite</strong></td>
+        <td>GET all, POST create, GET by ID, PUT update, DELETE, verify deleted — full resource lifecycle with variable chaining</td>
+      </tr>
+      <tr>
+        <td><strong>Auth Flow</strong></td>
+        <td>Register, login, access protected resource, access without token (401), logout</td>
+      </tr>
+      <tr>
+        <td><strong>Pagination Check</strong></td>
+        <td>First page, second page, large page number (empty), custom limit — validates paginated list endpoints</td>
+      </tr>
+      <tr>
+        <td><strong>Health &amp; Status</strong></td>
+        <td>Health check (200), response time, optional version endpoint</td>
+      </tr>
+      <tr>
+        <td><strong>Search &amp; Filter</strong></td>
+        <td>Search with keyword, no results, sort asc/desc, empty query</td>
+      </tr>
+      <tr>
+        <td><strong>Error Handling</strong></td>
+        <td>404 non-existent, 400 empty body, invalid path, 405 unsupported method</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>Click <strong>"From Template"</strong> in the project header</li>
+    <li>Select a template from the grid</li>
+    <li>Fill in the parameters (resource name, endpoint, etc.)</li>
+    <li>Click <strong>"Preview"</strong> to see the tests that will be generated</li>
+    <li>Click <strong>"Generate Suite"</strong> to create the suite</li>
+  </ol>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> After generating a suite, use <strong>"Try &amp; Auto-Generate"</strong> on individual tests to add accurate validations from real API responses.
+  </div>
+
+  <!-- Bulk Operations -->
+  <h2 id="bulk-ops">Bulk Test Operations</h2>
+  <p>Perform actions across multiple tests at once. Click <strong>"Bulk Edit"</strong> in the project header to enter bulk mode. Select tests using the checkboxes that appear, then use the toolbar to apply operations.</p>
+
+  <h3>Available Bulk Actions</h3>
+  <table>
+    <thead><tr><th>Action</th><th>What It Does</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Add Tags</strong></td><td>Add one or more tags (comma-separated) to all selected tests</td></tr>
+      <tr><td><strong>Remove Tags</strong></td><td>Remove specific tags or all tags (<code>*</code>) from selected tests</td></tr>
+      <tr><td><strong>Skip</strong></td><td>Mark selected tests as skipped (with optional reason)</td></tr>
+      <tr><td><strong>Unskip</strong></td><td>Remove skip flag from selected tests</td></tr>
+      <tr><td><strong>Status</strong></td><td>Update expected HTTP status code for all selected tests</td></tr>
+      <tr><td><strong>Timeout</strong></td><td>Set or remove timeout override for selected tests</td></tr>
+      <tr><td><strong>Method</strong></td><td>Change HTTP method (GET, POST, PUT, etc.) for selected tests</td></tr>
+      <tr><td><strong>Find/Replace</strong></td><td>Find and replace text in endpoint URLs across selected tests</td></tr>
+      <tr><td><strong>Auto-Generate</strong></td><td>Re-generate validations for all selected tests by sending real API requests</td></tr>
+      <tr><td><strong>Delete</strong></td><td>Delete all selected tests (with confirmation)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Use the suite-level checkbox to select/deselect all tests in a suite at once, or use "Select All" / "Deselect All" in the toolbar.
+  </div>
+
+  <!-- Response Comparison -->
+  <h2 id="response-diff">Response Comparison / Diff</h2>
+  <p>Compare actual API responses between two test runs to detect unintended changes after deployments, refactors, or config changes.</p>
+
+  <h3>Capturing Snapshots</h3>
+  <p>Click <strong>"Snapshot"</strong> in the Run History panel to capture all test responses. The framework sends real API requests for every test in the project and stores the response bodies in the database.</p>
+
+  <h3>Comparing Runs</h3>
+  <ol>
+    <li>Open <strong>Run History</strong></li>
+    <li>Check exactly <strong>2 runs</strong> (snapshots or regular runs with stored results)</li>
+    <li>Click <strong>"Compare"</strong></li>
+    <li>The comparison view shows every test with its HTTP status, response time, and diff status</li>
+    <li>Click the expand icon on any <strong>changed</strong> test to see a side-by-side response diff</li>
+  </ol>
+
+  <h3>Diff View</h3>
+  <table>
+    <thead><tr><th>Indicator</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:var(--accent);">Changed</strong></td><td>Response body differs between the two runs — expand to see line-by-line diff</td></tr>
+      <tr><td><strong style="color:var(--pass);">Added</strong></td><td>Test exists in Run #2 but not in Run #1 (new test)</td></tr>
+      <tr><td><strong style="color:var(--fail);">Removed</strong></td><td>Test exists in Run #1 but not in Run #2 (deleted test)</td></tr>
+      <tr><td>Unchanged</td><td>Response body is identical between the two runs</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Workflow:</strong> Take a snapshot before a deployment, deploy, take another snapshot, then compare the two to see exactly what changed in your API responses.
+  </div>
+
+  <!-- Schema Drift Detection -->
+  <h2 id="schema-drift">Schema Drift Detection</h2>
+  <p>Automatically detect when an API response structure changes from a known baseline. Useful for catching unintended field additions, removals, or type changes after deployments.</p>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>Open <strong>Run History</strong> and click <strong>"Save Baseline"</strong> — this sends real requests for every test and stores the response schema (field names, types, nesting structure)</li>
+    <li>After making changes (deploy, refactor, config update), click <strong>"Detect Drift"</strong></li>
+    <li>The framework re-fetches all endpoints and compares the current response structure against the saved baseline</li>
+    <li>A drift report shows which tests have changed, with field-level details</li>
+  </ol>
+
+  <h3>Drift Types</h3>
+  <table>
+    <thead><tr><th>Change</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:var(--pass);">Field added</strong></td><td>A new field appeared in the response that wasn't in the baseline</td></tr>
+      <tr><td><strong style="color:var(--fail);">Field removed</strong></td><td>A field from the baseline is missing in the current response</td></tr>
+      <tr><td><strong style="color:var(--accent);">Type changed</strong></td><td>A field's type changed (e.g., <code>string</code> &rarr; <code>number</code>, <code>object</code> &rarr; <code>array</code>)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Save a baseline after your API is in a known-good state. Then run drift detection periodically or after each deployment to catch breaking changes early.
+  </div>
+
+  <!-- Scheduled Test Runs -->
+  <h2 id="scheduled-runs">Scheduled Test Runs</h2>
+  <p>Automatically run tests at regular intervals without manual triggering. Click <strong>"Schedules"</strong> in the project header to manage scheduled runs.</p>
+
+  <h3>Creating a Schedule</h3>
+  <ol>
+    <li>Click <strong>"Schedules"</strong> in the project header</li>
+    <li>Enter a name (optional)</li>
+    <li>Select a <strong>preset</strong> (Every 5 min, Hourly, Daily, Weekdays, etc.) or enter a <strong>custom cron expression</strong></li>
+    <li>Click <strong>"Add"</strong> — the scheduler starts running automatically</li>
+  </ol>
+
+  <h3>Available Presets</h3>
+  <table>
+    <thead><tr><th>Preset</th><th>Cron Expression</th><th>Runs</th></tr></thead>
+    <tbody>
+      <tr><td>Every 5 minutes</td><td><code>*/5 * * * *</code></td><td>Continuous monitoring</td></tr>
+      <tr><td>Every 15 minutes</td><td><code>*/15 * * * *</code></td><td>Frequent checks</td></tr>
+      <tr><td>Every 30 minutes</td><td><code>*/30 * * * *</code></td><td>Regular interval</td></tr>
+      <tr><td>Hourly</td><td><code>0 * * * *</code></td><td>On the hour</td></tr>
+      <tr><td>Every 6 hours</td><td><code>0 */6 * * *</code></td><td>4 times per day</td></tr>
+      <tr><td>Daily at midnight</td><td><code>0 0 * * *</code></td><td>Nightly runs</td></tr>
+      <tr><td>Daily at 9 AM</td><td><code>0 9 * * *</code></td><td>Morning runs</td></tr>
+      <tr><td>Weekdays at 9 AM</td><td><code>0 9 * * 1-5</code></td><td>Business days only</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How It Works</h3>
+  <ul>
+    <li>The scheduler runs in-process and checks every 30 seconds for due schedules</li>
+    <li>When a schedule is due, the framework runs <code>npx playwright test</code> for the project</li>
+    <li>Results are stored in Run History tagged as <code>[scheduled:name]</code></li>
+    <li>You can <strong>pause</strong> and <strong>resume</strong> individual schedules without deleting them</li>
+  </ul>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Combine scheduled runs with Schema Drift Detection — schedule a nightly run and check the drift report each morning.
+  </div>
+
+  <!-- Notification Integration -->
+  <h2 id="notifications">Notification Integration</h2>
+  <p>Get notified when test runs complete or fail. Configure per-project notification settings in the <strong>project settings modal</strong> to send results to Slack, Microsoft Teams, or Email.</p>
+
+  <h3>Supported Channels</h3>
+  <table>
+    <thead><tr><th>Channel</th><th>Configuration</th><th>Message Format</th></tr></thead>
+    <tbody>
+      <tr><td>Slack</td><td>Webhook URL</td><td>Rich formatted messages with color-coded attachments (green for pass, red for fail)</td></tr>
+      <tr><td>Microsoft Teams</td><td>Webhook URL</td><td>MessageCard format with theme color</td></tr>
+      <tr><td>Email (SMTP)</td><td>SMTP host, port, user, pass, recipients</td><td>HTML-formatted results</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Configuration</h3>
+  <ol>
+    <li>Open the <strong>project settings modal</strong> for your project</li>
+    <li>Select a notification channel (Slack, Teams, or Email)</li>
+    <li>Enter the required configuration (webhook URL or SMTP settings)</li>
+    <li>Optionally enable <strong>"Only on failure"</strong> mode to reduce noise</li>
+    <li>Click <strong>"Test Notification"</strong> to verify the configuration</li>
+    <li>Enable or disable notifications at any time without removing settings</li>
+  </ol>
+
+  <h3>Options</h3>
+  <ul>
+    <li><strong>Enable/Disable:</strong> Toggle notifications on or off per project</li>
+    <li><strong>Only on failure:</strong> Only send notifications when one or more tests fail</li>
+    <li><strong>Test notification:</strong> Send a test message to verify your configuration is correct</li>
+  </ul>
+
+  <h3>When Notifications Are Sent</h3>
+  <ul>
+    <li>After <strong>manual test runs</strong> triggered from the Web UI or API</li>
+    <li>After <strong>scheduled runs</strong> triggered by the scheduler</li>
+  </ul>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Use "Only on failure" mode with scheduled runs for hands-free monitoring — you will only be notified when something breaks.
+  </div>
+
+  <!-- JUnit XML Export -->
+  <h2 id="junit-export">JUnit XML Export</h2>
+  <p>Export any test run as JUnit XML for integration with CI/CD tools like Jenkins, Azure DevOps, and GitHub Actions. The XML follows the standard JUnit format with <code>&lt;testsuites&gt;</code>, <code>&lt;testsuite&gt;</code>, and <code>&lt;testcase&gt;</code> elements.</p>
+
+  <h3>From the Web UI</h3>
+  <p>After a test run completes, or from the Run History view, click the <strong>download</strong> icon to export the run as JUnit XML.</p>
+
+  <h3>Via API</h3>
+  <pre><code>GET /api/projects/{projectId}/runs/{runId}/junit</code></pre>
+  <p>Returns an <code>application/xml</code> response with the JUnit XML report.</p>
+
+  <h3>CI/CD Usage Example</h3>
+  <pre><code># GitHub Actions — publish JUnit results
+- name: Run API Tests
+  run: npx playwright test
+  env:
+    TEST_PROJECT: my-project
+
+# Use the built-in Playwright JUnit reporter for CI
+# Or download from the web UI after running via the server</code></pre>
+
+  <!-- CSV Export -->
+  <h2 id="csv-export">CSV Export</h2>
+  <p>Export test run results as CSV for spreadsheet analysis in Excel, Google Sheets, or any data tool.</p>
+
+  <h3>From the Web UI</h3>
+  <p>In the Run History view, click the <strong>table_chart</strong> icon next to any run to download as CSV. The CSV is also available from the run detail panel.</p>
+
+  <h3>Via API</h3>
+  <pre><code>GET /api/projects/{projectId}/runs/{runId}/csv</code></pre>
+  <p>Returns a <code>text/csv</code> response with columns: <code>Suite, Test Name, Status, Duration (ms)</code>.</p>
+
+  <h3>CSV Format</h3>
+  <pre><code>Suite,Test Name,Status,Duration (ms)
+"Users API","get all users","passed","156"
+"Users API","create user","passed","342"
+"Posts API","get post by invalid id","failed","89"</code></pre>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> Values containing commas or quotes are properly escaped. The CSV uses UTF-8 encoding.
+  </div>
+
+  <!-- Trend Charts -->
+  <h2 id="trend-charts">Pass/Fail Trend Charts</h2>
+  <p>Track test stability over time with built-in trend charts. The Run History view displays an SVG chart showing passed vs. failed test counts across your last 20 runs.</p>
+
+  <h3>What's Shown</h3>
+  <ul>
+    <li><strong>Green area:</strong> Number of passing tests per run</li>
+    <li><strong>Red dashed line:</strong> Number of failing tests per run</li>
+    <li><strong>Hover tooltips:</strong> Date, passed count, failed count, and total for each data point</li>
+    <li><strong>Legend:</strong> Color-coded legend with Passed, Failed, and Total labels</li>
+  </ul>
+
+  <h3>Via API</h3>
+  <pre><code>GET /api/projects/{projectId}/trends</code></pre>
+  <p>Returns the last 20 runs with aggregated counts:</p>
+  <pre><code>[
+  {
+    "id": 42,
+    "timestamp": "2026-03-10T14:30:00.000Z",
+    "passed": 18,
+    "failed": 2,
+    "skipped": 0
+  }
+]</code></pre>
+
+  <!-- PDF Export -->
+  <h2 id="pdf-export">PDF Export</h2>
+  <p>Export any test run as a print-friendly PDF report. The PDF includes a summary dashboard, suite-grouped test tables with pass/fail status and durations.</p>
+
+  <h3>From the Web UI</h3>
+  <p>In the Run History view or run detail panel, click the <strong>picture_as_pdf</strong> icon. This opens a clean, printable report in a new tab — use your browser's Print dialog (Ctrl+P) to save as PDF.</p>
+
+  <h3>Via API</h3>
+  <pre><code>GET /api/projects/{projectId}/runs/{runId}/pdf</code></pre>
+  <p>Returns a self-contained HTML page optimized for printing with summary cards, suite tables, and a Print/Save as PDF button.</p>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> For best results, use Chrome or Edge and select "Save as PDF" in the print dialog. The report automatically hides the print button when printing.
+  </div>
+
+  <hr>
+  <p style="color: var(--text-muted); font-size: 13px; text-align: center; margin-top: 48px;">
+    API Automation Framework &bull; Built with Playwright &bull; v3.0
+  </p>
+
+</main>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll('h1[id], h2[id]');
+  const navLinks = document.querySelectorAll('.sidebar nav a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(section => {
+      const top = section.offsetTop - 100;
+      if (window.scrollY >= top) {
+        current = section.getAttribute('id');
+      }
+    });
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

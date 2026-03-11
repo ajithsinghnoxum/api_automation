@@ -1,0 +1,15 @@
+[
+  {
+    "id": "my-project",
+    "name": "My API Project",
+    "baseUrl": "https://api.example.com/v1",
+    "authType": "none",
+    "credentials": {
+      "token": "",
+      "username": "",
+      "password": "",
+      "apiKey": "",
+      "apiKeyHeader": "X-API-Key"
+    }
+  }
+]

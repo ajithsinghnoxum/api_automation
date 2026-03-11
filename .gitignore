@@ -1,0 +1,12 @@
+node_modules/
+dist/
+playwright-report/
+test-results/
+.env
+.claude/
+projects.config.json
+run-history/
+data.db
+data.db-wal
+data.db-shm
+test-configs/
