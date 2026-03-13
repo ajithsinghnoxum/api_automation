@@ -2,8 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 import { runTestSuite } from "../src/helpers/test-runner";
 import { TestSuiteConfig } from "../src/types/test-config.types";
+import { TEST_CONFIGS_DIR } from "../src/data-dir";
 
-const configDir = path.resolve(__dirname, "../test-configs");
+const configDir = TEST_CONFIGS_DIR;
 const targetProject = process.env.TEST_PROJECT;
 const targetTags = process.env.TEST_TAGS
   ? process.env.TEST_TAGS.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean)

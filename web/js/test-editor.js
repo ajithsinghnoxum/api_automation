@@ -1,3 +1,240 @@
+// --- Key-Value Pair Editor ---
+
+function addKvRow(containerId, key, value) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const row = document.createElement('div');
+  row.className = 'kv-row';
+  row.innerHTML = `
+    <input data-kv-key placeholder="key" class="kv-key">
+    <span class="kv-sep">=</span>
+    <input data-kv-value placeholder="value" class="kv-value">
+    <button class="validation-remove" onclick="this.parentElement.remove()"><span class="material-symbols-rounded">close</span></button>
+  `;
+  container.appendChild(row);
+  if (key !== undefined) row.querySelector('[data-kv-key]').value = key;
+  if (value !== undefined) row.querySelector('[data-kv-value]').value = String(value);
+}
+
+function collectKvRows(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return {};
+  const result = {};
+  container.querySelectorAll('.kv-row').forEach(row => {
+    const k = row.querySelector('[data-kv-key]')?.value.trim();
+    const v = row.querySelector('[data-kv-value]')?.value || '';
+    if (k) result[k] = v;
+  });
+  return result;
+}
+
+// --- Variable Autocomplete ---
+
+let lastTryResponseData = null;
+let activeAutocomplete = null;
+
+const BUILTIN_VARS = [
+  { name: '$timestamp', desc: 'Unix timestamp' },
+  { name: '$isoDate', desc: 'ISO 8601 date' },
+  { name: '$guid', desc: 'UUID v4' },
+  { name: '$uuid', desc: 'UUID v4' },
+  { name: '$randomInt', desc: 'Random 1–100000' },
+  { name: '$randomEmail', desc: 'Random email' },
+  { name: '$randomString', desc: '12-char random string' },
+];
+
+function getAvailableVars() {
+  const vars = [...BUILTIN_VARS];
+  // Add extracted vars from earlier tests in the same suite
+  if (editingSuiteFile) {
+    const suite = currentSuites.find(s => s.fileName === editingSuiteFile);
+    if (suite) {
+      const maxIdx = editingTestIdx !== null ? editingTestIdx : suite.tests.length;
+      for (let i = 0; i < maxIdx; i++) {
+        const t = suite.tests[i];
+        if (t.extract) {
+          for (const varName of Object.keys(t.extract)) {
+            vars.push({ name: varName, desc: `from "${t.name}" → ${t.extract[varName]}` });
+          }
+        }
+      }
+    }
+  }
+  return vars;
+}
+
+function setupVarAutocomplete(input) {
+  if (!input || input.dataset.varAc) return;
+  input.dataset.varAc = '1';
+  input.addEventListener('input', onVarInput);
+  input.addEventListener('keydown', onVarKeydown);
+  input.addEventListener('blur', () => setTimeout(dismissAutocomplete, 150));
+}
+
+function onVarInput(e) {
+  const input = e.target;
+  const val = input.value;
+  const pos = input.selectionStart;
+  // Find {{ before cursor
+  const before = val.substring(0, pos);
+  const match = before.match(/\{\{([^}]*)$/);
+  if (!match) { dismissAutocomplete(); return; }
+  const query = match[1].toLowerCase();
+  const vars = getAvailableVars().filter(v => v.name.toLowerCase().includes(query));
+  if (vars.length === 0) { dismissAutocomplete(); return; }
+  showAutocomplete(input, vars, match.index, match[0].length);
+}
+
+function onVarKeydown(e) {
+  if (!activeAutocomplete) return;
+  const items = activeAutocomplete.el.querySelectorAll('.ac-item');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    activeAutocomplete.idx = Math.min(activeAutocomplete.idx + 1, items.length - 1);
+    updateAcHighlight(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    activeAutocomplete.idx = Math.max(activeAutocomplete.idx - 1, 0);
+    updateAcHighlight(items);
+  } else if (e.key === 'Enter' || e.key === 'Tab') {
+    if (activeAutocomplete.idx >= 0) {
+      e.preventDefault();
+      items[activeAutocomplete.idx].click();
+    }
+  } else if (e.key === 'Escape') {
+    dismissAutocomplete();
+  }
+}
+
+function updateAcHighlight(items) {
+  items.forEach((item, i) => item.classList.toggle('ac-active', i === activeAutocomplete.idx));
+}
+
+function showAutocomplete(input, vars, matchStart, matchLen) {
+  dismissAutocomplete();
+  const dropdown = document.createElement('div');
+  dropdown.className = 'var-autocomplete';
+  vars.slice(0, 8).forEach((v, i) => {
+    const item = document.createElement('div');
+    item.className = 'ac-item' + (i === 0 ? ' ac-active' : '');
+    item.innerHTML = `<span class="ac-name">{{${esc(v.name)}}}</span><span class="ac-desc">${esc(v.desc)}</span>`;
+    item.onmousedown = (e) => {
+      e.preventDefault();
+      const val = input.value;
+      const before = val.substring(0, matchStart);
+      const after = val.substring(matchStart + matchLen);
+      input.value = before + '{{' + v.name + '}}' + after;
+      const newPos = matchStart + v.name.length + 4;
+      input.setSelectionRange(newPos, newPos);
+      input.focus();
+      dismissAutocomplete();
+    };
+    dropdown.appendChild(item);
+  });
+  // Position relative to input
+  const rect = input.getBoundingClientRect();
+  dropdown.style.position = 'fixed';
+  dropdown.style.left = rect.left + 'px';
+  dropdown.style.top = (rect.bottom + 2) + 'px';
+  dropdown.style.width = Math.max(rect.width, 250) + 'px';
+  document.body.appendChild(dropdown);
+  activeAutocomplete = { el: dropdown, input, idx: 0 };
+}
+
+function dismissAutocomplete() {
+  if (activeAutocomplete) {
+    activeAutocomplete.el.remove();
+    activeAutocomplete = null;
+  }
+}
+
+// --- Response Path Autocomplete for Validation Builder ---
+
+function getResponsePaths() {
+  if (!lastTryResponseData) return [];
+  const paths = [];
+  function walk(obj, prefix) {
+    if (obj === null || obj === undefined) return;
+    if (Array.isArray(obj)) {
+      paths.push({ path: prefix || '(root)', type: 'array', len: obj.length });
+      if (obj.length > 0 && typeof obj[0] === 'object' && obj[0] !== null) {
+        walk(obj[0], (prefix ? prefix + '[0]' : '[0]'));
+      }
+    } else if (typeof obj === 'object') {
+      for (const key of Object.keys(obj)) {
+        const fullPath = prefix ? prefix + '.' + key : key;
+        const val = obj[key];
+        const type = val === null ? 'null' : Array.isArray(val) ? 'array' : typeof val;
+        paths.push({ path: fullPath, type, preview: type !== 'object' && type !== 'array' ? String(val).substring(0, 40) : undefined });
+        if (typeof val === 'object' && val !== null) {
+          walk(val, fullPath);
+        }
+      }
+    }
+  }
+  walk(lastTryResponseData, '');
+  return paths;
+}
+
+function setupPathAutocomplete(input) {
+  if (!input || input.dataset.pathAc) return;
+  input.dataset.pathAc = '1';
+  input.addEventListener('input', onPathInput);
+  input.addEventListener('keydown', onPathKeydown);
+  input.addEventListener('blur', () => setTimeout(dismissAutocomplete, 150));
+}
+
+function onPathInput(e) {
+  const input = e.target;
+  if (input.dataset.field !== 'path') return;
+  const paths = getResponsePaths();
+  if (paths.length === 0) { dismissAutocomplete(); return; }
+  const query = input.value.toLowerCase();
+  const filtered = paths.filter(p => p.path.toLowerCase().includes(query));
+  if (filtered.length === 0) { dismissAutocomplete(); return; }
+  showPathAutocomplete(input, filtered);
+}
+
+function onPathKeydown(e) {
+  // Reuse the same keyboard nav as var autocomplete
+  onVarKeydown(e);
+}
+
+function showPathAutocomplete(input, paths) {
+  dismissAutocomplete();
+  const dropdown = document.createElement('div');
+  dropdown.className = 'var-autocomplete path-autocomplete';
+  paths.slice(0, 10).forEach((p, i) => {
+    const item = document.createElement('div');
+    item.className = 'ac-item' + (i === 0 ? ' ac-active' : '');
+    const previewStr = p.preview ? ` = ${p.preview}` : p.len !== undefined ? ` [${p.len}]` : '';
+    item.innerHTML = `<span class="ac-name">${esc(p.path)}</span><span class="ac-desc">${esc(p.type)}${esc(previewStr)}</span>`;
+    item.onmousedown = (e) => {
+      e.preventDefault();
+      input.value = p.path;
+      input.focus();
+      dismissAutocomplete();
+    };
+    dropdown.appendChild(item);
+  });
+  const rect = input.getBoundingClientRect();
+  dropdown.style.position = 'fixed';
+  dropdown.style.left = rect.left + 'px';
+  dropdown.style.top = (rect.bottom + 2) + 'px';
+  dropdown.style.width = Math.max(rect.width, 280) + 'px';
+  document.body.appendChild(dropdown);
+  activeAutocomplete = { el: dropdown, input, idx: 0 };
+}
+
+// Attach path autocomplete to all validation path inputs via delegation
+document.addEventListener('input', (e) => {
+  if (e.target.matches && e.target.matches('.val-fields input[data-field="path"]')) {
+    if (!e.target.dataset.pathAc) setupPathAutocomplete(e.target);
+    onPathInput(e);
+  }
+});
+
 // --- Test CRUD ---
 
 function addTestToSuite(suiteIdx) {
@@ -6,6 +243,7 @@ function addTestToSuite(suiteIdx) {
   resetTestModal();
   document.getElementById('test-modal-title').textContent = 'New Test Case';
   document.getElementById('test-modal').classList.add('open');
+  initVarAutocompleteFields();
   updateBreadcrumb();
 }
 
@@ -21,11 +259,22 @@ function editTest(suiteIdx, testIdx) {
   document.getElementById('tm-endpoint').value = test.endpoint || '';
   document.getElementById('tm-status').value = test.expectedStatus || 200;
 
-  // Query params
+  // Query params (key-value editor)
+  const paramsKv = document.getElementById('tm-params-kv');
+  paramsKv.innerHTML = '';
   if (test.queryParams) {
-    document.getElementById('tm-params').value = Object.entries(test.queryParams).map(([k, v]) => `${k}=${v}`).join('\n');
-  } else {
-    document.getElementById('tm-params').value = '';
+    for (const [k, v] of Object.entries(test.queryParams)) {
+      addKvRow('tm-params-kv', k, v);
+    }
+  }
+
+  // Headers (key-value editor)
+  const headersKv = document.getElementById('tm-headers-kv');
+  headersKv.innerHTML = '';
+  if (test.headers) {
+    for (const [k, v] of Object.entries(test.headers)) {
+      addKvRow('tm-headers-kv', k, v);
+    }
   }
 
   // Body
@@ -52,18 +301,43 @@ function editTest(suiteIdx, testIdx) {
   document.getElementById('tm-skip').checked = !!test.skip;
   document.getElementById('tm-timeout').value = test.timeout || '';
 
+  // Advanced fields
+  document.getElementById('tm-onlyif-env').value = test.onlyIf?.env || '';
+  document.getElementById('tm-before-hook').value = test.beforeRequest || '';
+  document.getElementById('tm-after-hook').value = test.afterResponse || '';
+  document.getElementById('tm-poll').value = test.poll ? JSON.stringify(test.poll, null, 2) : '';
+  document.getElementById('tm-dataset').value = test.dataSet ? JSON.stringify(test.dataSet, null, 2) : '';
+
   document.getElementById('test-modal').classList.add('open');
+  initVarAutocompleteFields();
   updateBreadcrumb();
 }
 
+function initVarAutocompleteFields() {
+  setupVarAutocomplete(document.getElementById('tm-endpoint'));
+}
+
 function resetTestModal() {
+  clearFieldErrors();
   document.getElementById('tm-name').value = '';
   document.getElementById('tm-method').value = 'GET';
   document.getElementById('tm-endpoint').value = '';
   document.getElementById('tm-status').value = '200';
-  document.getElementById('tm-params').value = '';
+  document.getElementById('tm-params-kv').innerHTML = '';
+  document.getElementById('tm-headers-kv').innerHTML = '';
   document.getElementById('tm-body').value = '';
   document.getElementById('tm-validations').innerHTML = '';
+  const valToolbar = document.getElementById('val-toolbar');
+  if (valToolbar) valToolbar.style.display = 'none';
+  const valCount = document.getElementById('val-count');
+  if (valCount) valCount.textContent = '';
+  const selectAll = document.getElementById('val-select-all');
+  if (selectAll) selectAll.checked = false;
+  const valFilter = document.getElementById('val-filter');
+  if (valFilter) valFilter.value = '';
+  valGroupsActive = false;
+  const groupBtn = document.getElementById('val-group-btn');
+  if (groupBtn) groupBtn.classList.remove('active');
   document.getElementById('tm-extract').innerHTML = '';
   document.getElementById('tm-dataset').value = '';
   document.getElementById('tm-tags').value = '';
@@ -82,6 +356,8 @@ function resetTestModal() {
   document.getElementById('tm-visual-mode').style.display = 'block';
   document.getElementById('toggle-visual').classList.add('active');
   document.getElementById('toggle-json').classList.remove('active');
+  const previewPanel = document.getElementById('tm-request-preview');
+  if (previewPanel) previewPanel.removeAttribute('open');
 }
 
 function closeTestModal() {
@@ -102,14 +378,11 @@ function buildTestFromForm() {
     expectedStatus: parseInt(document.getElementById('tm-status').value) || 200,
   };
 
-  const paramsText = document.getElementById('tm-params').value.trim();
-  if (paramsText) {
-    test.queryParams = {};
-    paramsText.split('\n').forEach(line => {
-      const [k, ...v] = line.split('=');
-      if (k) test.queryParams[k.trim()] = v.join('=').trim();
-    });
-  }
+  const queryParams = collectKvRows('tm-params-kv');
+  if (Object.keys(queryParams).length > 0) test.queryParams = queryParams;
+
+  const headers = collectKvRows('tm-headers-kv');
+  if (Object.keys(headers).length > 0) test.headers = headers;
 
   const bodyText = document.getElementById('tm-body').value.trim();
   if (bodyText) {
@@ -164,10 +437,18 @@ function populateFormFromTest(test) {
   document.getElementById('tm-endpoint').value = test.endpoint || '';
   document.getElementById('tm-status').value = test.expectedStatus || 200;
 
+  document.getElementById('tm-params-kv').innerHTML = '';
   if (test.queryParams) {
-    document.getElementById('tm-params').value = Object.entries(test.queryParams).map(([k, v]) => `${k}=${v}`).join('\n');
-  } else {
-    document.getElementById('tm-params').value = '';
+    for (const [k, v] of Object.entries(test.queryParams)) {
+      addKvRow('tm-params-kv', k, v);
+    }
+  }
+
+  document.getElementById('tm-headers-kv').innerHTML = '';
+  if (test.headers) {
+    for (const [k, v] of Object.entries(test.headers)) {
+      addKvRow('tm-headers-kv', k, v);
+    }
   }
 
   document.getElementById('tm-body').value = test.body ? JSON.stringify(test.body, null, 2) : '';
@@ -279,6 +560,176 @@ function setEditorMode(mode) {
   currentEditorMode = mode;
 }
 
+// --- Inline Form Validation ---
+
+function clearFieldErrors() {
+  document.querySelectorAll('.form-field-error').forEach(el => el.classList.remove('form-field-error'));
+  document.querySelectorAll('.field-error-msg').forEach(el => { el.classList.remove('show'); el.textContent = ''; });
+}
+
+function showFieldError(inputId, msg) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.classList.add('form-field-error');
+  let errEl = input.parentElement.querySelector('.field-error-msg');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.className = 'field-error-msg';
+    input.insertAdjacentElement('afterend', errEl);
+  }
+  errEl.textContent = msg;
+  errEl.classList.add('show');
+}
+
+function validateTestForm() {
+  clearFieldErrors();
+  let valid = true;
+  const name = document.getElementById('tm-name').value.trim();
+  const endpoint = document.getElementById('tm-endpoint').value.trim();
+
+  if (!name) { showFieldError('tm-name', 'Test name is required'); valid = false; }
+  if (!endpoint) { showFieldError('tm-endpoint', 'Endpoint is required'); valid = false; }
+
+  const bodyText = document.getElementById('tm-body').value.trim();
+  if (bodyText) {
+    try { JSON.parse(bodyText); } catch (e) {
+      showFieldError('tm-body', 'Invalid JSON: ' + e.message);
+      valid = false;
+    }
+  }
+
+  const dataSetText = document.getElementById('tm-dataset').value.trim();
+  if (dataSetText) {
+    try {
+      const ds = JSON.parse(dataSetText);
+      if (!Array.isArray(ds)) { showFieldError('tm-dataset', 'Dataset must be a JSON array'); valid = false; }
+    } catch (e) {
+      showFieldError('tm-dataset', 'Invalid JSON: ' + e.message);
+      valid = false;
+    }
+  }
+
+  const pollText = document.getElementById('tm-poll').value.trim();
+  if (pollText) {
+    try { JSON.parse(pollText); } catch (e) {
+      showFieldError('tm-poll', 'Invalid JSON: ' + e.message);
+      valid = false;
+    }
+  }
+
+  return valid;
+}
+
+// Clear error styling on input
+document.addEventListener('input', (e) => {
+  if (e.target.classList?.contains('form-field-error')) {
+    e.target.classList.remove('form-field-error');
+    const errEl = e.target.parentElement?.querySelector('.field-error-msg');
+    if (errEl) { errEl.classList.remove('show'); errEl.textContent = ''; }
+  }
+});
+
+// --- Request Preview ---
+
+function updateRequestPreview() {
+  const panel = document.getElementById('tm-request-preview');
+  const content = document.getElementById('tm-preview-content');
+  const badge = document.getElementById('tm-preview-badge');
+  if (!panel || !content || !currentProject) return;
+
+  const method = document.getElementById('tm-method').value;
+  const endpoint = document.getElementById('tm-endpoint').value.trim();
+  const queryParams = collectKvRows('tm-params-kv');
+  const headers = collectKvRows('tm-headers-kv');
+  const bodyText = document.getElementById('tm-body').value.trim();
+
+  // Build full URL
+  let baseUrl = currentProject.baseUrl || 'https://api.example.com';
+  if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+  // Resolve variables for preview (show as-is if unresolvable)
+  let fullUrl = baseUrl + endpoint;
+  const paramStr = Object.entries(queryParams).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+  if (paramStr) fullUrl += '?' + paramStr;
+
+  // Build headers display
+  const allHeaders = {};
+  // Add project auth headers
+  if (currentProject.authType === 'bearer' && currentProject.authToken) {
+    allHeaders['Authorization'] = 'Bearer ' + currentProject.authToken;
+  } else if (currentProject.authType === 'basic' && currentProject.authUser) {
+    allHeaders['Authorization'] = 'Basic ' + btoa(currentProject.authUser + ':' + (currentProject.authPass || ''));
+  } else if (currentProject.authType === 'apikey' && currentProject.apiKeyName) {
+    allHeaders[currentProject.apiKeyName] = currentProject.apiKeyValue || '***';
+  }
+  allHeaders['Content-Type'] = 'application/json';
+  Object.assign(allHeaders, headers);
+
+  // Build preview HTML
+  let html = `<span class="preview-label">Request</span>`;
+  html += `<span class="preview-method ${method}">${method}</span> ${esc(fullUrl)}\n`;
+  html += `\n<span class="preview-label">Headers</span>`;
+  for (const [k, v] of Object.entries(allHeaders)) {
+    const masked = k.toLowerCase() === 'authorization' ? v.substring(0, 12) + '...' : v;
+    html += `${esc(k)}: ${esc(masked)}\n`;
+  }
+
+  if (bodyText) {
+    html += `\n<span class="preview-label">Body</span>`;
+    try {
+      html += esc(JSON.stringify(JSON.parse(bodyText), null, 2));
+    } catch {
+      html += esc(bodyText);
+    }
+  }
+
+  // cURL preview
+  html += `\n\n<span class="preview-label">cURL</span>`;
+  let curl = `curl -X ${method}`;
+  for (const [k, v] of Object.entries(allHeaders)) {
+    const masked = k.toLowerCase() === 'authorization' ? v.substring(0, 12) + '...' : v;
+    curl += ` \\\n  -H '${k}: ${masked}'`;
+  }
+  if (bodyText) {
+    try {
+      curl += ` \\\n  -d '${JSON.stringify(JSON.parse(bodyText))}'`;
+    } catch {
+      curl += ` \\\n  -d '${bodyText}'`;
+    }
+  }
+  curl += ` \\\n  '${fullUrl}'`;
+  html += esc(curl);
+
+  content.innerHTML = html;
+  badge.textContent = `${method} ${endpoint || '...'}`;
+}
+
+// Debounced preview update
+let previewTimer = null;
+function schedulePreviewUpdate() {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(updateRequestPreview, 300);
+}
+
+// Listen for changes to update preview
+document.addEventListener('input', (e) => {
+  const previewPanel = document.getElementById('tm-request-preview');
+  if (!previewPanel || !previewPanel.open) return;
+  const id = e.target.id;
+  if (id === 'tm-method' || id === 'tm-endpoint' || id === 'tm-body' || id === 'tm-status' ||
+      e.target.closest('#tm-params-kv') || e.target.closest('#tm-headers-kv')) {
+    schedulePreviewUpdate();
+  }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'tm-method') schedulePreviewUpdate();
+});
+
+// Update preview when panel is toggled open
+document.addEventListener('toggle', (e) => {
+  if (e.target.id === 'tm-request-preview' && e.target.open) updateRequestPreview();
+}, true);
+
 // --- Save Test ---
 
 async function saveTest() {
@@ -295,18 +746,8 @@ async function saveTest() {
       return toast('Invalid JSON in editor', 'error');
     }
   } else {
+    if (!validateTestForm()) return;
     test = buildTestFromForm();
-  }
-
-  if (!test.name || !test.endpoint) return toast('Name and endpoint are required', 'error');
-
-  // Validate body is proper JSON if it's a string
-  if (typeof test.body === 'string') {
-    try {
-      test.body = JSON.parse(test.body);
-    } catch (e) {
-      return toast('Invalid JSON in request body', 'error');
-    }
   }
 
   // Find the suite and update
@@ -360,6 +801,7 @@ async function deleteTest(suiteIdx, testIdx) {
 
 // --- Validations ---
 
+const TRIM_TYPES = ['equals', 'notEquals', 'contains', 'notContains', 'startsWith', 'endsWith'];
 const VALIDATION_FIELDS = {
   equals: ['path', 'value'],
   notEquals: ['path', 'value'],
@@ -396,8 +838,7 @@ const SIMPLE_TYPES = Object.keys(VALIDATION_FIELDS).filter(t => !NESTED_TYPES.in
 function addValidationRow(existing, container, isNested) {
   container = container || document.getElementById('tm-validations');
   const row = document.createElement('div');
-  row.className = 'validation-row';
-  row.style.flexWrap = 'wrap';
+  row.className = 'validation-row' + (existing?.disabled ? ' val-disabled' : '');
   if (!isNested) {
     row.draggable = true;
     row.ondragstart = onValDragStart;
@@ -413,12 +854,210 @@ function addValidationRow(existing, container, isNested) {
   </select>`;
 
   const dragHandle = isNested ? '' : '<span class="drag-handle val-drag-handle" title="Drag to reorder"><span class="material-symbols-rounded" style="font-size:16px;">drag_indicator</span></span>';
+  const selectCheck = isNested ? '' : '<input type="checkbox" class="val-select-cb" onchange="updateValToolbar()">';
+  const numBadge = '<span class="val-num"></span>';
+  const disableBtn = isNested ? '' : `<button class="val-toggle-btn" onclick="toggleValidationDisabled(this)" title="${existing?.disabled ? 'Enable' : 'Disable'} validation"><span class="material-symbols-rounded" style="font-size:16px;">${existing?.disabled ? 'visibility_off' : 'visibility'}</span></button>`;
 
-  row.innerHTML = dragHandle + typeSelect + '<div class="val-fields" style="display:flex;gap:8px;flex:1;flex-wrap:wrap;"></div>' +
-    '<button class="validation-remove" onclick="this.parentElement.remove()"><span class="material-symbols-rounded">close</span></button>';
+  row.innerHTML = selectCheck + dragHandle + numBadge + typeSelect + '<div class="val-fields"></div>' +
+    disableBtn +
+    '<button class="validation-remove" onclick="this.parentElement.remove(); renumberValidations(); updateValToolbar()"><span class="material-symbols-rounded">close</span></button>';
 
   container.appendChild(row);
   updateValidationFields(row.querySelector('select'), existing);
+  renumberValidations();
+}
+
+function renumberValidations() {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+  const rows = container.querySelectorAll(':scope > .validation-row');
+  rows.forEach((row, i) => {
+    const badge = row.querySelector(':scope > .val-num');
+    if (badge) badge.textContent = i + 1;
+  });
+  // Update count & toolbar visibility
+  const countEl = document.getElementById('val-count');
+  if (countEl) countEl.textContent = rows.length > 0 ? `(${rows.length})` : '';
+  const toolbar = document.getElementById('val-toolbar');
+  if (toolbar) toolbar.style.display = rows.length > 0 ? '' : 'none';
+}
+
+// --- Bulk actions ---
+
+function updateValToolbar() {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+  const cbs = container.querySelectorAll(':scope > .validation-row > .val-select-cb');
+  const checked = container.querySelectorAll(':scope > .validation-row > .val-select-cb:checked');
+  const selectAll = document.getElementById('val-select-all');
+  if (selectAll) {
+    selectAll.checked = cbs.length > 0 && checked.length === cbs.length;
+    selectAll.indeterminate = checked.length > 0 && checked.length < cbs.length;
+  }
+}
+
+function toggleSelectAllValidations(checked) {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+  container.querySelectorAll(':scope > .validation-row > .val-select-cb').forEach(cb => { cb.checked = checked; });
+}
+
+function deleteSelectedValidations() {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+  const selected = container.querySelectorAll(':scope > .validation-row > .val-select-cb:checked');
+  if (selected.length === 0) return toast('No validations selected', 'error');
+  selected.forEach(cb => cb.closest('.validation-row').remove());
+  document.getElementById('val-select-all').checked = false;
+  renumberValidations();
+  updateValToolbar();
+}
+
+function toggleSelectedValidations(enable) {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+  const selected = container.querySelectorAll(':scope > .validation-row > .val-select-cb:checked');
+  if (selected.length === 0) return toast('No validations selected', 'error');
+  selected.forEach(cb => {
+    const row = cb.closest('.validation-row');
+    if (enable) {
+      row.classList.remove('val-disabled');
+    } else {
+      row.classList.add('val-disabled');
+    }
+    const icon = row.querySelector(':scope > .val-toggle-btn .material-symbols-rounded');
+    if (icon) icon.textContent = enable ? 'visibility' : 'visibility_off';
+  });
+}
+
+function toggleValidationDisabled(btn) {
+  const row = btn.closest('.validation-row');
+  const isDisabled = row.classList.toggle('val-disabled');
+  const icon = btn.querySelector('.material-symbols-rounded');
+  icon.textContent = isDisabled ? 'visibility_off' : 'visibility';
+  btn.title = isDisabled ? 'Enable validation' : 'Disable validation';
+}
+
+// --- Filter validations ---
+
+function filterValidations(query) {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+  const q = query.toLowerCase();
+  container.querySelectorAll(':scope > .validation-row').forEach(row => {
+    if (!q) { row.style.display = ''; return; }
+    const type = row.querySelector(':scope > select')?.value || '';
+    const fields = Array.from(row.querySelectorAll('.val-fields input')).map(i => i.value).join(' ');
+    const text = (type + ' ' + fields).toLowerCase();
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+  // Also hide/show group headers based on visible children
+  container.querySelectorAll(':scope > .val-group-header').forEach(hdr => {
+    if (!q) { hdr.style.display = ''; return; }
+    const groupName = hdr.dataset.group;
+    const hasVisible = Array.from(container.querySelectorAll(`:scope > .validation-row[data-group="${groupName}"]`))
+      .some(r => r.style.display !== 'none');
+    hdr.style.display = hasVisible ? '' : 'none';
+  });
+}
+
+// --- Group by path prefix ---
+
+let valGroupsActive = false;
+
+function getValPathPrefix(row) {
+  const type = row.querySelector(':scope > select')?.value || '';
+  // Types without meaningful paths
+  if (['isArray', 'arrayLength', 'schema', 'arrayEvery', 'arraySome', 'arrayNone'].includes(type)) {
+    const pathInput = row.querySelector('.val-fields input[data-field="path"]');
+    const p = pathInput?.value?.trim();
+    if (!p) return '_structure';
+  }
+  const pathInput = row.querySelector('.val-fields input[data-field="path"]');
+  const path = pathInput?.value?.trim() || '';
+  if (!path) return '_root';
+  // Extract top-level prefix: "meta.id" -> "meta", "values[0].attr" -> "values[0]", "[0].name" -> "[0]"
+  const m = path.match(/^([^.[]+(?:\[\d+\])?)/);
+  return m ? m[1] : path;
+}
+
+function toggleValGroups() {
+  valGroupsActive = !valGroupsActive;
+  const btn = document.getElementById('val-group-btn');
+  if (btn) {
+    const icon = btn.querySelector('.material-symbols-rounded');
+    if (valGroupsActive) {
+      btn.classList.add('active');
+      icon.textContent = 'folder_open';
+      buildValGroups();
+    } else {
+      btn.classList.remove('active');
+      icon.textContent = 'folder_open';
+      removeValGroups();
+    }
+  }
+}
+
+function buildValGroups() {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+
+  // Remove old headers
+  container.querySelectorAll(':scope > .val-group-header').forEach(h => h.remove());
+
+  // Collect rows and their prefixes
+  const rows = Array.from(container.querySelectorAll(':scope > .validation-row'));
+  if (rows.length === 0) return;
+
+  const groups = {};
+  rows.forEach(row => {
+    const prefix = getValPathPrefix(row);
+    row.dataset.group = prefix;
+    if (!groups[prefix]) groups[prefix] = [];
+    groups[prefix].push(row);
+  });
+
+  // Sort groups: _structure first, _root second, then alphabetical
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    if (a === '_structure') return -1;
+    if (b === '_structure') return 1;
+    if (a === '_root') return -1;
+    if (b === '_root') return 1;
+    return a.localeCompare(b);
+  });
+
+  // Reorder DOM: insert group headers, then rows
+  sortedKeys.forEach(key => {
+    const label = key === '_structure' ? 'Structure' : key === '_root' ? 'Response' : key;
+    const hdr = document.createElement('div');
+    hdr.className = 'val-group-header';
+    hdr.dataset.group = key;
+    hdr.innerHTML = `<span class="material-symbols-rounded">expand_more</span> ${esc(label)} <span class="val-group-count">(${groups[key].length})</span>`;
+    hdr.onclick = () => toggleGroupCollapse(hdr);
+    container.appendChild(hdr);
+    groups[key].forEach(row => container.appendChild(row));
+  });
+
+  renumberValidations();
+}
+
+function removeValGroups() {
+  const container = document.getElementById('tm-validations');
+  if (!container) return;
+  container.querySelectorAll(':scope > .val-group-header').forEach(h => h.remove());
+  container.querySelectorAll(':scope > .validation-row').forEach(r => {
+    r.style.display = '';
+    delete r.dataset.group;
+  });
+}
+
+function toggleGroupCollapse(hdr) {
+  const collapsed = hdr.classList.toggle('collapsed');
+  const container = hdr.parentElement;
+  const groupName = hdr.dataset.group;
+  container.querySelectorAll(`:scope > .validation-row[data-group="${groupName}"]`).forEach(row => {
+    row.style.display = collapsed ? 'none' : '';
+  });
 }
 
 function updateValidationFields(select, existing) {
@@ -434,14 +1073,7 @@ function updateValidationFields(select, existing) {
   // Remove any existing sub-validations, where-fields, or schema-builder
   row.querySelectorAll(':scope > .sub-validations, :scope > .where-fields, :scope > .schema-builder').forEach(el => el.remove());
 
-  fieldsContainer.innerHTML = fields.map(f => {
-    let val = existing?.[f] || '';
-    if (f === 'value' && existing?.value !== undefined) {
-      val = typeof existing.value === 'object' ? JSON.stringify(existing.value) : existing.value;
-    }
-    if (f === 'index' && existing?.index !== undefined) {
-      val = existing.index;
-    }
+  const fieldHtml = fields.map(f => {
     const placeholder = f === 'path' ? (hasNested ? 'array path (e.g. values)' : 'e.g. meta.id') :
                        f === 'value' ? 'expected value' :
                        f === 'pattern' ? 'regex pattern' :
@@ -449,8 +1081,37 @@ function updateValidationFields(select, existing) {
                        f === 'property' ? 'property name' :
                        f === 'index' ? 'index (0, 1, ...)' :
                        f;
-    return `<input data-field="${f}" value="${esc(String(val))}" placeholder="${placeholder}" style="min-width:90px;">`;
+    return `<input data-field="${f}" placeholder="${placeholder}">`;
   }).join('');
+
+  fieldsContainer.innerHTML = fieldHtml;
+
+  // Add trim checkbox outside val-fields so it doesn't wrap
+  row.querySelectorAll(':scope > .val-trim-label').forEach(el => el.remove());
+  if (TRIM_TYPES.includes(type)) {
+    const trimLabel = document.createElement('label');
+    trimLabel.className = 'val-trim-label';
+    trimLabel.title = 'Trim whitespace before comparing';
+    trimLabel.innerHTML = `<input type="checkbox" data-field="trim" ${existing?.trim ? 'checked' : ''} style="width:auto;margin:0;"> Trim`;
+    // Insert before the remove button
+    const removeBtn = row.querySelector(':scope > .validation-remove');
+    row.insertBefore(trimLabel, removeBtn);
+  }
+
+  // Set input values via DOM to avoid HTML attribute escaping issues with quotes/angle brackets
+  if (existing) {
+    fieldsContainer.querySelectorAll('input[data-field]').forEach(input => {
+      const f = input.dataset.field;
+      if (f === 'trim') return; // checkbox, already handled
+      let val = existing[f];
+      if (f === 'value' && existing.value !== undefined) {
+        val = typeof existing.value === 'object' ? JSON.stringify(existing.value) : existing.value;
+      }
+      if (val !== undefined && val !== null) {
+        input.value = String(val);
+      }
+    });
+  }
 
   // Add "where" clause fields for arrayFind
   if (hasWhere) {
@@ -533,11 +1194,16 @@ function collectValidationsFromContainer(container) {
     const type = row.querySelector(':scope > select').value;
     const v = { type };
 
+    // Collect disabled state
+    if (row.classList.contains('val-disabled')) {
+      v.disabled = true;
+    }
+
     // Collect simple fields
     row.querySelectorAll(':scope > .val-fields input').forEach(input => {
       const field = input.dataset.field;
-      let val = input.value.trim();
-      if (!val) return;
+      let val = field === 'value' ? input.value : input.value.trim();
+      if (!val && val !== 0) return;
 
       if (field === 'value') {
         if (val === 'true') val = true;
@@ -548,6 +1214,12 @@ function collectValidationsFromContainer(container) {
 
       v[field] = val;
     });
+
+    // Collect trim checkbox
+    const trimCheck = row.querySelector(':scope > .val-trim-label input[data-field="trim"]');
+    if (trimCheck && trimCheck.checked) {
+      v.trim = true;
+    }
 
     // Collect "where" clause for arrayFind
     const whereFields = row.querySelector(':scope > .where-fields');
@@ -625,16 +1297,9 @@ async function tryAndAutoGenerate() {
   const endpoint = document.getElementById('tm-endpoint').value.trim();
   if (!endpoint) return toast('Endpoint is required to send a request', 'error');
 
-  // Parse query params from form
-  let queryParams;
-  const paramsText = document.getElementById('tm-params').value.trim();
-  if (paramsText) {
-    queryParams = {};
-    paramsText.split('\n').forEach(line => {
-      const [k, ...v] = line.split('=');
-      if (k) queryParams[k.trim()] = v.join('=').trim();
-    });
-  }
+  // Collect query params from KV editor
+  const queryParams = collectKvRows('tm-params-kv');
+  const headers = collectKvRows('tm-headers-kv');
 
   // Parse body
   let body;
@@ -649,10 +1314,13 @@ async function tryAndAutoGenerate() {
   btn.innerHTML = '<span class="material-symbols-rounded spin" style="font-size:16px;vertical-align:-3px;margin-right:2px;">progress_activity</span> Sending...';
 
   try {
-    const includeValues = document.getElementById('tm-autogen-values').checked;
+    const profile = document.getElementById('tm-autogen-profile').value;
     const result = await api('POST', `/api/projects/${currentProject.id}/try-request`, {
-      method, endpoint, queryParams, body, includeValues
+      method, endpoint, queryParams, body, headers, profile
     });
+
+    // Store response data for path autocomplete in validations
+    lastTryResponseData = result.data;
 
     // Show response status
     toast(`Response: ${result.status} — ${result.validations.length} validations generated`, 'success');

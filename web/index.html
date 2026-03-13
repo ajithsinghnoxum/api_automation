@@ -55,6 +55,8 @@
       <button class="topnav-btn" onclick="window.open('/report/index.html?t=' + Date.now(), '_blank')"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">assessment</span>Report</button>
       <a href="/docs/index.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">menu_book</span>Docs</button></a>
       <a href="/docs/examples.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">science</span>Examples</button></a>
+      <button class="topnav-btn" onclick="openSettingsModal()" title="Settings"><span class="material-symbols-rounded" style="font-size:18px;">settings</span></button>
+      <button class="topnav-btn" onclick="openShortcutsModal()" title="Keyboard shortcuts (?)"><span class="material-symbols-rounded" style="font-size:18px;">keyboard</span></button>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" title="Toggle dark/light mode"></button>
     </div>
   </nav>
@@ -110,6 +112,54 @@
   </div>
 
   <!-- Project Modal -->
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal" style="max-width:600px;">
+      <div class="modal-header">
+        <h3><span class="material-symbols-rounded" style="font-size:20px;vertical-align:-4px;margin-right:6px;">settings</span>Settings</h3>
+        <button class="icon-btn" onclick="closeSettingsModal()"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Data Directory</label>
+          <p style="font-size:12px;color:var(--text-muted);margin:0 0 8px;">Where test configs, database, and reports are stored.</p>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="settings-data-dir" readonly style="flex:1;font-family:monospace;font-size:12px;">
+            <button class="btn" onclick="openFolderBrowser()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">folder_open</span> Browse</button>
+          </div>
+        </div>
+
+        <!-- Folder Browser -->
+        <div id="folder-browser" style="display:none;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <button class="icon-btn" id="fb-up-btn" onclick="folderBrowserUp()" title="Go up"><span class="material-symbols-rounded">arrow_upward</span></button>
+            <input type="text" id="fb-path" style="flex:1;font-family:monospace;font-size:12px;" onkeydown="if(event.key==='Enter') folderBrowserNavigate(this.value)">
+          </div>
+          <div id="fb-entries" class="folder-browser-list"></div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <div class="form-group" style="flex:1;margin:0;">
+              <input type="text" id="fb-new-folder" placeholder="New folder name...">
+            </div>
+            <button class="btn" onclick="folderBrowserCreateDir()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;">create_new_folder</span></button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+            <button class="btn" onclick="closeFolderBrowser()">Cancel</button>
+            <button class="btn btn-primary" onclick="selectCurrentFolder()">Select This Folder</button>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:10px;background:var(--surface-alt);border-radius:8px;font-size:12px;color:var(--text-muted);">
+          <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;margin-right:4px;">info</span>
+          You can also set the data directory via the <code style="background:var(--bg);padding:2px 6px;border-radius:4px;">DATA_DIR</code> environment variable.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" onclick="saveSettings()">Save & Restart</button>
+        <button class="btn" onclick="closeSettingsModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="project-modal">
     <div class="modal">
       <div class="modal-header">
@@ -257,8 +307,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn" onclick="closeProjectModal()">Cancel</button>
         <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+        <button class="btn" onclick="closeProjectModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -311,17 +361,23 @@
             <label>Expected Status</label>
             <input type="number" id="tm-status" value="200">
           </div>
-          <div class="form-group">
-            <label>Query Params (key=value, one per line)</label>
-            <textarea id="tm-params" placeholder="page=1&#10;limit=10" rows="3"></textarea>
+          <div class="form-group full">
+            <label>Query Params</label>
+            <div id="tm-params-kv"></div>
+            <button class="add-btn" onclick="addKvRow('tm-params-kv')" style="margin-top:4px;"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> Add Param</button>
           </div>
-          <div class="form-group">
-            <label>Timeout (ms)</label>
-            <input type="number" id="tm-timeout" placeholder="30000 (default)">
+          <div class="form-group full">
+            <label>Headers <span style="font-weight:400; color:var(--text-muted);">(per-test, merged with project headers)</span></label>
+            <div id="tm-headers-kv"></div>
+            <button class="add-btn" onclick="addKvRow('tm-headers-kv')" style="margin-top:4px;"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> Add Header</button>
           </div>
           <div class="form-group">
             <label>Tags (comma-separated)</label>
             <input type="text" id="tm-tags" placeholder="smoke, regression, auth">
+          </div>
+          <div class="form-group">
+            <label>Timeout (ms)</label>
+            <input type="number" id="tm-timeout" placeholder="30000 (default)">
           </div>
           <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;">
@@ -336,9 +392,30 @@
         </div>
 
         <div style="margin-top: 16px;">
-          <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 8px;">
-            Validations
-          </label>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">
+              Validations <span id="val-count" style="font-weight:400;color:var(--text-muted);font-size:12px;"></span>
+            </label>
+            <div id="val-toolbar" class="val-toolbar" style="display:none;">
+              <input type="text" id="val-filter" placeholder="Filter..." oninput="filterValidations(this.value)" class="val-filter-input">
+              <button class="btn btn-sm val-toolbar-btn" id="val-group-btn" onclick="toggleValGroups()" title="Group by path prefix">
+                <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;">folder_open</span> Group
+              </button>
+              <span class="val-toolbar-sep"></span>
+              <label class="val-toolbar-check" title="Select / deselect all">
+                <input type="checkbox" id="val-select-all" onchange="toggleSelectAllValidations(this.checked)"> All
+              </label>
+              <button class="btn btn-sm val-toolbar-btn" onclick="deleteSelectedValidations()" title="Delete selected">
+                <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;">delete</span> Delete
+              </button>
+              <button class="btn btn-sm val-toolbar-btn" onclick="toggleSelectedValidations(true)" title="Enable selected">
+                <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;">visibility</span>
+              </button>
+              <button class="btn btn-sm val-toolbar-btn" onclick="toggleSelectedValidations(false)" title="Disable selected">
+                <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;">visibility_off</span>
+              </button>
+            </div>
+          </div>
           <div id="tm-validations"></div>
           <button class="add-btn" onclick="addValidationRow()" style="margin-top: 8px;"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> Add Validation</button>
         </div>
@@ -390,16 +467,29 @@
           </div>
         </details>
         </div><!-- /tm-visual-mode -->
+
+        <!-- Request Preview -->
+        <details class="request-preview-panel" id="tm-request-preview">
+          <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text-secondary);display:flex;align-items:center;gap:6px;padding:8px 0;">
+            <span class="material-symbols-rounded" style="font-size:16px;">preview</span> Request Preview
+            <span id="tm-preview-badge" style="font-size:11px;color:var(--text-muted);font-weight:400;"></span>
+          </summary>
+          <div id="tm-preview-content" class="request-preview-content"></div>
+        </details>
       </div>
       <div class="modal-footer">
-        <button class="btn" onclick="closeTestModal()">Cancel</button>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);cursor:pointer;user-select:none;" title="When checked, generates equals validations for actual response values (nested fields, array items, etc.)">
-          <input type="checkbox" id="tm-autogen-values" style="width:auto;margin:0;"> Include value checks
-        </label>
-        <button class="btn btn-accent" id="tm-autogen-btn" onclick="tryAndAutoGenerate()" title="Send the request and auto-generate validations from the response">
-          <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">auto_fix_high</span> Try &amp; Auto-Generate
-        </button>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <select id="tm-autogen-profile" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;background:var(--surface-input);color:var(--text);" title="Auto-generate profile">
+            <option value="structure">Structure only</option>
+            <option value="key-fields">Key fields</option>
+            <option value="full">Full snapshot</option>
+          </select>
+          <button class="btn btn-accent" id="tm-autogen-btn" onclick="tryAndAutoGenerate()" title="Send the request and auto-generate validations from the response">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">auto_fix_high</span> Try &amp; Auto-Generate
+          </button>
+        </div>
         <button class="btn btn-primary" onclick="saveTest()">Save Test</button>
+        <button class="btn" onclick="closeTestModal()">Cancel</button>
       </div>
     </div>
   </div>
@@ -456,6 +546,52 @@
 
   </div><!-- /app-shell -->
 
+  <!-- Keyboard Shortcuts Overlay -->
+  <div class="modal-overlay" id="shortcuts-modal">
+    <div class="modal shortcuts-modal">
+      <div class="modal-header">
+        <h3><span class="material-symbols-rounded" style="font-size:20px;vertical-align:-4px;margin-right:6px;color:var(--accent);">keyboard</span>Keyboard Shortcuts</h3>
+        <button class="icon-btn" onclick="closeShortcutsModal()"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="modal-body shortcuts-body">
+        <div class="shortcuts-grid">
+          <div class="shortcuts-col">
+            <div class="shortcuts-section">
+              <h4 class="shortcuts-title"><span class="material-symbols-rounded shortcuts-icon">public</span>Global</h4>
+              <div class="shortcut-row"><span class="shortcut-desc">Run tests</span><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Enter</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">New test suite</span><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>N</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Search tests</span><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>F</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Toggle theme</span><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>D</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">This help</span><span class="shortcut-keys"><kbd class="kbd-wide">?</kbd></span></div>
+            </div>
+            <div class="shortcuts-section">
+              <h4 class="shortcuts-title"><span class="material-symbols-rounded shortcuts-icon">edit_note</span>Editor</h4>
+              <div class="shortcut-row"><span class="shortcut-desc">Save test</span><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>S</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Close modal</span><span class="shortcut-keys"><kbd class="kbd-wide">Esc</kbd></span></div>
+            </div>
+          </div>
+          <div class="shortcuts-col">
+            <div class="shortcuts-section">
+              <h4 class="shortcuts-title"><span class="material-symbols-rounded shortcuts-icon">auto_awesome</span>Autocomplete</h4>
+              <div class="shortcut-row"><span class="shortcut-desc">Trigger variables</span><span class="shortcut-keys"><kbd>&#123;&#123;</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Navigate</span><span class="shortcut-keys"><kbd>&uarr;</kbd><kbd>&darr;</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Accept</span><span class="shortcut-keys"><kbd>Enter</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Dismiss</span><span class="shortcut-keys"><kbd class="kbd-wide">Esc</kbd></span></div>
+            </div>
+            <div class="shortcuts-section">
+              <h4 class="shortcuts-title"><span class="material-symbols-rounded shortcuts-icon">list_alt</span>Test Items</h4>
+              <div class="shortcut-row"><span class="shortcut-desc">Context menu</span><span class="shortcut-keys kbd-text">Right-click</span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Reorder</span><span class="shortcut-keys kbd-text">Drag handle</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="shortcuts-footer">
+          <span class="material-symbols-rounded" style="font-size:14px;">laptop_mac</span> On macOS use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
@@ -484,6 +620,7 @@
   <script src="js/response-diff.js"></script>
   <script src="js/schema-drift.js"></script>
   <script src="js/schedules.js"></script>
+  <script src="js/settings.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

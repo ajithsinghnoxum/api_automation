@@ -96,6 +96,7 @@ function onValDragEnd() {
   valDragState = null;
   document.querySelectorAll('.validation-row.dragging').forEach(el => el.classList.remove('dragging'));
   document.querySelectorAll('.validation-row.drag-over').forEach(el => el.classList.remove('drag-over'));
+  if (typeof renumberValidations === 'function') renumberValidations();
 }
 
 async function reorderTest(suiteIdx, fromIdx, toIdx) {

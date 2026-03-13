@@ -283,6 +283,7 @@ export function runTestSuite(config: TestSuiteConfig) {
             // Run all configured validations (resolve validation values with merged vars)
             if (tc.validations) {
               for (const validation of tc.validations) {
+                if ((validation as any).disabled) continue;
                 const resolvedValidation = resolveValue(validation, mergedVars) as typeof validation;
                 const vResult = tryValidation(lastResult.data, resolvedValidation);
                 lastValidationResults.push(vResult);
@@ -335,6 +336,7 @@ export function runTestSuite(config: TestSuiteConfig) {
                 });
                 if (tc.validations) {
                   for (const validation of tc.validations) {
+                    if ((validation as any).disabled) continue;
                     const resolvedValidation = resolveValue(validation, mergedVars) as typeof validation;
                     lastValidationResults.push(tryValidation(lastResult.data, resolvedValidation));
                   }

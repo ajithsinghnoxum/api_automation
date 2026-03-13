@@ -1,3 +1,92 @@
+// --- Context Menu ---
+
+let activeCtxMenu = null;
+
+function showTestContextMenu(e, suiteIdx, testIdx) {
+  e.preventDefault();
+  e.stopPropagation();
+  dismissCtxMenu();
+
+  const test = currentSuites[suiteIdx]?.tests?.[testIdx];
+  if (!test) return;
+
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  const items = [
+    { icon: 'play_arrow', label: 'Quick Run', action: () => { const btn = document.getElementById(`qr-btn-${suiteIdx}-${testIdx}`); if (btn) quickRunTest(suiteIdx, testIdx, btn); } },
+    { icon: 'edit', label: 'Edit', action: () => editTest(suiteIdx, testIdx) },
+    { icon: 'content_copy', label: 'Duplicate', action: () => duplicateTest(suiteIdx, testIdx) },
+    { icon: 'terminal', label: 'Copy as cURL', action: () => copyAsCurl(suiteIdx, testIdx) },
+    { sep: true },
+    { icon: 'arrow_upward', label: 'Move Up', action: () => moveTest(suiteIdx, testIdx, testIdx - 1), disabled: testIdx === 0 },
+    { icon: 'arrow_downward', label: 'Move Down', action: () => moveTest(suiteIdx, testIdx, testIdx + 1), disabled: testIdx >= (currentSuites[suiteIdx]?.tests?.length || 1) - 1 },
+    { sep: true },
+    { icon: test.skip ? 'visibility' : 'visibility_off', label: test.skip ? 'Unskip' : 'Skip', action: () => toggleTestSkip(suiteIdx, testIdx) },
+    { icon: 'delete', label: 'Delete', action: () => deleteTest(suiteIdx, testIdx), danger: true },
+  ];
+
+  items.forEach(item => {
+    if (item.sep) {
+      const sep = document.createElement('div');
+      sep.className = 'ctx-menu-sep';
+      menu.appendChild(sep);
+      return;
+    }
+    const btn = document.createElement('button');
+    btn.className = 'ctx-menu-item' + (item.danger ? ' danger' : '');
+    btn.innerHTML = `<span class="material-symbols-rounded">${item.icon}</span> ${item.label}`;
+    if (item.disabled) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'default'; }
+    btn.onclick = () => { dismissCtxMenu(); item.action(); };
+    menu.appendChild(btn);
+  });
+
+  // Position the menu
+  let x = e.clientX, y = e.clientY;
+  document.body.appendChild(menu);
+  const rect = menu.getBoundingClientRect();
+  if (x + rect.width > window.innerWidth) x = window.innerWidth - rect.width - 4;
+  if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - 4;
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  activeCtxMenu = menu;
+}
+
+function dismissCtxMenu() {
+  if (activeCtxMenu) { activeCtxMenu.remove(); activeCtxMenu = null; }
+}
+
+document.addEventListener('click', dismissCtxMenu);
+document.addEventListener('contextmenu', (e) => {
+  if (activeCtxMenu && !activeCtxMenu.contains(e.target)) dismissCtxMenu();
+});
+
+async function moveTest(suiteIdx, fromIdx, toIdx) {
+  if (toIdx < 0 || toIdx >= (currentSuites[suiteIdx]?.tests?.length || 0)) return;
+  try {
+    const suite = currentSuites[suiteIdx];
+    const { fileName, ...suiteData } = suite;
+    const tests = [...suiteData.tests];
+    const [moved] = tests.splice(fromIdx, 1);
+    tests.splice(toIdx, 0, moved);
+    suiteData.tests = tests;
+    await api('PUT', `/api/projects/${currentProject.id}/suites/${fileName}`, suiteData);
+    await loadSuites();
+    renderProjectView();
+  } catch { /* error already toasted */ }
+}
+
+async function toggleTestSkip(suiteIdx, testIdx) {
+  try {
+    const suite = currentSuites[suiteIdx];
+    const { fileName, ...suiteData } = suite;
+    suiteData.tests[testIdx].skip = !suiteData.tests[testIdx].skip;
+    await api('PUT', `/api/projects/${currentProject.id}/suites/${fileName}`, suiteData);
+    toast(suiteData.tests[testIdx].skip ? 'Test skipped' : 'Test unskipped');
+    await loadSuites();
+    renderProjectView();
+  } catch { /* error already toasted */ }
+}
+
 // --- Suites ---
 
 async function loadSuites() {
@@ -44,7 +133,7 @@ function renderProjectView() {
         const timing = lastRunTimings[statusKey];
         const timingBadge = timing ? '<span class="timing-badge">' + timing + '</span>' : '';
         return `
-        <div class="test-item ${lastStatus ? 'test-' + lastStatus : ''}" draggable="true" data-suite-idx="${si}" data-test-idx="${ti}" ondragstart="onTestDragStart(event)" ondragover="onTestDragOver(event)" ondrop="onTestDrop(event)" ondragend="onTestDragEnd(event)">
+        <div class="test-item ${lastStatus ? 'test-' + lastStatus : ''}" draggable="true" data-suite-idx="${si}" data-test-idx="${ti}" ondragstart="onTestDragStart(event)" ondragover="onTestDragOver(event)" ondrop="onTestDrop(event)" ondragend="onTestDragEnd(event)" oncontextmenu="showTestContextMenu(event, ${si}, ${ti})">
           <div class="test-item-header" onclick="toggleTestBody('suite${si}-test${ti}')">
             <div class="test-item-left">
               ${getBulkCheckboxHtml(si, ti)}
@@ -68,6 +157,7 @@ function renderProjectView() {
             <div style="font-size:13px;">
               <strong>Expected Status:</strong> ${t.expectedStatus}<br>
               ${t.queryParams ? '<strong>Query Params:</strong> ' + esc(JSON.stringify(t.queryParams)) + '<br>' : ''}
+              ${t.headers ? '<strong>Headers:</strong> ' + esc(JSON.stringify(t.headers)) + '<br>' : ''}
               ${t.body ? '<strong>Body:</strong> <pre style="margin:4px 0;padding:8px;background:var(--bg);border-radius:6px;font-size:12px;">' + esc(JSON.stringify(t.body, null, 2)) + '</pre>' : ''}
               ${t.extract ? '<strong>Extract:</strong> <pre style="margin:4px 0;padding:8px;background:var(--bg);border-radius:6px;font-size:12px;">' + esc(JSON.stringify(t.extract, null, 2)) + '</pre>' : ''}
               ${t.validations?.length ? '<strong>Validations (' + t.validations.length + '):</strong><pre style="margin:4px 0;padding:8px;background:var(--bg);border-radius:6px;font-size:12px;">' + esc(JSON.stringify(t.validations, null, 2)) + '</pre>' : ''}
@@ -443,6 +533,13 @@ function copyAsCurl(suiteIdx, testIdx) {
   // Headers
   curl += ` \\\n  -H "Content-Type: application/json"`;
   curl += ` \\\n  -H "Accept: application/json"`;
+
+  // Per-test headers
+  if (test.headers) {
+    for (const [k, v] of Object.entries(test.headers)) {
+      curl += ` \\\n  -H "${k}: ${v}"`;
+    }
+  }
 
   if (currentProject.authType === 'bearer' && currentProject.credentials?.token) {
     curl += ` \\\n  -H "Authorization: Bearer ${currentProject.credentials.token}"`;

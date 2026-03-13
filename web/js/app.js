@@ -22,10 +22,32 @@ loadProjects().then(() => {
 document.addEventListener('keydown', (e) => {
   // Escape — close any open modal
   if (e.key === 'Escape') {
+    const shortcutsModal = document.getElementById('shortcuts-modal');
+    if (shortcutsModal?.classList.contains('open')) { closeShortcutsModal(); return; }
     const projectModal = document.getElementById('project-modal');
     const testModal = document.getElementById('test-modal');
     if (testModal?.classList.contains('open')) { closeTestModal(); return; }
     if (projectModal?.classList.contains('open')) { closeProjectModal(); return; }
+  }
+
+  // ? — show keyboard shortcuts help (only when not typing in an input)
+  if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const tag = document.activeElement?.tagName;
+    if (tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT' && !document.activeElement?.isContentEditable) {
+      e.preventDefault();
+      openShortcutsModal();
+      return;
+    }
+  }
+
+  // Ctrl+S / Cmd+S — save test (when test modal is open)
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    const testModal = document.getElementById('test-modal');
+    if (testModal?.classList.contains('open')) {
+      e.preventDefault();
+      saveTest();
+      return;
+    }
   }
 
   // Ctrl+Enter / Cmd+Enter — run tests
@@ -53,4 +75,19 @@ document.addEventListener('keydown', (e) => {
       searchInput.focus();
     }
   }
+
+  // Ctrl+Shift+D — toggle theme
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+    e.preventDefault();
+    toggleTheme();
+  }
 });
+
+// --- Shortcuts Modal ---
+function openShortcutsModal() {
+  document.getElementById('shortcuts-modal').classList.add('open');
+}
+
+function closeShortcutsModal() {
+  document.getElementById('shortcuts-modal').classList.remove('open');
+}

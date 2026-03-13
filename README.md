@@ -21,6 +21,11 @@ A full-featured, config-driven API testing framework built with **Playwright**, 
 - **Notifications** — Slack, Microsoft Teams, and email (SMTP) notifications on test results
 - **Chain Builder** — Visual flow editor showing variable dependencies between chained tests
 - **Dark/Light Theme** — Toggle between themes with smooth transitions
+- **Visual KV Editors** — Structured key-value pair editors for query params and per-test headers (like Postman)
+- **Variable Autocomplete** — Type `{{` in endpoint fields to get autocomplete for built-in variables and extracted variables
+- **Response Path Autocomplete** — After "Try & Auto-Generate", validation path inputs suggest all available response paths with types and value previews
+- **Right-Click Context Menu** — Right-click any test item for quick actions: Run, Edit, Duplicate, Copy as cURL, Move Up/Down, Skip/Unskip, Delete
+- **Per-Test Headers** — Define custom headers per test case, merged with project-level auth headers at runtime
 
 ## Quick Start
 
@@ -98,7 +103,7 @@ api_automation/
 │       ├── response-diff.js  # Response comparison
 │       ├── schema-drift.js   # Schema drift detection
 │       ├── schedules.js      # Scheduled test runs
-│       └── ...
+│       └── drag-reorder.js   # Drag & drop reordering
 ├── docs/                     # Documentation site
 ├── test-configs/             # Test suite JSON files (per project)
 └── IMPROVEMENTS.md           # Feature roadmap & progress
@@ -128,6 +133,7 @@ Tests are defined as JSON files in `test-configs/<project-id>/`:
       "name": "create user",
       "method": "POST",
       "endpoint": "users",
+      "headers": { "X-Request-ID": "{{$guid}}" },
       "body": { "name": "Test User", "email": "{{$randomEmail}}" },
       "expectedStatus": 201,
       "extract": { "userId": "id" },

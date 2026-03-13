@@ -54,6 +54,12 @@
     <div class="section-title">Notifications</div>
     <a href="#notifications-example">Notification Integration</a>
 
+    <div class="section-title">Editor Enhancements</div>
+    <a href="#kv-editors-example">KV Editors &amp; Headers</a>
+    <a href="#var-autocomplete-example">Variable Autocomplete</a>
+    <a href="#path-autocomplete-example">Path Autocomplete</a>
+    <a href="#context-menu-example">Context Menu</a>
+
     <div class="section-title">Links</div>
     <a href="index.html">Back to Examples</a>
     <a href="../index.html">Back to Docs</a>
@@ -904,6 +910,142 @@ GET /api/projects/{projectId}/trends               → application/json</code></
 
   <div class="alert alert-info">
     <strong>Tip:</strong> Use the "Test Notification" button in the project settings modal to verify your configuration before enabling notifications.
+  </div>
+
+  <!-- KV Editors & Per-Test Headers -->
+  <h2 id="kv-editors-example">KV Editors &amp; Per-Test Headers</h2>
+  <p>Query parameters and per-test headers use structured key-value editors. Per-test headers are merged with project auth headers at runtime.</p>
+
+  <div class="example-card">
+    <h4>Test with per-test headers</h4>
+    <p>Define custom headers that are sent alongside your project's auth headers.</p>
+    <pre><code>{
+  "name": "create resource with custom headers",
+  "method": "POST",
+  "endpoint": "resources",
+  "headers": {
+    "X-Request-ID": "{{$guid}}",
+    "X-Custom-Source": "api-tests",
+    "Accept-Language": "en-US"
+  },
+  "body": { "name": "Test Resource" },
+  "expectedStatus": 201,
+  "validations": [
+    { "type": "exists", "path": "id" }
+  ]
+}</code></pre>
+    <ul class="explain">
+      <li><code>headers</code> &mdash; Key-value pairs added to the request. Merged with project-level auth headers (Bearer, Basic, API Key)</li>
+      <li><code>{{$guid}}</code> &mdash; Built-in variable resolved at runtime, generating a unique UUID for each request</li>
+      <li>Headers support all variable types: built-in (<code>$timestamp</code>), extracted (<code>{{token}}</code>), and dataset variables</li>
+      <li>Per-test headers are included when using <strong>Copy as cURL</strong></li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Query params via KV editor</h4>
+    <p>Instead of typing <code>?page=1&amp;limit=10</code>, use the visual KV editor in the test modal.</p>
+    <pre><code>{
+  "name": "list users with pagination",
+  "method": "GET",
+  "endpoint": "users",
+  "queryParams": {
+    "page": "1",
+    "limit": "10",
+    "sort": "name",
+    "order": "asc"
+  },
+  "expectedStatus": 200
+}</code></pre>
+    <ul class="explain">
+      <li>Each key-value pair is a separate row in the editor with its own input fields</li>
+      <li>Click <strong>"Add Param"</strong> to add rows, click &times; to remove</li>
+      <li>Query params also support <code>{{variable}}</code> syntax</li>
+    </ul>
+  </div>
+
+  <!-- Variable Autocomplete -->
+  <h2 id="var-autocomplete-example">Variable Autocomplete</h2>
+  <p>Type <code>{{</code> in the endpoint field to trigger autocomplete for built-in and extracted variables.</p>
+
+  <div class="example-card">
+    <h4>How it works</h4>
+    <p>The autocomplete dropdown appears when you type <code>{{</code> anywhere in the endpoint field.</p>
+    <pre><code>// Endpoint field: users/{{
+//
+// Autocomplete shows:
+// ┌──────────────────────────────────┐
+// │ $timestamp    Unix timestamp     │
+// │ $isoDate      ISO date string    │
+// │ $guid         Random UUID        │
+// │ $randomInt    Random integer     │
+// │ $randomEmail  Random email       │
+// │ $randomString Random string      │
+// │ ─────────────────────────────── │
+// │ userId        (extracted var)    │
+// │ token         (extracted var)    │
+// └──────────────────────────────────┘
+//
+// Select "userId" → endpoint becomes: users/{{userId}}</code></pre>
+    <ul class="explain">
+      <li>Built-in variables start with <code>$</code> and generate dynamic values each run</li>
+      <li>Extracted variables come from earlier tests in the same suite that use <code>"extract"</code></li>
+      <li>Navigate with <strong>Arrow keys</strong>, select with <strong>Enter/Tab</strong>, dismiss with <strong>Escape</strong></li>
+    </ul>
+  </div>
+
+  <!-- Response Path Autocomplete -->
+  <h2 id="path-autocomplete-example">Response Path Autocomplete</h2>
+  <p>After using "Try &amp; Auto-Generate", validation path fields suggest response paths with type info.</p>
+
+  <div class="example-card">
+    <h4>Path suggestions from real response</h4>
+    <p>After sending a request via "Try &amp; Auto-Generate", validation path inputs show suggestions.</p>
+    <pre><code>// Response from API:
+// { "id": 42, "name": "Alice", "meta": { "role": "admin", "active": true } }
+//
+// Path autocomplete shows:
+// ┌──────────────────────────────────────────────┐
+// │ id            number    42                    │
+// │ name          string    "Alice"               │
+// │ meta          object    {role, active}        │
+// │ meta.role     string    "admin"               │
+// │ meta.active   boolean   true                  │
+// └──────────────────────────────────────────────┘</code></pre>
+    <ul class="explain">
+      <li>Paths are recursively extracted from the response, including nested objects and arrays</li>
+      <li>Each suggestion shows the <strong>path</strong>, <strong>data type</strong>, and a <strong>value preview</strong></li>
+      <li>Works for dynamically added validation rows (uses event delegation)</li>
+      <li>Helps avoid typos in validation paths by suggesting exact paths from real data</li>
+    </ul>
+  </div>
+
+  <!-- Right-Click Context Menu -->
+  <h2 id="context-menu-example">Right-Click Context Menu</h2>
+  <p>Right-click any test item for quick actions without navigating through the UI.</p>
+
+  <div class="example-card">
+    <h4>Available context menu actions</h4>
+    <pre><code>// Right-click on any test item:
+// ┌──────────────────────────┐
+// │ ▶  Quick Run             │
+// │ ✎  Edit                  │
+// │ ⧉  Duplicate             │
+// │ $  Copy as cURL          │
+// │ ────────────────────────│
+// │ ↑  Move Up               │
+// │ ↓  Move Down             │
+// │ ────────────────────────│
+// │ 👁  Skip / Unskip        │
+// │ 🗑  Delete                │
+// └──────────────────────────┘</code></pre>
+    <ul class="explain">
+      <li><strong>Quick Run</strong> &mdash; Execute the test immediately with inline result display</li>
+      <li><strong>Copy as cURL</strong> &mdash; Generates a full cURL command including auth headers and per-test headers</li>
+      <li><strong>Move Up/Down</strong> &mdash; Reorder tests within the suite (grayed out at boundaries)</li>
+      <li><strong>Skip/Unskip</strong> &mdash; Toggle the test's skip status without opening the editor</li>
+      <li><strong>Delete</strong> &mdash; Shown in red as a destructive action</li>
+    </ul>
   </div>
 
   <hr>

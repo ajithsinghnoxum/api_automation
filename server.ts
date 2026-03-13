@@ -27,12 +27,18 @@ import {
   getAllEnabledSchedules,
   migrateFromJson,
 } from "./src/db";
+import {
+  TEST_CONFIGS_DIR,
+  REPORT_DIR,
+  PROJECTS_FILE,
+  DATA_DIR,
+  getDataDir,
+  setDataDir,
+} from "./src/data-dir";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
-const TEST_CONFIGS_DIR = path.resolve("test-configs");
-const REPORT_DIR = path.resolve("playwright-report");
 const WEB_DIR = path.resolve("web");
 
 // --- Auto-migrate from JSON on first run ---
@@ -63,8 +69,6 @@ function safePath(base: string, ...segments: string[]): string | null {
   }
   return resolved;
 }
-
-const PROJECTS_FILE = path.resolve("projects.config.json");
 
 /** Sync projects to JSON file so Playwright config can read them */
 function syncProjectsFile() {
@@ -231,7 +235,7 @@ app.post("/api/projects/:id/try-request", async (req, res) => {
   const project = getProject(req.params.id);
   if (!project) return res.status(404).json({ error: "Project not found" });
 
-  const { method, endpoint, queryParams, body, headers: extraHeaders, includeValues } = req.body;
+  const { method, endpoint, queryParams, body, headers: extraHeaders, includeValues, profile } = req.body;
   if (!method || !endpoint) {
     return res.status(400).json({ error: "method and endpoint are required" });
   }
@@ -295,7 +299,8 @@ app.post("/api/projects/:id/try-request", async (req, res) => {
     response.headers.forEach((v, k) => { responseHeaders[k] = v; });
 
     // Auto-generate validations from the response
-    const validations = generateValidations(data, !!includeValues);
+    const genProfile = profile || (includeValues ? "full" : "structure");
+    const validations = generateValidations(data, genProfile);
 
     res.json({ status, data, headers: responseHeaders, validations });
   } catch (err: any) {
@@ -306,7 +311,8 @@ app.post("/api/projects/:id/try-request", async (req, res) => {
   }
 });
 
-function generateValidations(data: any, includeValues: boolean): any[] {
+/** Profiles: "structure" = schema/exists/typeOf only, "key-fields" = + equals for short primitives, "full" = all values */
+function generateValidations(data: any, profile: string): any[] {
   const validations: any[] = [];
 
   if (data === null || data === undefined || typeof data === "string") {
@@ -314,11 +320,9 @@ function generateValidations(data: any, includeValues: boolean): any[] {
   }
 
   if (Array.isArray(data)) {
-    // Array response — empty path means "the whole response"
     validations.push({ type: "isArray" });
     validations.push({ type: "arrayLength", exact: data.length });
 
-    // Analyze first item for schema + nested validations
     if (data.length > 0 && typeof data[0] === "object" && data[0] !== null) {
       const item = data[0];
       const properties: Record<string, string> = {};
@@ -327,7 +331,6 @@ function generateValidations(data: any, includeValues: boolean): any[] {
       }
       validations.push({ type: "schema", path: "[0]", properties });
 
-      // arrayEvery with type checks for key fields
       const nestedValidations: any[] = [];
       for (const [key, val] of Object.entries(item)) {
         if (val !== null && val !== undefined) {
@@ -342,13 +345,13 @@ function generateValidations(data: any, includeValues: boolean): any[] {
         validations.push({ type: "arrayEvery", validations: nestedValidations });
       }
 
-      // Spot-check first item values (equals for primitives)
-      if (includeValues) {
+      if (profile === "key-fields") {
+        generateKeyFieldChecks(item, "[0]", validations);
+      } else if (profile === "full") {
         generateValueChecks(item, "[0]", validations);
       }
     }
   } else if (typeof data === "object") {
-    // Object response — schema validation (no path = root object)
     const properties: Record<string, string> = {};
     for (const [key, val] of Object.entries(data)) {
       properties[key] = val === null ? "object" : Array.isArray(val) ? "array" : typeof val;
@@ -357,19 +360,17 @@ function generateValidations(data: any, includeValues: boolean): any[] {
       validations.push({ type: "schema", properties });
     }
 
-    // exists + typeOf for each field (skip typeOf for arrays — use isArray instead)
     for (const [key, val] of Object.entries(data)) {
       validations.push({ type: "exists", path: key });
       if (val !== null && val !== undefined) {
         if (Array.isArray(val)) {
-          // isArray is generated separately below; skip typeOf for arrays
+          // isArray generated below
         } else {
           validations.push({ type: "typeOf", path: key, expected: typeof val });
         }
       }
     }
 
-    // Nested arrays — check isArray + arrayLength
     for (const [key, val] of Object.entries(data)) {
       if (Array.isArray(val)) {
         validations.push({ type: "isArray", path: key });
@@ -377,13 +378,47 @@ function generateValidations(data: any, includeValues: boolean): any[] {
       }
     }
 
-    // Value checks — deep equals for all fields including nested objects & arrays
-    if (includeValues) {
+    if (profile === "key-fields") {
+      generateKeyFieldChecks(data, "", validations);
+    } else if (profile === "full") {
       generateValueChecks(data, "", validations);
     }
   }
 
   return validations;
+}
+
+/** Key-field patterns: IDs, names, statuses, types, codes — skip long strings (>200 chars) and HTML */
+const KEY_FIELD_PATTERNS = /^(id|guid|uuid|name|title|status|state|type|typeRef|code|slug|email|role|key|attribute)$/i;
+
+function isKeyField(key: string): boolean {
+  const leaf = key.includes(".") ? key.split(".").pop()! : key;
+  return KEY_FIELD_PATTERNS.test(leaf);
+}
+
+/** Generate equals checks only for key fields (IDs, names, statuses, short primitives) */
+function generateKeyFieldChecks(obj: any, prefix: string, validations: any[]): void {
+  for (const [key, val] of Object.entries(obj)) {
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    if (val === null || val === undefined) {
+      if (isKeyField(key)) validations.push({ type: "equals", path, value: null });
+    } else if (typeof val === "number" || typeof val === "boolean") {
+      if (isKeyField(key)) validations.push({ type: "equals", path, value: val });
+    } else if (typeof val === "string") {
+      // Only include key fields with short, non-HTML values
+      if (isKeyField(key) && val.length <= 200 && !val.includes("<")) {
+        validations.push({ type: "equals", path, value: val });
+      }
+    } else if (Array.isArray(val)) {
+      // Recurse into first item only for key-fields
+      if (val.length > 0 && typeof val[0] === "object" && val[0] !== null) {
+        generateKeyFieldChecks(val[0], `${path}[0]`, validations);
+      }
+    } else if (typeof val === "object") {
+      generateKeyFieldChecks(val, path, validations);
+    }
+  }
 }
 
 /** Recursively generate equals validations for all primitive values at any depth */
@@ -396,7 +431,6 @@ function generateValueChecks(obj: any, prefix: string, validations: any[]): void
     } else if (typeof val === "string" || typeof val === "number" || typeof val === "boolean") {
       validations.push({ type: "equals", path, value: val });
     } else if (Array.isArray(val)) {
-      // Generate checks for each array item
       val.forEach((item, idx) => {
         const itemPath = `${path}[${idx}]`;
         if (item === null || item === undefined) {
@@ -408,7 +442,6 @@ function generateValueChecks(obj: any, prefix: string, validations: any[]): void
         }
       });
     } else if (typeof val === "object") {
-      // Recurse into nested objects
       generateValueChecks(val, path, validations);
     }
   }
@@ -458,14 +491,28 @@ function runServerValidation(data: unknown, v: any): { status: "passed" | "faile
   const pathLabel = v.path || "response";
 
   switch (v.type) {
-    case "equals":
-      return val == v.value
+    case "equals": {
+      let a = val, b = v.value;
+      if (v.trim && typeof a === "string") a = a.trim();
+      if (v.trim && typeof b === "string") b = b.trim();
+      const eq = typeof a === "object" && typeof b === "object"
+        ? JSON.stringify(a) === JSON.stringify(b)
+        : a === b;
+      return eq
         ? { status: "passed", message: `${pathLabel} equals ${JSON.stringify(v.value)}` }
         : { status: "failed", message: `${pathLabel} equals ${JSON.stringify(v.value)}`, actual: val };
-    case "notEquals":
-      return val != v.value
+    }
+    case "notEquals": {
+      let a = val, b = v.value;
+      if (v.trim && typeof a === "string") a = a.trim();
+      if (v.trim && typeof b === "string") b = b.trim();
+      const neq = typeof a === "object" && typeof b === "object"
+        ? JSON.stringify(a) !== JSON.stringify(b)
+        : a !== b;
+      return neq
         ? { status: "passed", message: `${pathLabel} does not equal ${JSON.stringify(v.value)}` }
         : { status: "failed", message: `${pathLabel} does not equal ${JSON.stringify(v.value)}`, actual: val };
+    }
     case "exists":
       return val !== undefined && val !== null
         ? { status: "passed", message: `${pathLabel} exists` }
@@ -474,14 +521,20 @@ function runServerValidation(data: unknown, v: any): { status: "passed" | "faile
       return val === undefined || val === null
         ? { status: "passed", message: `${pathLabel} does not exist` }
         : { status: "failed", message: `${pathLabel} does not exist`, actual: val };
-    case "contains":
-      return typeof val === "string" && val.includes(v.value)
+    case "contains": {
+      const s = typeof val === "string" ? (v.trim ? val.trim() : val) : val;
+      const sv = v.trim && typeof v.value === "string" ? v.value.trim() : v.value;
+      return typeof s === "string" && s.includes(sv)
         ? { status: "passed", message: `${pathLabel} contains "${v.value}"` }
         : { status: "failed", message: `${pathLabel} contains "${v.value}"`, actual: val };
-    case "notContains":
-      return typeof val === "string" && !val.includes(v.value)
+    }
+    case "notContains": {
+      const s = typeof val === "string" ? (v.trim ? val.trim() : val) : val;
+      const sv = v.trim && typeof v.value === "string" ? v.value.trim() : v.value;
+      return typeof s === "string" && !s.includes(sv)
         ? { status: "passed", message: `${pathLabel} does not contain "${v.value}"` }
         : { status: "failed", message: `${pathLabel} does not contain "${v.value}"`, actual: val };
+    }
     case "typeOf": {
       const actualType = Array.isArray(val) ? "array" : typeof val;
       return actualType === v.expected
@@ -522,14 +575,20 @@ function runServerValidation(data: unknown, v: any): { status: "passed" | "faile
         ? { status: "passed", message: `${pathLabel} matches /${pattern}/` }
         : { status: "failed", message: `${pathLabel} matches /${pattern}/`, actual: val };
     }
-    case "startsWith":
-      return typeof val === "string" && val.startsWith(v.value)
+    case "startsWith": {
+      const s = typeof val === "string" ? (v.trim ? val.trim() : val) : val;
+      const sv = v.trim && typeof v.value === "string" ? v.value.trim() : v.value;
+      return typeof s === "string" && s.startsWith(sv)
         ? { status: "passed", message: `${pathLabel} starts with "${v.value}"` }
         : { status: "failed", message: `${pathLabel} starts with "${v.value}"`, actual: val };
-    case "endsWith":
-      return typeof val === "string" && val.endsWith(v.value)
+    }
+    case "endsWith": {
+      const s = typeof val === "string" ? (v.trim ? val.trim() : val) : val;
+      const sv = v.trim && typeof v.value === "string" ? v.value.trim() : v.value;
+      return typeof s === "string" && s.endsWith(sv)
         ? { status: "passed", message: `${pathLabel} ends with "${v.value}"` }
         : { status: "failed", message: `${pathLabel} ends with "${v.value}"`, actual: val };
+    }
     case "isEmpty":
       return val === "" || val === null || val === undefined || (Array.isArray(val) && val.length === 0) || (typeof val === "object" && Object.keys(val as object).length === 0)
         ? { status: "passed", message: `${pathLabel} is empty` }
@@ -677,7 +736,9 @@ app.post("/api/projects/:id/quick-run", async (req, res) => {
     const statusPassed = status === expectedStatus;
 
     // Run validations
-    const validationResults = (testConfig.validations || []).map((v: any) => runServerValidation(data, v));
+    const validationResults = (testConfig.validations || [])
+      .filter((v: any) => !v.disabled)
+      .map((v: any) => runServerValidation(data, v));
     const allValidationsPassed = validationResults.every((r: any) => r.status === "passed");
     const passed = statusPassed && allValidationsPassed;
 
@@ -1946,6 +2007,87 @@ function startScheduler() {
 
   console.log("[Scheduler] Started — checking every 30s");
 }
+
+// --- Settings API ---
+
+app.get("/api/settings", (_req, res) => {
+  res.json({
+    dataDir: getDataDir(),
+  });
+});
+
+app.put("/api/settings", (req, res) => {
+  const { dataDir } = req.body;
+  if (!dataDir || typeof dataDir !== "string") {
+    return res.status(400).json({ error: "dataDir is required" });
+  }
+
+  const resolved = path.resolve(dataDir);
+
+  // Verify the directory exists or can be created
+  try {
+    if (!fs.existsSync(resolved)) {
+      fs.mkdirSync(resolved, { recursive: true });
+    }
+    // Test write access
+    const testFile = path.join(resolved, ".write-test");
+    fs.writeFileSync(testFile, "test");
+    fs.unlinkSync(testFile);
+  } catch {
+    return res.status(400).json({ error: "Cannot write to that directory" });
+  }
+
+  setDataDir(resolved);
+  res.json({
+    dataDir: resolved,
+    message: "Data directory updated. Restart the server for changes to take effect.",
+    requiresRestart: true,
+  });
+});
+
+app.post("/api/settings/browse", (req, res) => {
+  const { dir } = req.body;
+  const target = dir ? path.resolve(dir) : require("os").homedir();
+
+  try {
+    if (!fs.existsSync(target) || !fs.statSync(target).isDirectory()) {
+      return res.status(400).json({ error: "Not a valid directory" });
+    }
+
+    const entries = fs.readdirSync(target, { withFileTypes: true })
+      .filter(e => e.isDirectory() && !e.name.startsWith(".") && e.name !== "node_modules")
+      .map(e => ({
+        name: e.name,
+        path: path.join(target, e.name),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const parent = path.dirname(target);
+    res.json({
+      current: target,
+      parent: parent !== target ? parent : null,
+      entries,
+    });
+  } catch {
+    return res.status(400).json({ error: "Cannot read directory" });
+  }
+});
+
+app.post("/api/settings/mkdir", (req, res) => {
+  const { dir } = req.body;
+  if (!dir || typeof dir !== "string") {
+    return res.status(400).json({ error: "dir is required" });
+  }
+  try {
+    const resolved = path.resolve(dir);
+    if (!fs.existsSync(resolved)) {
+      fs.mkdirSync(resolved, { recursive: true });
+    }
+    res.json({ ok: true, path: resolved });
+  } catch (err: any) {
+    res.status(400).json({ error: `Cannot create directory: ${err.message}` });
+  }
+});
 
 // --- Global Error Handler ---
 

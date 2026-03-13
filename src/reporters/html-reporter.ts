@@ -8,6 +8,7 @@ import {
 } from "@playwright/test/reporter";
 import * as fs from "fs";
 import * as path from "path";
+import { REPORT_DIR } from "../data-dir";
 
 interface ValidationEntry {
   status: "passed" | "failed";
@@ -118,7 +119,7 @@ class CustomHtmlReporter implements Reporter {
       }),
     });
 
-    const outDir = path.resolve("playwright-report");
+    const outDir = REPORT_DIR;
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
     fs.writeFileSync(path.join(outDir, "index.html"), html, "utf-8");
   }

@@ -103,14 +103,20 @@ export function tryValidation(data: unknown, validation: Validation): Validation
 export function runValidation(data: unknown, validation: Validation): void {
   switch (validation.type) {
     case "equals": {
-      const actual = getValueByPath(data, validation.path);
-      expect(actual, `Expected "${validation.path}" to equal ${JSON.stringify(validation.value)}`).toEqual(validation.value);
+      let actual = getValueByPath(data, validation.path);
+      let expected = validation.value;
+      if (validation.trim && typeof actual === "string") actual = actual.trim();
+      if (validation.trim && typeof expected === "string") expected = expected.trim();
+      expect(actual, `Expected "${validation.path}" to equal ${JSON.stringify(validation.value)}`).toEqual(expected);
       break;
     }
 
     case "notEquals": {
-      const actual = getValueByPath(data, validation.path);
-      expect(actual, `Expected "${validation.path}" to NOT equal ${JSON.stringify(validation.value)}`).not.toEqual(validation.value);
+      let actual = getValueByPath(data, validation.path);
+      let expected = validation.value;
+      if (validation.trim && typeof actual === "string") actual = actual.trim();
+      if (validation.trim && typeof expected === "string") expected = expected.trim();
+      expect(actual, `Expected "${validation.path}" to NOT equal ${JSON.stringify(validation.value)}`).not.toEqual(expected);
       break;
     }
 
@@ -127,8 +133,11 @@ export function runValidation(data: unknown, validation: Validation): void {
     }
 
     case "contains": {
-      const actual = getValueByPath(data, validation.path) as string;
-      expect(actual, `Expected "${validation.path}" to contain "${validation.value}"`).toContain(validation.value);
+      let actual = getValueByPath(data, validation.path) as string;
+      let expected = validation.value;
+      if (validation.trim && typeof actual === "string") actual = actual.trim();
+      if (validation.trim) expected = expected.trim();
+      expect(actual, `Expected "${validation.path}" to contain "${validation.value}"`).toContain(expected);
       break;
     }
 
@@ -279,14 +288,18 @@ export function runValidation(data: unknown, validation: Validation): void {
     }
 
     case "startsWith": {
-      const actual = getValueByPath(data, validation.path) as string;
-      expect(String(actual).startsWith(validation.value), `Expected "${validation.path}" to start with "${validation.value}"`).toBe(true);
+      const raw = getValueByPath(data, validation.path) as string;
+      const actual = validation.trim ? String(raw).trim() : String(raw);
+      const expected = validation.trim ? validation.value.trim() : validation.value;
+      expect(actual.startsWith(expected), `Expected "${validation.path}" to start with "${validation.value}"`).toBe(true);
       break;
     }
 
     case "endsWith": {
-      const actual = getValueByPath(data, validation.path) as string;
-      expect(String(actual).endsWith(validation.value), `Expected "${validation.path}" to end with "${validation.value}"`).toBe(true);
+      const raw = getValueByPath(data, validation.path) as string;
+      const actual = validation.trim ? String(raw).trim() : String(raw);
+      const expected = validation.trim ? validation.value.trim() : validation.value;
+      expect(actual.endsWith(expected), `Expected "${validation.path}" to end with "${validation.value}"`).toBe(true);
       break;
     }
 
@@ -305,8 +318,10 @@ export function runValidation(data: unknown, validation: Validation): void {
     }
 
     case "notContains": {
-      const actual = getValueByPath(data, validation.path) as string;
-      expect(String(actual).includes(validation.value), `Expected "${validation.path}" to NOT contain "${validation.value}"`).toBe(false);
+      const raw = getValueByPath(data, validation.path) as string;
+      const actual = validation.trim ? String(raw).trim() : String(raw);
+      const expected = validation.trim ? validation.value.trim() : validation.value;
+      expect(actual.includes(expected), `Expected "${validation.path}" to NOT contain "${validation.value}"`).toBe(false);
       break;
     }
 

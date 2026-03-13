@@ -10,3 +10,4 @@ data.db
 data.db-wal
 data.db-shm
 test-configs/
+settings.json

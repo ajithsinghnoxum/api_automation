@@ -1,8 +1,7 @@
 import Database from "better-sqlite3";
 import * as path from "path";
 import * as fs from "fs";
-
-const DB_PATH = path.resolve("data.db");
+import { DB_PATH } from "./data-dir";
 
 const db = new Database(DB_PATH);
 
@@ -419,6 +418,8 @@ export function migrateFromJson() {
               baseUrl: p.baseUrl || "",
               authType: p.authType || "none",
               credentials: JSON.stringify(p.credentials || {}),
+              environments: JSON.stringify(p.environments || []),
+              notifications: JSON.stringify(p.notifications || {}),
             });
           } catch {
             /* skip duplicates */

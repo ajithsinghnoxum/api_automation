@@ -381,17 +381,52 @@
 - [ ] Alert when a test consistently gets slower (e.g., >20% increase over last 5 runs)
 - [ ] Performance trend sparkline on test cards
 
-### 8.5 Request Preview in Editor
-- [ ] Live preview of resolved request (full URL, headers, body with variables substituted)
-- [ ] Show what the cURL command would look like as you edit
+### 8.5 Request Preview in Editor ✅
+- [x] Live preview of resolved request (full URL, headers, body with variables substituted)
+- [x] Show what the cURL command would look like as you edit
+- [x] Collapsible panel in test editor with debounced live updates
+- [x] Color-coded HTTP method badges, masked auth tokens
+- [x] Shows project auth headers merged with per-test headers
 
-### 8.6 Keyboard Shortcuts Help
-- [ ] Press `?` to show keyboard shortcuts overlay
-- [ ] Discoverable shortcut hints on buttons (tooltips)
+### 8.8 Visual Key-Value Editors ✅
+- [x] Structured key-value pair editors for query parameters (replaces textarea)
+- [x] Per-test headers KV editor (merged with project auth headers at runtime)
+- [x] Add/remove rows with key and value inputs, Postman-style layout
+- [x] Monospace font for inputs, automatic collection into object on save
 
-### 8.7 Inline Form Validation
-- [ ] Red borders + inline error messages on invalid fields (not just toasts)
-- [ ] Validate test config before save (required fields, valid JSON body, valid endpoint)
+### 8.9 Variable Autocomplete ✅
+- [x] Type `{{` in endpoint field to trigger autocomplete dropdown
+- [x] Shows built-in variables (`$timestamp`, `$guid`, `$randomEmail`, etc.)
+- [x] Shows extracted variables from earlier tests in the same suite
+- [x] Keyboard navigation (arrow keys, Enter/Tab to select, Escape to dismiss)
+- [x] Cursor-position-aware — works for mid-string `{{` patterns
+
+### 8.10 Response Path Autocomplete ✅
+- [x] After "Try & Auto-Generate", response data is stored for path suggestions
+- [x] Validation path inputs show dropdown with all available response paths
+- [x] Each suggestion shows data type and value preview
+- [x] Recursive walk of response data to build flat path list
+- [x] Event delegation for dynamically created validation path inputs
+
+### 8.11 Right-Click Context Menu ✅
+- [x] Custom context menu on right-click of any test item
+- [x] Actions: Quick Run, Edit, Duplicate, Copy as cURL, Move Up, Move Down, Skip/Unskip, Delete
+- [x] Viewport boundary detection to prevent off-screen rendering
+- [x] Click-away dismiss, keyboard-accessible
+- [x] Danger styling for destructive actions (Delete)
+
+### 8.6 Keyboard Shortcuts Help ✅
+- [x] Press `?` to show keyboard shortcuts overlay
+- [x] Two-column grid layout with section icons
+- [x] Keyboard icon button in top nav bar
+- [x] Added Ctrl+S (save test), Ctrl+Shift+D (toggle theme)
+- [x] macOS Cmd note in footer
+
+### 8.7 Inline Form Validation ✅
+- [x] Red borders + inline error messages on invalid fields (not just toasts)
+- [x] Validate test config before save (required fields, valid JSON body, valid endpoint)
+- [x] Validates dataset JSON array and poll JSON
+- [x] Auto-clear errors on input
 
 ---
 
@@ -453,6 +488,13 @@
 4. ~~**Response Comparison / Diff** (6.8)~~ — **DONE** (snapshot capture, side-by-side diff, LCS line diff, filter by change type)
 5. ~~**Schema Drift Detection** (6.9)~~ — **DONE** (baseline capture, drift report with field-level changes)
 6. ~~**Notification Integration** (5.4)~~ — **DONE** (Slack/Teams webhooks, SMTP email, per-project config, failure-only mode)
+7. ~~**Visual KV Editors** (8.8)~~ — **DONE** (structured key-value editors for query params & per-test headers)
+8. ~~**Variable Autocomplete** (8.9)~~ — **DONE** (`{{` trigger, built-in + extracted vars, keyboard nav)
+9. ~~**Response Path Autocomplete** (8.10)~~ — **DONE** (path suggestions from Try & Auto-Generate response data)
+10. ~~**Right-Click Context Menu** (8.11)~~ — **DONE** (Quick Run, Edit, Duplicate, cURL, Move, Skip, Delete)
+11. ~~**Request Preview in Editor** (8.5)~~ — **DONE** (live resolved URL, headers, body, cURL preview with debounced updates)
+12. ~~**Keyboard Shortcuts Help** (8.6)~~ — **DONE** (two-column overlay, `?` key, Ctrl+S save, Ctrl+Shift+D theme)
+13. ~~**Inline Form Validation** (8.7)~~ — **DONE** (red borders, inline error messages, JSON validation)
 
 ### High Impact — Automation & Testing
 7. **Response Time / SLA Assertions** (7.1) — `responseTime` validation, performance thresholds

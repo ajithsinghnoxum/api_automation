@@ -58,11 +58,11 @@ export interface TestCaseConfig {
 }
 
 export type Validation =
-  | { type: "equals"; path: string; value: unknown }
-  | { type: "notEquals"; path: string; value: unknown }
+  | { type: "equals"; path: string; value: unknown; trim?: boolean }
+  | { type: "notEquals"; path: string; value: unknown; trim?: boolean }
   | { type: "exists"; path: string }
   | { type: "notExists"; path: string }
-  | { type: "contains"; path: string; value: string }
+  | { type: "contains"; path: string; value: string; trim?: boolean }
   | { type: "regex"; path: string; pattern: string }
   | { type: "isArray"; path?: string }
   | { type: "arrayLength"; path?: string; min?: number; max?: number; exact?: number }
@@ -77,10 +77,10 @@ export type Validation =
   | { type: "arrayFind"; path?: string; where: { path: string; value: unknown }; validations: Validation[] }
   | { type: "schema"; path?: string; properties: Record<string, "string" | "number" | "boolean" | "object" | "array"> }
   // String validations
-  | { type: "startsWith"; path: string; value: string }
-  | { type: "endsWith"; path: string; value: string }
+  | { type: "startsWith"; path: string; value: string; trim?: boolean }
+  | { type: "endsWith"; path: string; value: string; trim?: boolean }
   | { type: "stringLength"; path: string; min?: number; max?: number; exact?: number }
-  | { type: "notContains"; path: string; value: string }
+  | { type: "notContains"; path: string; value: string; trim?: boolean }
   | { type: "isEmpty"; path?: string }
   | { type: "isNotEmpty"; path?: string }
   // Numeric validations

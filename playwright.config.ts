@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
+import { PROJECTS_FILE } from "./src/data-dir";
 
 dotenv.config();
 
@@ -26,9 +27,8 @@ interface ProjectConfig {
 }
 
 function loadProjects(): ProjectConfig[] {
-  const file = path.resolve("projects.config.json");
-  if (!fs.existsSync(file)) return [];
-  return JSON.parse(fs.readFileSync(file, "utf-8"));
+  if (!fs.existsSync(PROJECTS_FILE)) return [];
+  return JSON.parse(fs.readFileSync(PROJECTS_FILE, "utf-8"));
 }
 
 function getAuthHeaders(project: ProjectConfig): Record<string, string> {

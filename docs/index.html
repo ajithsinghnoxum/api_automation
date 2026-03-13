@@ -409,6 +409,10 @@
     <a href="#schema-drift">Schema Drift Detection</a>
     <a href="#scheduled-runs">Scheduled Test Runs</a>
     <a href="#notifications">Notification Integration</a>
+    <a href="#kv-editors">Visual KV Editors</a>
+    <a href="#var-autocomplete">Variable Autocomplete</a>
+    <a href="#path-autocomplete">Path Autocomplete</a>
+    <a href="#context-menu">Right-Click Context Menu</a>
 
     <div class="section-title">Advanced</div>
     <a href="#path-syntax">Path Syntax</a>
@@ -702,6 +706,10 @@
     <li>Export test runs as PDF, CSV, or JUnit XML</li>
     <li>Smooth transition animations for modals, collapsible sections, and theme switching</li>
     <li>Keyboard shortcuts: Ctrl+S (save), Ctrl+Enter (run), Ctrl+Shift+N (new suite), Ctrl+Shift+F (search)</li>
+    <li>Visual key-value editors for query parameters and per-test headers (like Postman)</li>
+    <li>Variable autocomplete &mdash; type <code>{{</code> in endpoint fields for built-in and extracted variable suggestions</li>
+    <li>Response path autocomplete &mdash; validation path inputs suggest paths from real API responses</li>
+    <li>Right-click context menu on test items with Quick Run, Edit, Duplicate, cURL, Move, Skip, Delete</li>
   </ul>
 
   <h2 id="web-projects">Managing Projects</h2>
@@ -726,6 +734,7 @@
     <li><strong>Edit existing tests</strong> — click a test to open it in the visual editor</li>
     <li><strong>Delete tests or suites</strong> — removes the test or the entire JSON file</li>
     <li><strong>Duplicate a test</strong> — click the copy icon on any test to clone it with a "(copy)" suffix. Great for creating similar tests quickly.</li>
+    <li><strong>Right-click a test</strong> — opens a context menu with Quick Run, Edit, Duplicate, Copy as cURL, Move Up/Down, Skip/Unskip, and Delete</li>
   </ul>
 
   <h3>Using the Validation Builder</h3>
@@ -2457,6 +2466,101 @@ steps:
   <div class="alert alert-info">
     <strong>Tip:</strong> Use "Only on failure" mode with scheduled runs for hands-free monitoring — you will only be notified when something breaks.
   </div>
+
+  <!-- Visual KV Editors -->
+  <h2 id="kv-editors">Visual Key-Value Editors</h2>
+  <p>Query parameters and per-test headers are now edited through structured <strong>key-value pair editors</strong>, similar to tools like Postman. Instead of typing raw query strings or JSON, add rows with separate key and value inputs.</p>
+
+  <h3>Query Parameters</h3>
+  <p>In the test editor, the <strong>Query Params</strong> section shows a KV editor. Click <strong>"Add Param"</strong> to add a row. Each row has a <strong>key</strong> and <strong>value</strong> input. Remove a row by clicking the &times; button.</p>
+  <p>On save, the KV pairs are collected into a query params object: <code>{ "page": "1", "limit": "10" }</code>.</p>
+
+  <h3>Per-Test Headers</h3>
+  <p>Below query params, a <strong>Headers</strong> KV editor lets you define custom headers for individual tests. These are merged with your project-level auth headers at runtime.</p>
+  <pre><code>{
+  "name": "create user with custom headers",
+  "method": "POST",
+  "endpoint": "users",
+  "headers": {
+    "X-Request-ID": "{{$guid}}",
+    "X-Custom-Source": "api-tests"
+  },
+  "body": { "name": "Test User" },
+  "expectedStatus": 201
+}</code></pre>
+  <p>Per-test headers support <code>{{variable}}</code> syntax and are resolved at runtime, just like endpoints and body fields.</p>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> Per-test headers are also included when you use <strong>"Copy as cURL"</strong> or the right-click context menu's cURL action.
+  </div>
+
+  <!-- Variable Autocomplete -->
+  <h2 id="var-autocomplete">Variable Autocomplete</h2>
+  <p>When editing a test's <strong>endpoint</strong> field, type <code>{{</code> to trigger an autocomplete dropdown. This helps you quickly insert variables without remembering exact names.</p>
+
+  <h3>What's Suggested</h3>
+  <table>
+    <thead><tr><th>Category</th><th>Variables</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Built-in variables</strong></td>
+        <td><code>$timestamp</code>, <code>$isoDate</code>, <code>$guid</code>, <code>$randomInt</code>, <code>$randomEmail</code>, <code>$randomString</code></td>
+      </tr>
+      <tr>
+        <td><strong>Extracted variables</strong></td>
+        <td>Variables extracted by earlier tests in the same suite via <code>"extract"</code> fields (e.g., <code>userId</code>, <code>token</code>)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>How to Use</h3>
+  <ol>
+    <li>Place your cursor in the endpoint field</li>
+    <li>Type <code>{{</code> &mdash; the autocomplete dropdown appears</li>
+    <li>Use <strong>arrow keys</strong> to navigate, <strong>Enter</strong> or <strong>Tab</strong> to select</li>
+    <li>Press <strong>Escape</strong> to dismiss without selecting</li>
+    <li>The selected variable is inserted with closing <code>}}</code> automatically</li>
+  </ol>
+
+  <div class="alert alert-info">
+    <strong>Tip:</strong> Autocomplete is cursor-position-aware &mdash; it works even when <code>{{</code> appears in the middle of a URL like <code>users/{{userId}}/posts</code>.
+  </div>
+
+  <!-- Response Path Autocomplete -->
+  <h2 id="path-autocomplete">Response Path Autocomplete</h2>
+  <p>After using <strong>"Try &amp; Auto-Generate"</strong>, the framework remembers the API response. When you add or edit <strong>validation path</strong> inputs, a dropdown suggests all available response paths with their data types and value previews.</p>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>Open a test and click <strong>"Try &amp; Auto-Generate"</strong> to send a real request</li>
+    <li>Add a validation and start typing in the <strong>path</strong> field</li>
+    <li>A dropdown appears showing matching response paths</li>
+    <li>Each suggestion shows: <strong>path</strong>, <strong>data type</strong> (string, number, etc.), and a <strong>value preview</strong></li>
+    <li>Click a suggestion or use keyboard to select it</li>
+  </ol>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> Path autocomplete works for dynamically added validation rows too &mdash; it uses event delegation so new rows automatically get autocomplete support.
+  </div>
+
+  <!-- Right-Click Context Menu -->
+  <h2 id="context-menu">Right-Click Context Menu</h2>
+  <p>Right-click any test item in the suite view to open a context menu with quick actions. This provides fast access to common operations without navigating through the UI.</p>
+
+  <h3>Available Actions</h3>
+  <table>
+    <thead><tr><th>Action</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Quick Run</strong></td><td>Execute this single test immediately and show inline results</td></tr>
+      <tr><td><strong>Edit</strong></td><td>Open the test in the visual editor modal</td></tr>
+      <tr><td><strong>Duplicate</strong></td><td>Clone the test with a "(copy)" suffix</td></tr>
+      <tr><td><strong>Copy as cURL</strong></td><td>Generate and copy a cURL command to clipboard (includes auth and per-test headers)</td></tr>
+      <tr><td><strong>Move Up / Down</strong></td><td>Reorder the test within its suite (disabled at boundaries)</td></tr>
+      <tr><td><strong>Skip / Unskip</strong></td><td>Toggle the test's skip status</td></tr>
+      <tr><td><strong>Delete</strong></td><td>Remove the test from the suite (shown in red as a destructive action)</td></tr>
+    </tbody>
+  </table>
+
 
   <!-- JUnit XML Export -->
   <h2 id="junit-export">JUnit XML Export</h2>
