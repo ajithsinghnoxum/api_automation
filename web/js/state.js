@@ -28,6 +28,7 @@ function toggleTheme() {
   localStorage.setItem('theme', next);
   updateThemeIcon(next);
   if (typeof applyCMTheme === 'function') applyCMTheme();
+  if (next === 'dark' && typeof unlockAchievement === 'function') unlockAchievement('dark_side');
 }
 
 function updateThemeIcon(theme) {

@@ -231,6 +231,15 @@ function renderProjectView() {
           <button class="toolbar-btn" onclick="showSchedules()" title="Schedules"><span class="material-symbols-rounded">schedule</span><span>Schedules</span></button>
           <button class="toolbar-btn ${bulkMode ? 'active' : ''}" onclick="toggleBulkMode()" title="Bulk Edit"><span class="material-symbols-rounded">checklist</span><span>Bulk</span></button>
         </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group">
+          <button class="toolbar-btn" onclick="showHealthDashboard()" title="API Health"><span class="material-symbols-rounded">monitor_heart</span><span>Health</span></button>
+          <button class="toolbar-btn" onclick="showCoverageHeatmap()" title="Coverage"><span class="material-symbols-rounded">grid_view</span><span>Coverage</span></button>
+          <button class="toolbar-btn" onclick="showEndpointMap()" title="Endpoint Map"><span class="material-symbols-rounded">hub</span><span>Map</span></button>
+          <button class="toolbar-btn" onclick="showResponseRace()" title="Response Race"><span class="material-symbols-rounded">sprint</span><span>Race</span></button>
+          <button class="toolbar-btn" onclick="showTestSuggestions()" title="Suggestions"><span class="material-symbols-rounded">lightbulb</span><span>Suggest</span></button>
+          <button class="toolbar-btn" onclick="showChaosMode()" title="Chaos Mode"><span class="material-symbols-rounded">electric_bolt</span><span>Chaos</span></button>
+        </div>
       </div>
     </div>
     ${getBulkToolbarHtml()}

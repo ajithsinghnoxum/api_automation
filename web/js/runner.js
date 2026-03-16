@@ -177,6 +177,22 @@ function finishRun(exitCode, output, selected, total) {
   renderProjectView();
 
   toast(isPass ? 'All tests passed!' : 'Some tests failed', isPass ? 'success' : 'error');
+
+  // --- Fun features ---
+  // Confetti on 100% pass
+  if (isPass && typeof launchConfetti === 'function') {
+    launchConfetti();
+  }
+  // Achievements
+  if (typeof unlockAchievement === 'function') {
+    unlockAchievement('first_blood');
+    if (isPass) unlockAchievement('perfect_run');
+    // Check speed demon - any test under 100ms
+    for (const key of Object.keys(lastRunTimings)) {
+      const ms = parseFloat(lastRunTimings[key]);
+      if (ms > 0 && ms < 100) { unlockAchievement('speed_demon'); break; }
+    }
+  }
 }
 
 // Strip ANSI escape codes from terminal output

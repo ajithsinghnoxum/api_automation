@@ -10,6 +10,7 @@ function openResponseViz(data) {
   }
   vizData = data;
   vizSearchTerm = '';
+  if (typeof unlockAchievement === 'function') unlockAchievement('explorer');
   vizExpanded = false;
   const modal = document.getElementById('response-viz-modal');
   modal.classList.add('open');

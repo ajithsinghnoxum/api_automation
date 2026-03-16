@@ -145,6 +145,7 @@ async function handleImportPostman(input) {
 
     const result = await api('POST', '/api/import/project', bundle);
     toast(`Imported "${projectName}" with ${result.suitesImported} suite(s)`);
+    if (typeof unlockAchievement === 'function') unlockAchievement('import_pro');
     await loadProjects();
     selectProject(result.project.id);
   } catch (e) {
@@ -344,6 +345,7 @@ async function handleImportOpenAPI(input) {
 
     const result = await api('POST', '/api/import/project', bundle);
     toast(`Imported "${title}" — ${result.suitesImported} suite(s), ${totalTests} test(s)`);
+    if (typeof unlockAchievement === 'function') unlockAchievement('import_pro');
     await loadProjects();
     selectProject(result.project.id);
   } catch (e) {

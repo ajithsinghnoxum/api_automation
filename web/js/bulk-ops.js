@@ -316,6 +316,7 @@ async function applyBulkUpdate(updateFn) {
 
   await loadSuites();
   renderProjectView();
+  if (typeof unlockAchievement === 'function') unlockAchievement('bulk_master');
 }
 
 // --- Render Helpers ---

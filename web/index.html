@@ -56,6 +56,7 @@
       <a href="/docs/index.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:15px;">menu_book</span>Docs</button></a>
       <a href="/docs/examples.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:15px;">science</span>Examples</button></a>
       <div class="topnav-divider"></div>
+      <button class="topnav-btn" onclick="openAchievements()" title="Achievements" id="achievements-btn"><span class="material-symbols-rounded" style="font-size:16px;">emoji_events</span></button>
       <button class="topnav-btn" onclick="openSettingsModal()" title="Settings"><span class="material-symbols-rounded" style="font-size:16px;">settings</span></button>
       <button class="topnav-btn" onclick="openShortcutsModal()" title="Keyboard shortcuts (?)"><span class="material-symbols-rounded" style="font-size:16px;">keyboard</span></button>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" title="Toggle dark/light mode"></button>
@@ -619,6 +620,17 @@
     </div>
   </div>
 
+  <!-- Achievements Modal -->
+  <div class="modal-overlay" id="achievements-modal">
+    <div class="modal" style="max-width:640px;">
+      <div class="modal-header">
+        <h3><span class="material-symbols-rounded" style="font-size:20px;vertical-align:-4px;margin-right:6px;color:#f59e0b;">emoji_events</span>Achievements</h3>
+        <button class="icon-btn" onclick="closeAchievements()"><span class="material-symbols-rounded">close</span></button>
+      </div>
+      <div class="modal-body" id="achievements-content" style="padding:16px;"></div>
+    </div>
+  </div>
+
   <!-- Keyboard Shortcuts Overlay -->
   <div class="modal-overlay" id="shortcuts-modal">
     <div class="modal shortcuts-modal">
@@ -696,6 +708,14 @@
   <script src="js/schedules.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/response-viz.js"></script>
+  <script src="js/confetti.js"></script>
+  <script src="js/achievements.js"></script>
+  <script src="js/health-dashboard.js"></script>
+  <script src="js/coverage-heatmap.js"></script>
+  <script src="js/response-race.js"></script>
+  <script src="js/test-suggester.js"></script>
+  <script src="js/chaos-mode.js"></script>
+  <script src="js/endpoint-map.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
