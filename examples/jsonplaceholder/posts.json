@@ -1,0 +1,147 @@
+{
+  "suite": "Posts API",
+  "tests": [
+    {
+      "name": "should return all posts",
+      "method": "GET",
+      "endpoint": "posts",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "exact": 100 }
+      ]
+    },
+    {
+      "name": "should return post by ID",
+      "method": "GET",
+      "endpoint": "posts/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "id", "value": 1 },
+        { "type": "equals", "path": "userId", "value": 1 },
+        { "type": "typeOf", "path": "title", "expected": "string" },
+        { "type": "typeOf", "path": "body", "expected": "string" }
+      ]
+    },
+    {
+      "name": "should filter posts by userId",
+      "method": "GET",
+      "endpoint": "posts",
+      "queryParams": { "userId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "min": 1 },
+        {
+          "type": "arrayEvery",
+          "validations": [
+            { "type": "equals", "path": "userId", "value": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every post should have correct schema",
+      "method": "GET",
+      "endpoint": "posts",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayEvery",
+          "validations": [
+            {
+              "type": "schema",
+              "properties": {
+                "userId": "number",
+                "id": "number",
+                "title": "string",
+                "body": "string"
+              }
+            },
+            { "type": "greaterThan", "path": "id", "value": 0 },
+            { "type": "greaterThan", "path": "userId", "value": 0 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "should create a new post",
+      "method": "POST",
+      "endpoint": "posts",
+      "body": {
+        "title": "Test Post Title",
+        "body": "This is the content of the test post.",
+        "userId": 1
+      },
+      "expectedStatus": 201,
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Test Post Title" },
+        { "type": "equals", "path": "body", "value": "This is the content of the test post." },
+        { "type": "equals", "path": "userId", "value": 1 },
+        { "type": "exists", "path": "id" }
+      ]
+    },
+    {
+      "name": "should update a post with PUT",
+      "method": "PUT",
+      "endpoint": "posts/1",
+      "body": {
+        "id": 1,
+        "title": "Updated Title",
+        "body": "Updated body content",
+        "userId": 1
+      },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Updated Title" },
+        { "type": "equals", "path": "body", "value": "Updated body content" }
+      ]
+    },
+    {
+      "name": "should partially update a post with PATCH",
+      "method": "PATCH",
+      "endpoint": "posts/1",
+      "body": {
+        "title": "Patched Title Only"
+      },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Patched Title Only" }
+      ]
+    },
+    {
+      "name": "should delete a post",
+      "method": "DELETE",
+      "endpoint": "posts/1",
+      "expectedStatus": 200
+    },
+    {
+      "name": "post titles should not be empty",
+      "method": "GET",
+      "endpoint": "posts",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayNone",
+          "validations": [
+            { "type": "equals", "path": "title", "value": "" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "should find post with specific title keyword",
+      "method": "GET",
+      "endpoint": "posts",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arraySome",
+          "validations": [
+            { "type": "contains", "path": "title", "value": "qui" }
+          ]
+        }
+      ]
+    }
+  ]
+}

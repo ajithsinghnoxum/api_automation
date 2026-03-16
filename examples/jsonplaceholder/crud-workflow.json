@@ -1,0 +1,83 @@
+{
+  "suite": "CRUD Workflow with Variable Chaining",
+  "tests": [
+    {
+      "name": "fetch an existing post to extract its ID",
+      "method": "GET",
+      "endpoint": "posts/1",
+      "expectedStatus": 200,
+      "extract": {
+        "postId": "id",
+        "originalTitle": "title"
+      },
+      "validations": [
+        { "type": "exists", "path": "id" },
+        { "type": "equals", "path": "id", "value": 1 },
+        { "type": "typeOf", "path": "title", "expected": "string" }
+      ]
+    },
+    {
+      "name": "create a new post using extracted userId reference",
+      "method": "POST",
+      "endpoint": "posts",
+      "body": {
+        "title": "My Automated Test Post",
+        "body": "This post was created by the API automation framework.",
+        "userId": 1
+      },
+      "expectedStatus": 201,
+      "extract": {
+        "newPostId": "id",
+        "postTitle": "title"
+      },
+      "validations": [
+        { "type": "exists", "path": "id" },
+        { "type": "equals", "path": "title", "value": "My Automated Test Post" },
+        { "type": "equals", "path": "userId", "value": 1 }
+      ]
+    },
+    {
+      "name": "verify original post still exists using chained variable",
+      "method": "GET",
+      "endpoint": "posts/{{postId}}",
+      "expectedStatus": 200,
+      "description": "Uses the extracted postId from the first test to verify variable chaining works",
+      "validations": [
+        { "type": "equals", "path": "id", "value": 1 }
+      ]
+    },
+    {
+      "name": "update the original post",
+      "method": "PUT",
+      "endpoint": "posts/{{postId}}",
+      "body": {
+        "id": "{{postId}}",
+        "title": "Updated Automated Post",
+        "body": "This post has been updated by the framework.",
+        "userId": 1
+      },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Updated Automated Post" }
+      ]
+    },
+    {
+      "name": "partially update the post title",
+      "method": "PATCH",
+      "endpoint": "posts/{{postId}}",
+      "body": {
+        "title": "Final Patched Title"
+      },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "title", "value": "Final Patched Title" }
+      ]
+    },
+    {
+      "name": "delete the post",
+      "method": "DELETE",
+      "endpoint": "posts/{{postId}}",
+      "expectedStatus": 200
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "suite": "Comments API",
+  "tests": [
+    {
+      "name": "should return comments for post 1",
+      "method": "GET",
+      "endpoint": "posts/1/comments",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "min": 1 },
+        {
+          "type": "arrayEvery",
+          "validations": [
+            { "type": "equals", "path": "postId", "value": 1 },
+            { "type": "exists", "path": "email" },
+            { "type": "exists", "path": "body" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "should filter comments by postId query param",
+      "method": "GET",
+      "endpoint": "comments",
+      "queryParams": { "postId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "exact": 5 },
+        {
+          "type": "arrayEvery",
+          "validations": [
+            { "type": "equals", "path": "postId", "value": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every comment should have valid email",
+      "method": "GET",
+      "endpoint": "comments",
+      "queryParams": { "postId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayEvery",
+          "validations": [
+            { "type": "regex", "path": "email", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" },
+            {
+              "type": "schema",
+              "properties": {
+                "postId": "number",
+                "id": "number",
+                "name": "string",
+                "email": "string",
+                "body": "string"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "first comment should have id 1",
+      "method": "GET",
+      "endpoint": "comments",
+      "queryParams": { "postId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayItemAt",
+          "index": 0,
+          "validations": [
+            { "type": "equals", "path": "id", "value": 1 },
+            { "type": "equals", "path": "postId", "value": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "should find comment by email",
+      "method": "GET",
+      "endpoint": "comments",
+      "queryParams": { "postId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayFind",
+          "where": { "path": "email", "value": "Eliseo@gardner.biz" },
+          "validations": [
+            { "type": "equals", "path": "id", "value": 1 },
+            { "type": "contains", "path": "name", "value": "id labore" }
+          ]
+        }
+      ]
+    }
+  ]
+}

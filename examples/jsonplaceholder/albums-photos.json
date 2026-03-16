@@ -1,0 +1,86 @@
+{
+  "suite": "Albums & Photos API",
+  "tests": [
+    {
+      "name": "should return all albums",
+      "method": "GET",
+      "endpoint": "albums",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "exact": 100 }
+      ]
+    },
+    {
+      "name": "should return album by ID",
+      "method": "GET",
+      "endpoint": "albums/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "id", "value": 1 },
+        { "type": "equals", "path": "userId", "value": 1 },
+        { "type": "typeOf", "path": "title", "expected": "string" }
+      ]
+    },
+    {
+      "name": "should return photos for album 1",
+      "method": "GET",
+      "endpoint": "albums/1/photos",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "min": 1, "max": 100 },
+        {
+          "type": "arrayEvery",
+          "validations": [
+            { "type": "equals", "path": "albumId", "value": 1 },
+            { "type": "exists", "path": "title" },
+            { "type": "regex", "path": "url", "pattern": "^https://" },
+            { "type": "regex", "path": "thumbnailUrl", "pattern": "^https://" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every photo should have valid URL format",
+      "method": "GET",
+      "endpoint": "photos",
+      "queryParams": { "albumId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayEvery",
+          "validations": [
+            {
+              "type": "schema",
+              "properties": {
+                "albumId": "number",
+                "id": "number",
+                "title": "string",
+                "url": "string",
+                "thumbnailUrl": "string"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "first photo should have id 1",
+      "method": "GET",
+      "endpoint": "photos",
+      "queryParams": { "albumId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayItemAt",
+          "index": 0,
+          "validations": [
+            { "type": "equals", "path": "id", "value": 1 },
+            { "type": "equals", "path": "albumId", "value": 1 }
+          ]
+        }
+      ]
+    }
+  ]
+}

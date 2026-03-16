@@ -1,0 +1,104 @@
+{
+  "suite": "Todos API",
+  "tests": [
+    {
+      "name": "should return all todos",
+      "method": "GET",
+      "endpoint": "todos",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "exact": 200 }
+      ]
+    },
+    {
+      "name": "should return todo by ID",
+      "method": "GET",
+      "endpoint": "todos/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "id", "value": 1 },
+        { "type": "equals", "path": "userId", "value": 1 },
+        { "type": "typeOf", "path": "title", "expected": "string" },
+        { "type": "typeOf", "path": "completed", "expected": "boolean" },
+        { "type": "equals", "path": "completed", "value": false }
+      ]
+    },
+    {
+      "name": "should have both completed and incomplete todos",
+      "method": "GET",
+      "endpoint": "todos",
+      "queryParams": { "userId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arraySome",
+          "validations": [
+            { "type": "equals", "path": "completed", "value": true }
+          ]
+        },
+        {
+          "type": "arraySome",
+          "validations": [
+            { "type": "equals", "path": "completed", "value": false }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every todo should have correct types",
+      "method": "GET",
+      "endpoint": "todos",
+      "queryParams": { "userId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayEvery",
+          "validations": [
+            {
+              "type": "schema",
+              "properties": {
+                "userId": "number",
+                "id": "number",
+                "title": "string",
+                "completed": "boolean"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no todo should have empty title",
+      "method": "GET",
+      "endpoint": "todos",
+      "queryParams": { "userId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayNone",
+          "validations": [
+            { "type": "equals", "path": "title", "value": "" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "should find specific todo by title",
+      "method": "GET",
+      "endpoint": "todos",
+      "queryParams": { "userId": "1" },
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayFind",
+          "where": { "path": "id", "value": 1 },
+          "validations": [
+            { "type": "equals", "path": "title", "value": "delectus aut autem" },
+            { "type": "equals", "path": "completed", "value": false }
+          ]
+        }
+      ]
+    }
+  ]
+}

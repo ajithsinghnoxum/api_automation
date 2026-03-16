@@ -1,0 +1,228 @@
+{
+  "suite": "Users API",
+  "tests": [
+    {
+      "name": "should return all users",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "exact": 10 }
+      ]
+    },
+    {
+      "name": "should return user by ID",
+      "method": "GET",
+      "endpoint": "users/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "equals", "path": "id", "value": 1 },
+        { "type": "equals", "path": "name", "value": "Leanne Graham" },
+        { "type": "exists", "path": "email" },
+        { "type": "exists", "path": "address" },
+        { "type": "exists", "path": "company" }
+      ]
+    },
+    {
+      "name": "should validate user schema",
+      "method": "GET",
+      "endpoint": "users/1",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "schema",
+          "properties": {
+            "id": "number",
+            "name": "string",
+            "username": "string",
+            "email": "string",
+            "phone": "string",
+            "website": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "should validate nested address object",
+      "method": "GET",
+      "endpoint": "users/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "hasProperty", "path": "address", "property": "street" },
+        { "type": "hasProperty", "path": "address", "property": "city" },
+        { "type": "hasProperty", "path": "address", "property": "zipcode" },
+        {
+          "type": "schema",
+          "path": "address.geo",
+          "properties": {
+            "lat": "string",
+            "lng": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "should validate email format with regex",
+      "method": "GET",
+      "endpoint": "users/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "regex", "path": "email", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$" }
+      ]
+    },
+    {
+      "name": "should filter users by query param",
+      "method": "GET",
+      "endpoint": "users",
+      "queryParams": {
+        "username": "Bret"
+      },
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "arrayLength", "min": 1 },
+        {
+          "type": "arrayEvery",
+          "validations": [
+            { "type": "equals", "path": "username", "value": "Bret" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "every user should have required fields",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayEvery",
+          "validations": [
+            { "type": "exists", "path": "id" },
+            { "type": "typeOf", "path": "name", "expected": "string" },
+            { "type": "typeOf", "path": "email", "expected": "string" },
+            { "type": "exists", "path": "address" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "should find user Ervin Howell by name",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayFind",
+          "where": { "path": "name", "value": "Ervin Howell" },
+          "validations": [
+            { "type": "equals", "path": "id", "value": 2 },
+            { "type": "equals", "path": "username", "value": "Antonette" },
+            { "type": "contains", "path": "email", "value": "@" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no user should have empty name",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayNone",
+          "validations": [
+            { "type": "equals", "path": "name", "value": "" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "at least one user should have .org website",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arraySome",
+          "validations": [
+            { "type": "regex", "path": "website", "pattern": "\\.org$" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "first user should be Leanne Graham",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "validations": [
+        {
+          "type": "arrayItemAt",
+          "index": 0,
+          "validations": [
+            { "type": "equals", "path": "name", "value": "Leanne Graham" },
+            { "type": "equals", "path": "id", "value": 1 }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "user name should start with L and not be empty",
+      "method": "GET",
+      "endpoint": "users/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "startsWith", "path": "name", "value": "Leanne" },
+        { "type": "endsWith", "path": "name", "value": "Graham" },
+        { "type": "isNotEmpty", "path": "name" },
+        { "type": "stringLength", "path": "name", "min": 5, "max": 50 }
+      ]
+    },
+    {
+      "name": "user ID should be between 1 and 10",
+      "method": "GET",
+      "endpoint": "users/5",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "between", "path": "id", "min": 1, "max": 10 },
+        { "type": "greaterThanOrEqual", "path": "id", "value": 1 },
+        { "type": "lessThanOrEqual", "path": "id", "value": 10 }
+      ]
+    },
+    {
+      "name": "username should not contain spaces",
+      "method": "GET",
+      "endpoint": "users/1",
+      "expectedStatus": 200,
+      "validations": [
+        { "type": "notContains", "path": "username", "value": " " }
+      ]
+    },
+    {
+      "name": "should return 404 for non-existent user",
+      "method": "GET",
+      "endpoint": "users/9999",
+      "expectedStatus": 404
+    },
+    {
+      "name": "skipped test example (placeholder for future test)",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "skip": true
+    },
+    {
+      "name": "should return users with custom timeout",
+      "method": "GET",
+      "endpoint": "users",
+      "expectedStatus": 200,
+      "timeout": 60000,
+      "validations": [
+        { "type": "isArray" },
+        { "type": "isNotEmpty" }
+      ]
+    }
+  ]
+}
