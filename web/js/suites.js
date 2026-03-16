@@ -133,7 +133,7 @@ function renderProjectView() {
         const timing = lastRunTimings[statusKey];
         const timingBadge = timing ? '<span class="timing-badge">' + timing + '</span>' : '';
         return `
-        <div class="test-item ${lastStatus ? 'test-' + lastStatus : ''}" draggable="true" data-suite-idx="${si}" data-test-idx="${ti}" ondragstart="onTestDragStart(event)" ondragover="onTestDragOver(event)" ondrop="onTestDrop(event)" ondragend="onTestDragEnd(event)" oncontextmenu="showTestContextMenu(event, ${si}, ${ti})">
+        <div class="test-item ${lastStatus ? 'test-' + lastStatus : ''}" draggable="true" data-anim data-suite-idx="${si}" data-test-idx="${ti}" style="animation-delay:${ti * 30}ms" ondragstart="onTestDragStart(event)" ondragover="onTestDragOver(event)" ondrop="onTestDrop(event)" ondragend="onTestDragEnd(event)" oncontextmenu="showTestContextMenu(event, ${si}, ${ti})">
           <div class="test-item-header" onclick="toggleTestBody('suite${si}-test${ti}')">
             <div class="test-item-left">
               ${getBulkCheckboxHtml(si, ti)}
@@ -167,26 +167,26 @@ function renderProjectView() {
         </div>`}).join('');
 
       return `
-        <div class="card" data-suite-card="${si}">
-          <div class="card-header">
+        <div class="card suite-card" data-suite-card="${si}">
+          <div class="card-header suite-header">
             <div class="suite-check-row">
               <button class="icon-btn collapse-btn" onclick="toggleSuiteCollapse(${si})" title="Collapse/Expand">
                 <span class="material-symbols-rounded suite-collapse-icon" id="collapse-icon-${si}">expand_more</span>
               </button>
               ${getBulkSuiteCheckboxHtml(si)}
               <input type="checkbox" class="run-check suite-check" data-suite="${si}" checked onclick="onSuiteCheckChange(${si})">
-              <h3>${esc(suite.suite)} <span style="font-size:12px; color:var(--text-muted); font-weight:400;">(${suite.tests?.length || 0} tests)</span></h3>
+              <h3>${esc(suite.suite)}<span class="suite-count">${suite.tests?.length || 0}</span></h3>
             </div>
-            <div class="btn-group">
-              <button class="btn" onclick="addTestToSuite(${si})"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> Add Test</button>
+            <div class="suite-actions">
+              <button class="btn btn-sm" onclick="addTestToSuite(${si})"><span class="material-symbols-rounded" style="font-size:14px;">add</span> Add Test</button>
               <button class="icon-btn" onclick="openChainView(${si})" title="Chain View"><span class="material-symbols-rounded">account_tree</span></button>
               <button class="icon-btn" onclick="exportSuite(${si})" title="Export Suite"><span class="material-symbols-rounded">download</span></button>
               <button class="icon-btn" onclick="cloneSuite(${si})" title="Clone Suite"><span class="material-symbols-rounded">content_copy</span></button>
               <button class="icon-btn danger" onclick="deleteSuite(${si})" title="Delete Suite"><span class="material-symbols-rounded">delete</span></button>
             </div>
           </div>
-          <div class="card-body suite-body" id="suite-body-${si}" style="padding:12px 16px;">
-            ${testsHtml || '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:13px;">No tests in this suite. Click "+ Add Test" to add one.</div>'}
+          <div class="card-body suite-body" id="suite-body-${si}" style="padding:8px 12px;">
+            ${testsHtml || '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px;">No tests in this suite. Click "Add Test" to create one.</div>'}
           </div>
         </div>`;
     }).join('');
@@ -212,17 +212,25 @@ function renderProjectView() {
     </select>` : '';
 
   view.innerHTML = `
-    <div class="main-header">
-      <h2>${esc(currentProject.name)}</h2>
-      <div class="btn-group">${envSelector}
-        <button class="btn" onclick="openSuiteModal()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">add</span> New Suite</button>
-        <button class="btn btn-accent" onclick="openTemplateModal()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">auto_fix_high</span> From Template</button>
-        <button class="btn" onclick="triggerImportSuite()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">upload</span> Import Suite</button>
-        <button class="btn" onclick="exportProject()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">download</span> Export</button>
-        <button class="btn" onclick="showRunHistory()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">history</span> History</button>
-        <button class="btn" onclick="showSchedules()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">schedule</span> Schedules</button>
-        <button class="btn ${bulkMode ? 'btn-primary' : ''}" onclick="toggleBulkMode()"><span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">checklist</span> Bulk Edit</button>
-        <button class="btn btn-success" id="run-btn" onclick="runTests()"><span class="material-symbols-rounded" style="font-size:18px;vertical-align:-4px;margin-right:4px;">play_arrow</span>Run <span id="run-count">${totalTests}</span> Test${totalTests !== 1 ? 's' : ''}</button>
+    <div class="project-toolbar">
+      <div class="project-toolbar-top">
+        <h2 class="project-title">${esc(currentProject.name)}</h2>
+        <button class="btn btn-primary run-btn-main" id="run-btn" onclick="runTests()"><span class="material-symbols-rounded" style="font-size:18px;">play_arrow</span>Run <span id="run-count">${totalTests}</span> Test${totalTests !== 1 ? 's' : ''}</button>
+      </div>
+      <div class="project-toolbar-actions">
+        ${envSelector}
+        <div class="toolbar-group">
+          <button class="toolbar-btn" onclick="openSuiteModal()" title="New Suite"><span class="material-symbols-rounded">add</span><span>New Suite</span></button>
+          <button class="toolbar-btn highlight" onclick="openTemplateModal()" title="From Template"><span class="material-symbols-rounded">auto_fix_high</span><span>Template</span></button>
+          <button class="toolbar-btn" onclick="triggerImportSuite()" title="Import Suite"><span class="material-symbols-rounded">upload</span><span>Import</span></button>
+          <button class="toolbar-btn" onclick="exportProject()" title="Export"><span class="material-symbols-rounded">download</span><span>Export</span></button>
+        </div>
+        <div class="toolbar-divider"></div>
+        <div class="toolbar-group">
+          <button class="toolbar-btn" onclick="showRunHistory()" title="History"><span class="material-symbols-rounded">history</span><span>History</span></button>
+          <button class="toolbar-btn" onclick="showSchedules()" title="Schedules"><span class="material-symbols-rounded">schedule</span><span>Schedules</span></button>
+          <button class="toolbar-btn ${bulkMode ? 'active' : ''}" onclick="toggleBulkMode()" title="Bulk Edit"><span class="material-symbols-rounded">checklist</span><span>Bulk</span></button>
+        </div>
       </div>
     </div>
     ${getBulkToolbarHtml()}
@@ -462,6 +470,11 @@ async function quickRunTest(suiteIdx, testIdx, btn) {
       return;
     }
 
+    // Store response data for visualizer
+    if (typeof result.data === 'object' && result.data !== null) {
+      window['_lastQrData_' + suiteIdx + '_' + testIdx] = result.data;
+    }
+
     const passedCount = (result.validations || []).filter(v => v.status === 'passed').length;
     const failedCount = (result.validations || []).filter(v => v.status === 'failed').length;
     const totalValidations = (result.validations || []).length;
@@ -484,7 +497,10 @@ async function quickRunTest(suiteIdx, testIdx, btn) {
       </div>
       ${validationRows ? '<div class="qr-validations">' + validationRows + '</div>' : ''}
       <details class="qr-response-details">
-        <summary style="cursor:pointer;font-size:12px;color:var(--text-muted);padding:6px 10px;">Response Body</summary>
+        <summary style="cursor:pointer;font-size:12px;color:var(--text-muted);padding:6px 10px;">
+          Response Body
+          ${typeof result.data === 'object' && result.data !== null ? '<button class="btn btn-sm" onclick="event.stopPropagation(); openResponseViz(window._lastQrData_' + suiteIdx + '_' + testIdx + ')" style="font-size:10px;padding:1px 6px;margin-left:8px;"><span class=&quot;material-symbols-rounded&quot; style=&quot;font-size:13px;vertical-align:-2px;margin-right:2px;&quot;>account_tree</span>Explore</button>' : ''}
+        </summary>
         <pre class="qr-response-body">${esc(typeof result.data === 'string' ? result.data : JSON.stringify(result.data, null, 2))}</pre>
       </details>`;
 

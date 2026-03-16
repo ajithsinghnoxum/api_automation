@@ -1,54 +1,56 @@
 /* --- Theme Variables --- */
 
 :root, [data-theme="light"] {
-  --bg: #f1f5f9;
+  --bg: #f4f6f8;
   --surface: #ffffff;
-  --surface-alt: #fafbfc;
-  --surface-input: #f8f9fa;
-  --border: #e2e8f0;
-  --text: #1e293b;
-  --text-secondary: #64748b;
-  --text-muted: #94a3b8;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
-  --accent-bg: #eff6ff;
-  --pass: #22c55e;
+  --surface-alt: #f8f9fb;
+  --surface-input: #f1f3f5;
+  --border: #e4e7ec;
+  --hover: rgba(0,0,0,0.03);
+  --text: #1a1d26;
+  --text-secondary: #5f6b7a;
+  --text-muted: #8b95a5;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-bg: #eff4ff;
+  --pass: #16a34a;
   --pass-bg: #f0fdf4;
-  --fail: #ef4444;
+  --fail: #dc2626;
   --fail-bg: #fef2f2;
-  --warn: #f59e0b;
-  --shadow: 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --warn: #d97706;
+  --shadow: 0 1px 2px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
   --radius: 10px;
-  --modal-overlay: rgba(0,0,0,0.4);
-  --topnav-bg: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  --modal-overlay: rgba(15,23,42,0.4);
+  --topnav-bg: #1a1d26;
   --run-output-bg: #0d1117;
   --run-output-text: #c9d1d9;
 }
 
 [data-theme="dark"] {
-  --bg: #0f172a;
-  --surface: #1e293b;
-  --surface-alt: #273548;
-  --surface-input: #334155;
-  --border: #334155;
-  --text: #e2e8f0;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --accent: #38bdf8;
-  --accent-hover: #0ea5e9;
-  --accent-bg: #0c4a6e;
+  --bg: #0c1018;
+  --surface: #161b26;
+  --surface-alt: #1e2434;
+  --surface-input: #252d3d;
+  --border: #2a3344;
+  --hover: rgba(255,255,255,0.04);
+  --text: #e8ecf2;
+  --text-secondary: #8e99ab;
+  --text-muted: #5a6577;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-bg: rgba(59,130,246,0.12);
   --pass: #4ade80;
-  --pass-bg: #064e3b;
+  --pass-bg: rgba(74,222,128,0.1);
   --fail: #f87171;
-  --fail-bg: #7f1d1d;
+  --fail-bg: rgba(248,113,113,0.1);
   --warn: #fbbf24;
-  --shadow: 0 1px 3px rgba(0,0,0,0.3);
-  --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.5);
   --radius: 10px;
-  --modal-overlay: rgba(0,0,0,0.6);
-  --topnav-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  --run-output-bg: #0d1117;
+  --modal-overlay: rgba(0,0,0,0.65);
+  --topnav-bg: #0c1018;
+  --run-output-bg: #0a0e14;
   --run-output-text: #c9d1d9;
 }
 
@@ -83,17 +85,17 @@ body {
 
 /* --- Theme Toggle --- */
 .theme-toggle {
-  width: 36px;
-  height: 36px;
-  border: 1px solid rgba(255,255,255,0.2);
+  width: 32px;
+  height: 32px;
+  border: none;
   background: transparent;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
   transition: all 0.15s;
-  color: white;
+  color: rgba(255,255,255,0.6);
 }
-.theme-toggle:hover { background: rgba(255,255,255,0.1); }
+.theme-toggle:hover { background: rgba(255,255,255,0.1); color: white; }

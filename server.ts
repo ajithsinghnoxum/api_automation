@@ -36,10 +36,53 @@ import {
   setDataDir,
 } from "./src/data-dir";
 
+import { randomUUID, randomInt } from "crypto";
+
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
 const WEB_DIR = path.resolve("web");
+
+// --- Built-in Variable Resolution (for try-request) ---
+let tryIncrement = 0;
+let trySequence = 0;
+
+function resolveBuiltinVar(name: string): string | undefined {
+  switch (name) {
+    case "$timestamp": return String(Date.now());
+    case "$isoDate": return new Date().toISOString();
+    case "$guid": case "$uuid": return randomUUID();
+    case "$randomInt": return String(randomInt(1, 100000));
+    case "$randomEmail": return `test${randomInt(1000, 99999)}@example.com`;
+    case "$randomString": return randomUUID().replace(/-/g, "").slice(0, 12);
+    case "$increment": return String(++tryIncrement);
+    case "$sequence": return String(++trySequence);
+    case "$randomName":
+      const names = ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Henry"];
+      return names[randomInt(0, names.length)] + "_" + randomInt(100, 999);
+    default: return undefined;
+  }
+}
+
+function resolveVarsInString(str: string): string {
+  return str.replace(/\{\{(\$\w+)\}\}/g, (match, name) => {
+    const val = resolveBuiltinVar(name);
+    return val !== undefined ? val : match;
+  });
+}
+
+function resolveVarsDeep(value: unknown): unknown {
+  if (typeof value === "string") return resolveVarsInString(value);
+  if (Array.isArray(value)) return value.map(resolveVarsDeep);
+  if (value && typeof value === "object") {
+    const result: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      result[k] = resolveVarsDeep(v);
+    }
+    return result;
+  }
+  return value;
+}
 
 // --- Auto-migrate from JSON on first run ---
 migrateFromJson();
@@ -240,13 +283,19 @@ app.post("/api/projects/:id/try-request", async (req, res) => {
     return res.status(400).json({ error: "method and endpoint are required" });
   }
 
+  // Resolve built-in variables in endpoint, body, headers, query params
+  const resolvedEndpoint = resolveVarsInString(endpoint);
+  const resolvedBody = body ? resolveVarsDeep(body) : undefined;
+  const resolvedHeaders = extraHeaders ? resolveVarsDeep(extraHeaders) as Record<string, string> : {};
+  const resolvedParams = queryParams ? resolveVarsDeep(queryParams) as Record<string, string> : {};
+
   // Build full URL
   const baseUrl = ((project as any).baseUrl || "").replace(/\/?$/, "/");
-  let url = baseUrl + endpoint.replace(/^\//, "");
+  let url = baseUrl + resolvedEndpoint.replace(/^\//, "");
 
   // Append query params
-  if (queryParams && typeof queryParams === "object" && Object.keys(queryParams).length > 0) {
-    const qs = new URLSearchParams(queryParams as Record<string, string>).toString();
+  if (Object.keys(resolvedParams).length > 0) {
+    const qs = new URLSearchParams(resolvedParams).toString();
     url += (url.includes("?") ? "&" : "?") + qs;
   }
 
@@ -254,7 +303,7 @@ app.post("/api/projects/:id/try-request", async (req, res) => {
   const requestHeaders: Record<string, string> = {
     "Content-Type": "application/json",
     "Accept": "application/json",
-    ...(extraHeaders || {}),
+    ...resolvedHeaders,
   };
 
   // Apply project auth
@@ -279,8 +328,8 @@ app.post("/api/projects/:id/try-request", async (req, res) => {
       headers: requestHeaders,
       signal: controller.signal,
     };
-    if (body && ["POST", "PUT", "PATCH"].includes(method.toUpperCase())) {
-      fetchOpts.body = typeof body === "string" ? body : JSON.stringify(body);
+    if (resolvedBody && ["POST", "PUT", "PATCH"].includes(method.toUpperCase())) {
+      fetchOpts.body = typeof resolvedBody === "string" ? resolvedBody : JSON.stringify(resolvedBody);
     }
 
     const response = await fetch(url, fetchOpts);

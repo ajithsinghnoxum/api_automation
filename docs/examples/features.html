@@ -59,6 +59,11 @@
     <a href="#var-autocomplete-example">Variable Autocomplete</a>
     <a href="#path-autocomplete-example">Path Autocomplete</a>
     <a href="#context-menu-example">Context Menu</a>
+    <a href="#body-editor-example">CodeMirror Body Editor</a>
+    <a href="#fullscreen-example">Fullscreen Editors</a>
+    <a href="#keyboard-shortcuts-example">Keyboard Shortcuts</a>
+    <a href="#form-validation-example">Inline Validation</a>
+    <a href="#request-preview-example">Request Preview</a>
 
     <div class="section-title">Links</div>
     <a href="index.html">Back to Examples</a>
@@ -1045,6 +1050,168 @@ GET /api/projects/{projectId}/trends               → application/json</code></
       <li><strong>Move Up/Down</strong> &mdash; Reorder tests within the suite (grayed out at boundaries)</li>
       <li><strong>Skip/Unskip</strong> &mdash; Toggle the test's skip status without opening the editor</li>
       <li><strong>Delete</strong> &mdash; Shown in red as a destructive action</li>
+    </ul>
+  </div>
+
+  <!-- CodeMirror Body Editor -->
+  <h2 id="body-editor-example">CodeMirror Body Editor</h2>
+  <p>The request body field uses CodeMirror 5 with JSON syntax highlighting, replacing the plain textarea.</p>
+
+  <div class="example-card">
+    <h4>Body editor features</h4>
+    <pre><code>// The body editor supports:
+// • JSON syntax highlighting (strings, numbers, keys, brackets)
+// • Bracket matching — matching brackets highlight on cursor
+// • Auto-close brackets — typing { or [ inserts closing pair
+// • Code folding — collapse objects/arrays via gutter icons
+// • Line numbers and line wrapping
+// • Variable autocomplete — type {{ to trigger dropdown
+// • Dark/light theme — follows app theme setting
+
+// Example body with built-in variables:
+{
+  "name": "User {{$increment}}",
+  "email": "{{$randomEmail}}",
+  "id": "{{$guid}}"
+}</code></pre>
+    <ul class="explain">
+      <li><strong>Insert Variable</strong> &mdash; click the button next to the body label to pick from available variables</li>
+      <li><strong>Autocomplete</strong> &mdash; type <code>{{</code> inside the editor to trigger a dropdown of built-in and extracted variables</li>
+      <li><strong>Fullscreen</strong> &mdash; click the Fullscreen button to open a dedicated fullscreen dialog for large payloads</li>
+    </ul>
+  </div>
+
+  <!-- Fullscreen Editors -->
+  <h2 id="fullscreen-example">Fullscreen Editors</h2>
+  <p>Two fullscreen modes are available for maximum editing space.</p>
+
+  <div class="example-card">
+    <h4>Fullscreen body editor</h4>
+    <pre><code>// Click the "Fullscreen" button next to the body label
+// to open a dedicated fullscreen dialog:
+//
+// ┌─────────────────────────────────────────────────────┐
+// │ Request Body (JSON)    [Insert Variable] [Format] ✕ │
+// ├─────────────────────────────────────────────────────┤
+// │ 1 │ {                                               │
+// │ 2 │   "name": "{{$randomName}}",                    │
+// │ 3 │   "email": "{{$randomEmail}}",                  │
+// │ 4 │   "address": {                                  │
+// │ 5 │     "street": "123 Main St",                    │
+// │ 6 │     "city": "Springfield"                       │
+// │ 7 │   }                                             │
+// │ 8 │ }                                               │
+// │   │                                                 │
+// │   │            (editor fills viewport)              │
+// │   │                                                 │
+// ├─────────────────────────────────────────────────────┤
+// │ Supports: {{$increment}} {{$guid}} ...      [Done]  │
+// └─────────────────────────────────────────────────────┘</code></pre>
+    <ul class="explain">
+      <li><strong>Format</strong> &mdash; auto-formats valid JSON with 2-space indentation</li>
+      <li><strong>Insert Variable</strong> &mdash; same picker as inline editor, inserts at cursor</li>
+      <li><strong>Done / Esc</strong> &mdash; close and sync content back to main body editor</li>
+    </ul>
+  </div>
+
+  <div class="example-card">
+    <h4>Fullscreen test editor</h4>
+    <pre><code>// Press F11 or click the fullscreen icon in the modal header
+// to expand the entire test editor to fill the viewport.
+//
+// Shortcuts:
+//   F11        → toggle fullscreen
+//   Ctrl+S     → save test
+//   Esc        → close modal (resets fullscreen)</code></pre>
+    <ul class="explain">
+      <li>The modal expands to <code>100vw - 48px</code> wide (max 1200px) and fills the viewport height</li>
+      <li>All CodeMirror editors inside automatically resize</li>
+      <li>Fullscreen state resets when the modal is closed</li>
+    </ul>
+  </div>
+
+  <!-- Keyboard Shortcuts -->
+  <h2 id="keyboard-shortcuts-example">Keyboard Shortcuts</h2>
+  <p>Press <kbd>?</kbd> anywhere in the UI (when not in an input field) to see the shortcuts overlay.</p>
+
+  <div class="example-card">
+    <h4>All keyboard shortcuts</h4>
+    <pre><code>// Global shortcuts:
+//   Ctrl+Enter       → Run tests
+//   Ctrl+Shift+N     → New test suite
+//   Ctrl+Shift+F     → Focus search
+//   Ctrl+Shift+D     → Toggle dark/light theme
+//   ?                → Show keyboard shortcuts help
+//
+// Test editor shortcuts:
+//   Ctrl+S           → Save test
+//   F11              → Toggle fullscreen editor
+//   Esc              → Close modal / fullscreen body editor
+//
+// Body editor autocomplete:
+//   {{               → Trigger variable autocomplete
+//   ↑ / ↓            → Navigate suggestions
+//   Enter            → Accept suggestion
+//   Esc              → Dismiss autocomplete
+//
+// Note: On macOS, use Cmd instead of Ctrl</code></pre>
+  </div>
+
+  <!-- Inline Form Validation -->
+  <h2 id="form-validation-example">Inline Form Validation</h2>
+  <p>The test editor validates fields before saving and shows inline error messages.</p>
+
+  <div class="example-card">
+    <h4>Validated fields</h4>
+    <pre><code>// The following fields are validated on save:
+//
+// Required fields:
+//   • Test name      → "Test name is required"
+//   • Endpoint       → "Endpoint is required"
+//
+// JSON validation:
+//   • Request body   → "Invalid JSON in request body"
+//   • Dataset        → "Dataset must be a valid JSON array"
+//   • Poll config    → "Invalid JSON in poll configuration"
+//
+// Invalid fields get:
+//   ┌──────────────────────────────────────┐
+//   │ Endpoint __________________________ │ ← red border
+//   │ ⚠ Endpoint is required              │ ← inline error
+//   └──────────────────────────────────────┘
+//
+// Errors auto-clear as you fix them</code></pre>
+  </div>
+
+  <!-- Request Preview -->
+  <h2 id="request-preview-example">Request Preview</h2>
+  <p>The test editor includes a collapsible preview panel showing the full resolved request.</p>
+
+  <div class="example-card">
+    <h4>Request preview panel</h4>
+    <pre><code>// The preview panel updates live as you edit fields:
+//
+// ┌──────────────────────────────────────────────┐
+// │ ▼ Request Preview                            │
+// ├──────────────────────────────────────────────┤
+// │ POST  https://api.example.com/users          │
+// │                                              │
+// │ Headers:                                     │
+// │   Authorization: Bearer ●●●●●●●●            │
+// │   Content-Type: application/json             │
+// │   X-Request-ID: {{$guid}}                    │
+// │                                              │
+// │ Body:                                        │
+// │   { "name": "{{$randomName}}" }              │
+// │                                              │
+// │ cURL:                                        │
+// │   curl -X POST https://api.example.com/...   │
+// └──────────────────────────────────────────────┘</code></pre>
+    <ul class="explain">
+      <li><strong>Color-coded method badge</strong> &mdash; GET (green), POST (blue), PUT (orange), DELETE (red)</li>
+      <li><strong>Masked auth tokens</strong> &mdash; Bearer tokens shown as <code>●●●●●●●●</code> for security</li>
+      <li><strong>Merged headers</strong> &mdash; project auth headers + per-test headers shown together</li>
+      <li><strong>Debounced updates</strong> &mdash; preview refreshes after a short delay as you type</li>
     </ul>
   </div>
 

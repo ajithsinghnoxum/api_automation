@@ -41,6 +41,9 @@ const BUILTIN_VARS = [
   { name: '$randomInt', desc: 'Random 1–100000' },
   { name: '$randomEmail', desc: 'Random email' },
   { name: '$randomString', desc: '12-char random string' },
+  { name: '$increment', desc: 'Auto-increment (1, 2, 3...)' },
+  { name: '$sequence', desc: 'Sequence counter per suite' },
+  { name: '$randomName', desc: 'Random name + number' },
 ];
 
 function getAvailableVars() {
@@ -227,6 +230,48 @@ function showPathAutocomplete(input, paths) {
   activeAutocomplete = { el: dropdown, input, idx: 0 };
 }
 
+// --- Body Variable Picker (for CodeMirror body editor) ---
+
+function showBodyVarPicker(btn, fullscreen) {
+  dismissAutocomplete();
+  const vars = getAvailableVars();
+  const dropdown = document.createElement('div');
+  dropdown.className = 'var-autocomplete';
+  vars.forEach((v, i) => {
+    const item = document.createElement('div');
+    item.className = 'ac-item';
+    item.innerHTML = `<span class="ac-name">${esc(v.name)}</span><span class="ac-desc">${esc(v.desc)}</span>`;
+    item.onmousedown = (e) => {
+      e.preventDefault();
+      const cm = fullscreen ? cmBodyFullscreen : getOrCreateBodyCM();
+      if (cm) {
+        const cursor = cm.getCursor();
+        cm.replaceRange(`{{${v.name}}}`, cursor);
+        cm.focus();
+      }
+      dismissAutocomplete();
+    };
+    dropdown.appendChild(item);
+  });
+  const rect = btn.getBoundingClientRect();
+  dropdown.style.position = 'fixed';
+  dropdown.style.left = Math.min(rect.left, window.innerWidth - 280) + 'px';
+  dropdown.style.top = (rect.bottom + 2) + 'px';
+  dropdown.style.width = '260px';
+  document.body.appendChild(dropdown);
+  activeAutocomplete = { el: dropdown, input: btn, idx: -1 };
+  // Close on click outside
+  setTimeout(() => {
+    const closeHandler = (e) => {
+      if (!dropdown.contains(e.target)) {
+        dismissAutocomplete();
+        document.removeEventListener('mousedown', closeHandler);
+      }
+    };
+    document.addEventListener('mousedown', closeHandler);
+  }, 0);
+}
+
 // Attach path autocomplete to all validation path inputs via delegation
 document.addEventListener('input', (e) => {
   if (e.target.matches && e.target.matches('.val-fields input[data-field="path"]')) {
@@ -278,7 +323,7 @@ function editTest(suiteIdx, testIdx) {
   }
 
   // Body
-  document.getElementById('tm-body').value = test.body ? JSON.stringify(test.body, null, 2) : '';
+  setBodyValue(test.body ? JSON.stringify(test.body, null, 2) : '');
 
   // Validations
   const container = document.getElementById('tm-validations');
@@ -325,7 +370,7 @@ function resetTestModal() {
   document.getElementById('tm-status').value = '200';
   document.getElementById('tm-params-kv').innerHTML = '';
   document.getElementById('tm-headers-kv').innerHTML = '';
-  document.getElementById('tm-body').value = '';
+  setBodyValue('');
   document.getElementById('tm-validations').innerHTML = '';
   const valToolbar = document.getElementById('val-toolbar');
   if (valToolbar) valToolbar.style.display = 'none';
@@ -362,10 +407,95 @@ function resetTestModal() {
 
 function closeTestModal() {
   document.getElementById('test-modal').classList.remove('open');
+  // Reset fullscreen state
+  const modal = document.querySelector('#test-modal .modal');
+  modal.classList.remove('modal-fullscreen');
+  const fsBtn = document.getElementById('tm-fullscreen-btn');
+  if (fsBtn) fsBtn.innerHTML = '<span class="material-symbols-rounded" style="font-size:18px;">fullscreen</span>';
+  // Close fullscreen body editor if open
+  closeBodyFullscreen();
+  // Hide visualize button
+  const vizBtn = document.getElementById('tm-viz-btn');
+  if (vizBtn) vizBtn.style.display = 'none';
   editingSuiteFile = null;
   editingTestIdx = null;
   currentEditorMode = 'visual';
   updateBreadcrumb();
+}
+
+function toggleTestModalFullscreen() {
+  const modal = document.querySelector('#test-modal .modal');
+  const btn = document.getElementById('tm-fullscreen-btn');
+  const isFullscreen = modal.classList.toggle('modal-fullscreen');
+  btn.innerHTML = `<span class="material-symbols-rounded" style="font-size:18px;">${isFullscreen ? 'fullscreen_exit' : 'fullscreen'}</span>`;
+  btn.title = isFullscreen ? 'Exit fullscreen (F11)' : 'Toggle fullscreen (F11)';
+  // Refresh CodeMirror editors to adjust to new size
+  if (typeof cmBody !== 'undefined' && cmBody) setTimeout(() => cmBody.refresh(), 50);
+  if (typeof cmEditor !== 'undefined' && cmEditor) setTimeout(() => cmEditor.refresh(), 50);
+}
+
+// --- Fullscreen Body Editor ---
+let cmBodyFullscreen = null;
+
+function openBodyFullscreen() {
+  const modal = document.getElementById('body-fullscreen-modal');
+  modal.classList.add('open');
+  // Create or get fullscreen CM
+  if (!cmBodyFullscreen) {
+    const wrap = document.getElementById('body-fullscreen-cm-wrap');
+    cmBodyFullscreen = CodeMirror(wrap, {
+      mode: { name: 'javascript', json: true },
+      lineNumbers: true,
+      matchBrackets: true,
+      autoCloseBrackets: true,
+      foldGutter: true,
+      gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+      tabSize: 2,
+      theme: 'default',
+      lineWrapping: true,
+      placeholder: '{ "name": "Test {{$increment}}" }',
+    });
+    applyBodyFullscreenTheme();
+  }
+  // Copy current body content into fullscreen editor
+  const currentValue = cmBody ? cmBody.getValue() : document.getElementById('tm-body').value;
+  cmBodyFullscreen.setValue(currentValue);
+  setTimeout(() => cmBodyFullscreen.refresh(), 50);
+  setTimeout(() => cmBodyFullscreen.focus(), 100);
+}
+
+function closeBodyFullscreen() {
+  const modal = document.getElementById('body-fullscreen-modal');
+  if (!modal.classList.contains('open')) return;
+  // Sync fullscreen content back to main body editor
+  if (cmBodyFullscreen) {
+    const val = cmBodyFullscreen.getValue();
+    if (cmBody) {
+      cmBody.setValue(val);
+    }
+    document.getElementById('tm-body').value = val;
+  }
+  modal.classList.remove('open');
+}
+
+function formatBodyFullscreen() {
+  if (!cmBodyFullscreen) return;
+  try {
+    const val = cmBodyFullscreen.getValue().trim();
+    if (val) {
+      const formatted = JSON.stringify(JSON.parse(val), null, 2);
+      cmBodyFullscreen.setValue(formatted);
+    }
+  } catch (e) {
+    // Not valid JSON, ignore
+  }
+}
+
+function applyBodyFullscreenTheme() {
+  const wrap = document.getElementById('body-fullscreen-cm-wrap');
+  if (!wrap) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  wrap.classList.toggle('cm-dark', isDark);
 }
 
 // --- Build / Populate Test Object ---
@@ -384,7 +514,7 @@ function buildTestFromForm() {
   const headers = collectKvRows('tm-headers-kv');
   if (Object.keys(headers).length > 0) test.headers = headers;
 
-  const bodyText = document.getElementById('tm-body').value.trim();
+  const bodyText = getBodyValue().trim();
   if (bodyText) {
     try { test.body = JSON.parse(bodyText); } catch (e) { test.body = bodyText; }
   }
@@ -451,7 +581,7 @@ function populateFormFromTest(test) {
     }
   }
 
-  document.getElementById('tm-body').value = test.body ? JSON.stringify(test.body, null, 2) : '';
+  setBodyValue(test.body ? JSON.stringify(test.body, null, 2) : '');
 
   const container = document.getElementById('tm-validations');
   container.innerHTML = '';
@@ -477,6 +607,56 @@ function populateFormFromTest(test) {
   document.getElementById('tm-before-hook').value = test.beforeRequest || '';
   document.getElementById('tm-after-hook').value = test.afterResponse || '';
   document.getElementById('tm-poll').value = test.poll ? JSON.stringify(test.poll, null, 2) : '';
+}
+
+// --- Body CodeMirror Editor ---
+
+let cmBody = null;
+
+function getOrCreateBodyCM() {
+  if (cmBody) return cmBody;
+  const wrap = document.getElementById('tm-body-cm-wrap');
+  if (!wrap) return null;
+  cmBody = CodeMirror(wrap, {
+    mode: { name: 'javascript', json: true },
+    lineNumbers: true,
+    matchBrackets: true,
+    autoCloseBrackets: true,
+    foldGutter: true,
+    gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+    tabSize: 2,
+    theme: 'default',
+    lineWrapping: true,
+    placeholder: '{ "name": "Test {{$increment}}" }',
+  });
+  cmBody.setSize('100%', '160px');
+  // Sync to hidden textarea
+  cmBody.on('change', () => {
+    document.getElementById('tm-body').value = cmBody.getValue();
+  });
+  applyBodyCMTheme();
+  return cmBody;
+}
+
+function applyBodyCMTheme() {
+  const wrap = document.getElementById('tm-body-cm-wrap');
+  if (!wrap) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  wrap.classList.toggle('cm-dark', isDark);
+}
+
+function getBodyValue() {
+  return cmBody ? cmBody.getValue() : document.getElementById('tm-body').value;
+}
+
+function setBodyValue(val) {
+  const cm = getOrCreateBodyCM();
+  if (cm) {
+    cm.setValue(val);
+    setTimeout(() => cm.refresh(), 10);
+  } else {
+    document.getElementById('tm-body').value = val;
+  }
 }
 
 // --- JSON Editor Mode (CodeMirror) ---
@@ -508,6 +688,8 @@ function applyCMTheme() {
   if (!wrap) return;
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   wrap.classList.toggle('cm-dark', isDark);
+  applyBodyCMTheme();
+  applyBodyFullscreenTheme();
 }
 
 function getCMValue() {
@@ -571,6 +753,9 @@ function showFieldError(inputId, msg) {
   const input = document.getElementById(inputId);
   if (!input) return;
   input.classList.add('form-field-error');
+  input.classList.remove('shake');
+  void input.offsetWidth;
+  input.classList.add('shake');
   let errEl = input.parentElement.querySelector('.field-error-msg');
   if (!errEl) {
     errEl = document.createElement('div');
@@ -590,7 +775,7 @@ function validateTestForm() {
   if (!name) { showFieldError('tm-name', 'Test name is required'); valid = false; }
   if (!endpoint) { showFieldError('tm-endpoint', 'Endpoint is required'); valid = false; }
 
-  const bodyText = document.getElementById('tm-body').value.trim();
+  const bodyText = getBodyValue().trim();
   if (bodyText) {
     try { JSON.parse(bodyText); } catch (e) {
       showFieldError('tm-body', 'Invalid JSON: ' + e.message);
@@ -641,7 +826,7 @@ function updateRequestPreview() {
   const endpoint = document.getElementById('tm-endpoint').value.trim();
   const queryParams = collectKvRows('tm-params-kv');
   const headers = collectKvRows('tm-headers-kv');
-  const bodyText = document.getElementById('tm-body').value.trim();
+  const bodyText = getBodyValue().trim();
 
   // Build full URL
   let baseUrl = currentProject.baseUrl || 'https://api.example.com';
@@ -1303,7 +1488,7 @@ async function tryAndAutoGenerate() {
 
   // Parse body
   let body;
-  const bodyText = document.getElementById('tm-body').value.trim();
+  const bodyText = getBodyValue().trim();
   if (bodyText) {
     try { body = JSON.parse(bodyText); } catch { body = bodyText; }
   }
@@ -1321,6 +1506,12 @@ async function tryAndAutoGenerate() {
 
     // Store response data for path autocomplete in validations
     lastTryResponseData = result.data;
+
+    // Show Visualize button if response is structured
+    const vizBtn = document.getElementById('tm-viz-btn');
+    if (vizBtn && typeof result.data === 'object' && result.data !== null) {
+      vizBtn.style.display = '';
+    }
 
     // Show response status
     toast(`Response: ${result.status} — ${result.validations.length} validations generated`, 'success');

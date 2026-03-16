@@ -50,13 +50,14 @@
 
   <!-- Top Nav -->
   <nav class="topnav">
-    <h1><span class="material-symbols-rounded icon-filled" style="font-size:24px;vertical-align:-4px;margin-right:6px;">api</span>API Test Manager</h1>
+    <h1><span class="topnav-logo">API</span>Test Manager</h1>
     <div class="topnav-links">
-      <button class="topnav-btn" onclick="window.open('/report/index.html?t=' + Date.now(), '_blank')"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">assessment</span>Report</button>
-      <a href="/docs/index.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">menu_book</span>Docs</button></a>
-      <a href="/docs/examples.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:16px;margin-right:4px;">science</span>Examples</button></a>
-      <button class="topnav-btn" onclick="openSettingsModal()" title="Settings"><span class="material-symbols-rounded" style="font-size:18px;">settings</span></button>
-      <button class="topnav-btn" onclick="openShortcutsModal()" title="Keyboard shortcuts (?)"><span class="material-symbols-rounded" style="font-size:18px;">keyboard</span></button>
+      <button class="topnav-btn" onclick="window.open('/report/index.html?t=' + Date.now(), '_blank')"><span class="material-symbols-rounded" style="font-size:15px;">assessment</span>Report</button>
+      <a href="/docs/index.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:15px;">menu_book</span>Docs</button></a>
+      <a href="/docs/examples.html" target="_blank"><button class="topnav-btn"><span class="material-symbols-rounded" style="font-size:15px;">science</span>Examples</button></a>
+      <div class="topnav-divider"></div>
+      <button class="topnav-btn" onclick="openSettingsModal()" title="Settings"><span class="material-symbols-rounded" style="font-size:16px;">settings</span></button>
+      <button class="topnav-btn" onclick="openShortcutsModal()" title="Keyboard shortcuts (?)"><span class="material-symbols-rounded" style="font-size:16px;">keyboard</span></button>
       <button class="theme-toggle" onclick="toggleTheme()" id="theme-toggle" title="Toggle dark/light mode"></button>
     </div>
   </nav>
@@ -97,6 +98,7 @@
         </button>
       </div>
       <div class="sidebar-project-list" id="project-list"></div>
+      <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
     </aside>
 
     <!-- Main -->
@@ -323,6 +325,7 @@
             <button class="editor-toggle-btn active" id="toggle-visual" onclick="setEditorMode('visual')"><span class="material-symbols-rounded" style="font-size:16px;">view_list</span> Visual</button>
             <button class="editor-toggle-btn" id="toggle-json" onclick="setEditorMode('json')"><span class="material-symbols-rounded" style="font-size:16px;">code</span> JSON</button>
           </div>
+          <button class="fullscreen-toggle" onclick="toggleTestModalFullscreen()" id="tm-fullscreen-btn" title="Toggle fullscreen (F11)"><span class="material-symbols-rounded" style="font-size:18px;">fullscreen</span></button>
           <button class="icon-btn" onclick="closeTestModal()"><span class="material-symbols-rounded">close</span></button>
         </div>
       </div>
@@ -386,8 +389,22 @@
             </label>
           </div>
           <div class="form-group full" id="tm-body-group">
-            <label>Request Body (JSON)</label>
-            <textarea id="tm-body" placeholder='{ "name": "Test" }' rows="4" style="font-family: monospace;"></textarea>
+            <label style="display:flex;align-items:center;justify-content:space-between;">
+              Request Body (JSON)
+              <span style="display:flex;gap:4px;">
+                <button type="button" class="body-expand-toggle" onclick="openBodyFullscreen()" id="tm-body-expand-btn" title="Open fullscreen editor">
+                  <span class="material-symbols-rounded" style="font-size:14px;">open_in_full</span> Fullscreen
+                </button>
+                <button type="button" class="btn btn-sm" onclick="showBodyVarPicker(this)" style="font-size:11px;padding:2px 8px;">
+                  <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-3px;margin-right:2px;">data_object</span> Insert Variable
+                </button>
+              </span>
+            </label>
+            <div id="tm-body-cm-wrap" class="cm-body-wrap"></div>
+            <textarea id="tm-body" style="display:none;"></textarea>
+            <div class="var-hint" style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+              Supports: <code>{{$increment}}</code> <code>{{$sequence}}</code> <code>{{$guid}}</code> <code>{{$randomName}}</code> <code>{{$randomString}}</code> <code>{{varName}}</code>
+            </div>
           </div>
         </div>
 
@@ -487,6 +504,9 @@
           <button class="btn btn-accent" id="tm-autogen-btn" onclick="tryAndAutoGenerate()" title="Send the request and auto-generate validations from the response">
             <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">auto_fix_high</span> Try &amp; Auto-Generate
           </button>
+          <button class="btn" id="tm-viz-btn" onclick="openResponseViz(lastTryResponseData)" title="Explore response structure" style="display:none;">
+            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:2px;">account_tree</span> Explore
+          </button>
         </div>
         <button class="btn btn-primary" onclick="saveTest()">Save Test</button>
         <button class="btn" onclick="closeTestModal()">Cancel</button>
@@ -546,6 +566,59 @@
 
   </div><!-- /app-shell -->
 
+  <!-- Response Explorer (Collapsible JSON Tree) -->
+  <div class="modal-overlay" id="response-viz-modal">
+    <div class="modal response-viz-dialog">
+      <div class="modal-header">
+        <h3><span class="material-symbols-rounded" style="font-size:20px;vertical-align:-4px;margin-right:6px;color:var(--accent);">account_tree</span>Response Explorer</h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="text" id="viz-search" placeholder="Search keys or values..." oninput="vizSearchChanged(this.value)" style="font-size:12px;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);width:200px;">
+          <button class="btn btn-sm" id="viz-toggle-expand" onclick="toggleExpandCollapse()" title="Expand all" style="font-size:11px;padding:2px 8px;">
+            <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-3px;">unfold_more</span>
+          </button>
+          <button class="btn btn-sm" onclick="copyFullJson()" style="font-size:11px;padding:2px 8px;">
+            <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-3px;margin-right:2px;">content_copy</span> Copy JSON
+          </button>
+          <button class="icon-btn" onclick="closeResponseViz()"><span class="material-symbols-rounded">close</span></button>
+        </div>
+      </div>
+      <div class="modal-body" style="flex:1;overflow:auto;padding:12px 16px;">
+        <div id="viz-tree-container" class="jt-root"></div>
+      </div>
+      <div class="modal-footer" style="padding:8px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:11px;color:var(--text-muted);" id="viz-stats"></div>
+        <button type="button" class="btn btn-primary" onclick="closeResponseViz()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fullscreen Body Editor Overlay -->
+  <div class="modal-overlay" id="body-fullscreen-modal">
+    <div class="modal body-fullscreen-dialog">
+      <div class="modal-header">
+        <h3><span class="material-symbols-rounded" style="font-size:20px;vertical-align:-4px;margin-right:6px;color:var(--accent);">code</span>Request Body (JSON)</h3>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button type="button" class="btn btn-sm" onclick="showBodyVarPicker(this, true)" style="font-size:11px;padding:2px 8px;">
+            <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-3px;margin-right:2px;">data_object</span> Insert Variable
+          </button>
+          <button type="button" class="btn btn-sm" onclick="formatBodyFullscreen()" style="font-size:11px;padding:2px 8px;">
+            <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-3px;margin-right:2px;">format_align_left</span> Format
+          </button>
+          <button class="icon-btn" onclick="closeBodyFullscreen()"><span class="material-symbols-rounded">close</span></button>
+        </div>
+      </div>
+      <div class="modal-body" style="flex:1;padding:0;overflow:hidden;">
+        <div id="body-fullscreen-cm-wrap" class="cm-body-wrap" style="height:100%;"></div>
+      </div>
+      <div class="modal-footer" style="justify-content:space-between;align-items:center;">
+        <div class="var-hint" style="font-size:11px;color:var(--text-muted);">
+          Supports: <code>{{$increment}}</code> <code>{{$sequence}}</code> <code>{{$guid}}</code> <code>{{$randomName}}</code> <code>{{$randomString}}</code> <code>{{varName}}</code>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="closeBodyFullscreen()">Done</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Keyboard Shortcuts Overlay -->
   <div class="modal-overlay" id="shortcuts-modal">
     <div class="modal shortcuts-modal">
@@ -567,6 +640,7 @@
             <div class="shortcuts-section">
               <h4 class="shortcuts-title"><span class="material-symbols-rounded shortcuts-icon">edit_note</span>Editor</h4>
               <div class="shortcut-row"><span class="shortcut-desc">Save test</span><span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>S</kbd></span></div>
+              <div class="shortcut-row"><span class="shortcut-desc">Fullscreen editor</span><span class="shortcut-keys"><kbd class="kbd-wide">F11</kbd></span></div>
               <div class="shortcut-row"><span class="shortcut-desc">Close modal</span><span class="shortcut-keys"><kbd class="kbd-wide">Esc</kbd></span></div>
             </div>
           </div>
@@ -621,6 +695,7 @@
   <script src="js/schema-drift.js"></script>
   <script src="js/schedules.js"></script>
   <script src="js/settings.js"></script>
+  <script src="js/response-viz.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

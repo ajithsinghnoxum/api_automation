@@ -413,6 +413,12 @@
     <a href="#var-autocomplete">Variable Autocomplete</a>
     <a href="#path-autocomplete">Path Autocomplete</a>
     <a href="#context-menu">Right-Click Context Menu</a>
+    <a href="#body-editor">CodeMirror Body Editor</a>
+    <a href="#fullscreen-body">Fullscreen Body Editor</a>
+    <a href="#fullscreen-editor">Fullscreen Test Editor</a>
+    <a href="#request-preview">Request Preview</a>
+    <a href="#form-validation">Inline Form Validation</a>
+    <a href="#keyboard-shortcuts">Keyboard Shortcuts</a>
 
     <div class="section-title">Advanced</div>
     <a href="#path-syntax">Path Syntax</a>
@@ -1802,12 +1808,15 @@ steps:
   <table>
     <thead><tr><th>Variable</th><th>Output</th><th>Example</th></tr></thead>
     <tbody>
-      <tr><td><code>{{$timestamp}}</code></td><td>Current Unix timestamp</td><td><code>1710000000000</code></td></tr>
+      <tr><td><code>{{$increment}}</code></td><td>Auto-incrementing counter (resets per run)</td><td><code>1</code>, <code>2</code>, <code>3</code>...</td></tr>
+      <tr><td><code>{{$sequence}}</code></td><td>Sequential counter (never resets)</td><td><code>42</code>, <code>43</code>, <code>44</code>...</td></tr>
+      <tr><td><code>{{$timestamp}}</code></td><td>Current Unix timestamp</td><td><code>1710000000</code></td></tr>
       <tr><td><code>{{$isoDate}}</code></td><td>ISO 8601 date string</td><td><code>2024-03-10T12:00:00.000Z</code></td></tr>
       <tr><td><code>{{$guid}}</code> / <code>{{$uuid}}</code></td><td>Random UUID v4</td><td><code>a1b2c3d4-e5f6-...</code></td></tr>
-      <tr><td><code>{{$randomInt}}</code></td><td>Random integer 1–100000</td><td><code>42857</code></td></tr>
+      <tr><td><code>{{$randomInt}}</code></td><td>Random integer 0–9999</td><td><code>4285</code></td></tr>
+      <tr><td><code>{{$randomName}}</code></td><td>Random full name</td><td><code>Alice Johnson</code></td></tr>
       <tr><td><code>{{$randomEmail}}</code></td><td>Random test email</td><td><code>test52381@example.com</code></td></tr>
-      <tr><td><code>{{$randomString}}</code></td><td>12-char alphanumeric</td><td><code>a1b2c3d4e5f6</code></td></tr>
+      <tr><td><code>{{$randomString}}</code></td><td>10-char alphanumeric</td><td><code>a1b2c3d4e5</code></td></tr>
     </tbody>
   </table>
 
@@ -2642,6 +2651,100 @@ steps:
 
   <div class="alert alert-info">
     <strong>Tip:</strong> For best results, use Chrome or Edge and select "Save as PDF" in the print dialog. The report automatically hides the print button when printing.
+  </div>
+
+  <!-- CodeMirror Body Editor -->
+  <h2 id="body-editor">CodeMirror Body Editor</h2>
+  <p>The request body field uses <strong>CodeMirror 5</strong> with JSON mode for a rich editing experience. This replaces the plain textarea with a proper code editor.</p>
+
+  <h3>Editor Features</h3>
+  <ul>
+    <li><strong>JSON syntax highlighting</strong> &mdash; color-coded strings, numbers, booleans, keys, and brackets</li>
+    <li><strong>Bracket matching</strong> &mdash; matching brackets are highlighted when the cursor is adjacent</li>
+    <li><strong>Auto-close brackets</strong> &mdash; typing <code>{</code>, <code>[</code>, or <code>"</code> automatically inserts the closing pair</li>
+    <li><strong>Code folding</strong> &mdash; collapse/expand JSON objects and arrays using gutter icons</li>
+    <li><strong>Line numbers</strong> &mdash; numbered lines for easy reference</li>
+    <li><strong>Line wrapping</strong> &mdash; long lines wrap instead of scrolling horizontally</li>
+    <li><strong>Dark/light theme</strong> &mdash; automatically matches the app theme</li>
+    <li><strong>Variable autocomplete</strong> &mdash; type <code>{{</code> to trigger a dropdown of available variables</li>
+  </ul>
+
+  <h3>Insert Variable Button</h3>
+  <p>Click <strong>Insert Variable</strong> next to the body label to pick from built-in variables (<code>$increment</code>, <code>$guid</code>, <code>$randomName</code>, etc.) and extracted variables from previous tests. The selected variable is inserted at the cursor position.</p>
+
+  <!-- Fullscreen Body Editor -->
+  <h2 id="fullscreen-body">Fullscreen Body Editor</h2>
+  <p>For editing large JSON payloads, click the <strong>Fullscreen</strong> button next to the request body label. This opens a dedicated fullscreen dialog with a large CodeMirror editor that fills nearly the entire viewport.</p>
+
+  <h3>Fullscreen Editor Features</h3>
+  <ul>
+    <li><strong>Full-viewport editor</strong> &mdash; the CodeMirror editor fills the entire dialog (roughly 100vh &minus; 80px)</li>
+    <li><strong>Format button</strong> &mdash; auto-formats valid JSON with proper indentation (2-space)</li>
+    <li><strong>Insert Variable</strong> &mdash; same variable picker as the inline editor, inserts at cursor position</li>
+    <li><strong>Variable hints</strong> &mdash; footer shows available variable syntax</li>
+    <li><strong>Content sync</strong> &mdash; when you close the fullscreen editor (via <strong>Done</strong> button or <kbd>Esc</kbd>), the content syncs back to the main body editor</li>
+    <li><strong>Theme-aware</strong> &mdash; follows the app's dark/light theme</li>
+  </ul>
+
+  <!-- Fullscreen Test Editor -->
+  <h2 id="fullscreen-editor">Fullscreen Test Editor</h2>
+  <p>Toggle the entire test editor modal to fullscreen mode for more workspace. Useful when you have many validations, query parameters, or headers to configure.</p>
+
+  <h3>How to Activate</h3>
+  <ul>
+    <li>Press <kbd>F11</kbd> when the test editor is open</li>
+    <li>Click the fullscreen toggle button (top-right corner of the modal header)</li>
+  </ul>
+
+  <p>In fullscreen mode, the modal expands to fill most of the viewport (up to 1200px wide). All CodeMirror editors automatically resize. Press <kbd>F11</kbd> again or click the button to exit fullscreen. The state resets when the modal is closed.</p>
+
+  <!-- Request Preview -->
+  <h2 id="request-preview">Request Preview</h2>
+  <p>The test editor includes a collapsible <strong>Request Preview</strong> panel that shows a live preview of what will be sent when the test runs. Updates automatically as you edit fields.</p>
+
+  <h3>What's Shown</h3>
+  <ul>
+    <li><strong>Full URL</strong> &mdash; base URL + endpoint with resolved variables, color-coded HTTP method badge</li>
+    <li><strong>Headers</strong> &mdash; project-level auth headers merged with per-test headers (auth tokens are masked)</li>
+    <li><strong>Request body</strong> &mdash; formatted JSON body with variable placeholders</li>
+    <li><strong>cURL command</strong> &mdash; copyable cURL equivalent of the request</li>
+  </ul>
+
+  <!-- Inline Form Validation -->
+  <h2 id="form-validation">Inline Form Validation</h2>
+  <p>The test editor validates required fields before saving and shows inline error messages directly on invalid fields.</p>
+
+  <h3>Validated Fields</h3>
+  <ul>
+    <li><strong>Test name</strong> &mdash; required, cannot be empty</li>
+    <li><strong>Endpoint</strong> &mdash; required, cannot be empty</li>
+    <li><strong>Request body</strong> &mdash; must be valid JSON (when provided)</li>
+    <li><strong>Dataset</strong> &mdash; must be a valid JSON array (when provided)</li>
+    <li><strong>Poll configuration</strong> &mdash; must be valid JSON (when provided)</li>
+  </ul>
+
+  <p>Invalid fields get a red border and an inline error message below them. Errors clear automatically as you type or fix the issue.</p>
+
+  <!-- Keyboard Shortcuts -->
+  <h2 id="keyboard-shortcuts">Keyboard Shortcuts</h2>
+  <p>Press <kbd>?</kbd> anywhere in the UI (when not focused on an input field) to open the keyboard shortcuts overlay. The overlay shows all available shortcuts organized by category.</p>
+
+  <table>
+    <thead><tr><th>Shortcut</th><th>Action</th><th>Context</th></tr></thead>
+    <tbody>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td>Run tests</td><td>Global</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd></td><td>New test suite</td><td>Global</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd></td><td>Focus search</td><td>Global</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd></td><td>Toggle dark/light theme</td><td>Global</td></tr>
+      <tr><td><kbd>?</kbd></td><td>Show this help</td><td>Global (not in inputs)</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Save test</td><td>Test editor modal</td></tr>
+      <tr><td><kbd>F11</kbd></td><td>Toggle fullscreen</td><td>Test editor modal</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Close modal</td><td>Any open modal</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Note:</strong> On macOS, use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd> for all shortcuts.
   </div>
 
   <hr>

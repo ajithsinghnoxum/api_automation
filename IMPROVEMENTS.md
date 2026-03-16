@@ -428,6 +428,43 @@
 - [x] Validates dataset JSON array and poll JSON
 - [x] Auto-clear errors on input
 
+### 8.12 CodeMirror Body Editor ✅
+- [x] JSON syntax highlighting with CodeMirror 5 for request body editing
+- [x] Bracket matching, auto-close brackets, code folding
+- [x] Line numbers and line wrapping
+- [x] Dark/light theme support matching the app theme
+- [x] Variable autocomplete via `{{` trigger inside the body editor
+- [x] Placeholder text showing example with built-in variables
+
+### 8.13 Fullscreen Body Editor ✅
+- [x] Dedicated fullscreen dialog for editing large JSON request bodies
+- [x] Opens from "Fullscreen" button next to body field in test editor
+- [x] Full-viewport CodeMirror editor (~100vh - 80px height)
+- [x] "Format" button to auto-format JSON with proper indentation
+- [x] "Insert Variable" button with variable picker
+- [x] Content syncs back to main body editor on close
+- [x] Escape key or "Done" button to close
+- [x] Theme-aware (dark/light) matching app theme
+
+### 8.14 Fullscreen Test Editor ✅
+- [x] Toggle entire test editor modal to fullscreen mode
+- [x] F11 keyboard shortcut to toggle fullscreen
+- [x] Fullscreen toggle button in modal header
+- [x] All CodeMirror editors (body, JSON editor) resize appropriately
+- [x] Resets on modal close
+
+### 8.15 Built-in Variables (Extended Set) ✅
+- [x] `{{$increment}}` — auto-incrementing counter (resets per run)
+- [x] `{{$sequence}}` — sequential counter (never resets across runs)
+- [x] `{{$guid}}` — random UUID v4
+- [x] `{{$timestamp}}` — current Unix timestamp (seconds)
+- [x] `{{$randomInt}}` — random integer (0-9999)
+- [x] `{{$randomName}}` — random full name from name pool
+- [x] `{{$randomEmail}}` — random email address
+- [x] `{{$randomString}}` — random 10-character alphanumeric string
+- [x] Server-side variable resolution for Try Request endpoint
+- [x] Client-side variable hints displayed below body editor
+
 ---
 
 ## 9. Security & Enterprise
@@ -515,9 +552,13 @@
 18. **Responsive Design** (1.4) — tablet/mobile layout improvements
 19. **Drag Tests Between Suites** (2.4) — cross-suite drag & drop
 20. **Configurable Logo in Reports** (1.3) — company/project branding
-21. **Inline Form Validation** (8.7) — red borders + inline errors instead of toasts
-22. **Keyboard Shortcuts Help** (8.6) — `?` overlay, tooltip hints
-23. **Request Preview in Editor** (8.5) — live preview of resolved request
+21. ~~**Inline Form Validation** (8.7)~~ — **DONE** (red borders + inline errors)
+22. ~~**Keyboard Shortcuts Help** (8.6)~~ — **DONE** (`?` overlay, tooltip hints)
+23. ~~**Request Preview in Editor** (8.5)~~ — **DONE** (live preview of resolved request)
+24. ~~**CodeMirror Body Editor** (8.12)~~ — **DONE** (JSON syntax highlighting, bracket matching, code folding)
+25. ~~**Fullscreen Body Editor** (8.13)~~ — **DONE** (dedicated fullscreen dialog with format button)
+26. ~~**Fullscreen Test Editor** (8.14)~~ — **DONE** (F11 toggle, fullscreen modal)
+27. ~~**Extended Built-in Variables** (8.15)~~ — **DONE** ($increment, $sequence, $randomName, $randomString, server-side resolution)
 
 ### Advanced Features
 24. **Test Dependencies** (6.14) — `dependsOn` for conditional test flow

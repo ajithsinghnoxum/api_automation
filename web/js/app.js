@@ -9,6 +9,9 @@ if (localStorage.getItem('sidebar-collapsed') === '1') {
   document.getElementById('sidebar-toggle-icon').textContent = 'menu';
 }
 
+// Initialize sidebar resize
+initSidebarResize();
+
 // Load projects, then reveal the app
 loadProjects().then(() => {
   const loader = document.getElementById('app-loader');
@@ -22,6 +25,10 @@ loadProjects().then(() => {
 document.addEventListener('keydown', (e) => {
   // Escape — close any open modal
   if (e.key === 'Escape') {
+    const vizModal = document.getElementById('response-viz-modal');
+    if (vizModal?.classList.contains('open')) { closeResponseViz(); return; }
+    const bodyFsModal = document.getElementById('body-fullscreen-modal');
+    if (bodyFsModal?.classList.contains('open')) { closeBodyFullscreen(); return; }
     const shortcutsModal = document.getElementById('shortcuts-modal');
     if (shortcutsModal?.classList.contains('open')) { closeShortcutsModal(); return; }
     const projectModal = document.getElementById('project-modal');
@@ -80,6 +87,15 @@ document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
     e.preventDefault();
     toggleTheme();
+  }
+
+  // F11 — toggle fullscreen on test modal
+  if (e.key === 'F11') {
+    const testModal = document.getElementById('test-modal');
+    if (testModal?.classList.contains('open')) {
+      e.preventDefault();
+      toggleTestModalFullscreen();
+    }
   }
 });
 

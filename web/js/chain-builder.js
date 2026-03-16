@@ -283,7 +283,10 @@ async function executeChainStep() {
           ${!statusMatch ? `<span class="chain-step-expected">(expected ${test.expectedStatus || 200})</span>` : ''}
         </div>
         <div class="chain-step-response">
-          <div class="chain-step-response-label">Response Body</div>
+          <div class="chain-step-response-label" style="display:flex;align-items:center;justify-content:space-between;">
+            Response Body
+            ${typeof result.data === 'object' && result.data !== null ? '<button class="btn btn-sm" onclick="openResponseViz(chainStepResults[' + chainStepIdx + '].data)" style="font-size:10px;padding:1px 6px;"><span class="material-symbols-rounded" style="font-size:13px;vertical-align:-2px;margin-right:2px;">account_tree</span>Explore</button>' : ''}
+          </div>
           <pre class="chain-step-json">${esc(JSON.stringify(result.data, null, 2))}</pre>
         </div>
         ${result.headers ? `<details class="chain-step-headers">

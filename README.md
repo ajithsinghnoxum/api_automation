@@ -1,6 +1,6 @@
 # API Test Automation Framework
 
-A full-featured, config-driven API testing framework built with **Playwright**, **Express.js**, and **SQLite**. Manage projects, write tests through a visual web UI, run them with Playwright, and view rich HTML reports — all without writing test code.
+A full-featured, config-driven API testing framework built with **Playwright**, **Express 5**, and **SQLite**. Manage projects, write tests through a visual web UI, run them with Playwright, and view rich HTML reports — all without writing test code.
 
 ## Features
 
@@ -26,6 +26,12 @@ A full-featured, config-driven API testing framework built with **Playwright**, 
 - **Response Path Autocomplete** — After "Try & Auto-Generate", validation path inputs suggest all available response paths with types and value previews
 - **Right-Click Context Menu** — Right-click any test item for quick actions: Run, Edit, Duplicate, Copy as cURL, Move Up/Down, Skip/Unskip, Delete
 - **Per-Test Headers** — Define custom headers per test case, merged with project-level auth headers at runtime
+- **CodeMirror Body Editor** — JSON syntax highlighting, bracket matching, auto-close brackets, code folding, and line numbers for request body editing
+- **Fullscreen Body Editor** — Dedicated fullscreen dialog for editing large JSON payloads with Format and Insert Variable buttons
+- **Fullscreen Test Editor** — Toggle the entire test editor modal to fullscreen with F11
+- **Request Preview** — Live preview of the full request URL with resolved variables
+- **Inline Form Validation** — Required fields highlighted with validation messages before save
+- **Keyboard Shortcuts** — Press `?` to view all shortcuts; Ctrl+S to save, Ctrl+Enter to run, F11 for fullscreen
 
 ## Quick Start
 
@@ -103,6 +109,8 @@ api_automation/
 │       ├── response-diff.js  # Response comparison
 │       ├── schema-drift.js   # Schema drift detection
 │       ├── schedules.js      # Scheduled test runs
+│       ├── settings.js       # Settings management
+│       ├── state.js          # Global state management
 │       └── drag-reorder.js   # Drag & drop reordering
 ├── docs/                     # Documentation site
 ├── test-configs/             # Test suite JSON files (per project)
@@ -178,11 +186,31 @@ Use these in endpoints, bodies, headers, and query params:
 
 | Variable | Description |
 |----------|-------------|
+| `{{$increment}}` | Auto-incrementing counter (resets per run) |
+| `{{$sequence}}` | Sequential counter (never resets) |
 | `{{$timestamp}}` | Current Unix timestamp |
 | `{{$isoDate}}` | Current ISO date string |
-| `{{$guid}}` | Random UUID |
-| `{{$randomInt}}` | Random integer (1-10000) |
+| `{{$guid}}` | Random UUID v4 |
+| `{{$randomInt}}` | Random integer (0-9999) |
+| `{{$randomName}}` | Random full name |
 | `{{$randomEmail}}` | Random email address |
+| `{{$randomString}}` | Random 10-character alphanumeric string |
+
+## Keyboard Shortcuts
+
+Press `?` anywhere in the UI to see the shortcuts overlay.
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Enter` | Run tests |
+| `Ctrl+Shift+N` | New test suite |
+| `Ctrl+Shift+F` | Focus search |
+| `Ctrl+Shift+D` | Toggle dark/light theme |
+| `?` | Show shortcuts help |
+| `Ctrl+S` | Save test (in editor) |
+| `F11` | Toggle fullscreen editor |
+| `Esc` | Close current modal |
+| `{{` | Trigger variable autocomplete |
 
 ## Notifications
 

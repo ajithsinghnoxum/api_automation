@@ -4,6 +4,15 @@ import { ApiHelper } from "./api.helper";
 import { tryValidation, runValidation, ValidationResult, getValueByPath } from "./validator";
 import { TestSuiteConfig, TestCaseConfig, Validation } from "../types/test-config.types";
 
+// Auto-increment counter (resets per test run / suite execution)
+let incrementCounter = 0;
+let sequenceCounter = 0;
+
+export function resetBuiltinCounters() {
+  incrementCounter = 0;
+  sequenceCounter = 0;
+}
+
 // Built-in variable generators (called fresh each time they're referenced)
 function getBuiltinVar(name: string): string | undefined {
   switch (name) {
@@ -20,6 +29,13 @@ function getBuiltinVar(name: string): string | undefined {
       return `test${randomInt(1000, 99999)}@example.com`;
     case "$randomString":
       return randomUUID().replace(/-/g, "").slice(0, 12);
+    case "$increment":
+      return String(++incrementCounter);
+    case "$sequence":
+      return String(++sequenceCounter);
+    case "$randomName":
+      const names = ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Henry"];
+      return names[randomInt(0, names.length)] + "_" + randomInt(100, 999);
     default:
       return undefined;
   }
@@ -135,6 +151,9 @@ function resolveTestCase(tc: TestCaseConfig, vars: Record<string, unknown>): Tes
 
 export function runTestSuite(config: TestSuiteConfig) {
   let api: ApiHelper;
+
+  // Reset increment/sequence counters for each suite
+  resetBuiltinCounters();
 
   // Suite-level fixtures for $ref resolution
   const fixtures: Record<string, unknown> = config.fixtures || {};

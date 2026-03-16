@@ -34,28 +34,25 @@ async function showSchedules() {
 
     return `
       <div class="schedule-row">
+        <div class="sched-status-icon ${enabled ? 'sched-active' : 'sched-paused'}">
+          <span class="material-symbols-rounded">${enabled ? 'schedule' : 'pause_circle'}</span>
+        </div>
         <div class="schedule-info">
-          <div class="schedule-name">
-            <span class="material-symbols-rounded" style="font-size:18px;color:${enabled ? 'var(--pass)' : 'var(--text-muted)'};vertical-align:-4px;margin-right:4px;">
-              ${enabled ? 'schedule' : 'pause_circle'}
-            </span>
-            ${esc(s.name)}
-          </div>
+          <div class="schedule-name">${esc(s.name)}</div>
           <div class="schedule-meta">
             <code>${esc(s.cronExpr)}</code>
-            <span class="schedule-dot">&middot;</span>
+            <span class="schedule-dot">&bull;</span>
             Next: <strong>${nextStr}</strong>
-            <span class="schedule-dot">&middot;</span>
+            <span class="schedule-dot">&bull;</span>
             Last: ${lastStr}
           </div>
         </div>
         <div class="schedule-actions">
-          <button class="btn btn-sm" onclick="toggleScheduleEnabled(${s.id}, ${enabled ? 0 : 1})" title="${enabled ? 'Pause' : 'Resume'}">
-            <span class="material-symbols-rounded" style="font-size:15px;vertical-align:-3px;">${enabled ? 'pause' : 'play_arrow'}</span>
-            ${enabled ? 'Pause' : 'Resume'}
+          <button class="icon-btn" onclick="toggleScheduleEnabled(${s.id}, ${enabled ? 0 : 1})" title="${enabled ? 'Pause' : 'Resume'}">
+            <span class="material-symbols-rounded">${enabled ? 'pause' : 'play_arrow'}</span>
           </button>
-          <button class="btn btn-sm btn-danger" onclick="deleteScheduleItem(${s.id})">
-            <span class="material-symbols-rounded" style="font-size:15px;vertical-align:-3px;">delete</span>
+          <button class="icon-btn danger" onclick="deleteScheduleItem(${s.id})" title="Delete">
+            <span class="material-symbols-rounded">delete</span>
           </button>
         </div>
       </div>`;
@@ -68,39 +65,50 @@ async function showSchedules() {
   resultDiv.innerHTML = `
     <div class="card">
       <div class="card-header">
-        <h3>Scheduled Runs <span style="font-size:12px;font-weight:400;color:var(--text-muted);">(${schedules.length} schedule${schedules.length !== 1 ? 's' : ''})</span></h3>
+        <h3>Scheduled Runs <span class="sched-count-badge">${schedules.length}</span></h3>
         <button class="icon-btn" onclick="document.getElementById('run-result').innerHTML=''" title="Close"><span class="material-symbols-rounded">close</span></button>
       </div>
 
       <div class="schedule-add-form">
-        <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;">
-          <div class="form-group" style="flex:1;min-width:140px;">
-            <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px;">Name</label>
-            <input type="text" id="sched-name" placeholder="e.g. Nightly Smoke Tests" class="input sched-input">
+        <div class="sched-form-row">
+          <div class="sched-field sched-field-name">
+            <label class="sched-label">Name</label>
+            <input type="text" id="sched-name" placeholder="e.g. Nightly Smoke Tests" class="sched-input">
           </div>
-          <div class="form-group" style="min-width:160px;">
-            <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px;">Preset</label>
-            <select id="sched-preset" class="input sched-input" onchange="onPresetChange()">
-              <option value="">Custom cron...</option>
-              ${presetOptions}
-            </select>
+          <div class="sched-field sched-field-preset">
+            <label class="sched-label">Preset</label>
+            <div class="sched-select-wrap">
+              <select id="sched-preset" class="sched-input sched-select" onchange="onPresetChange()">
+                <option value="">Custom cron...</option>
+                ${presetOptions}
+              </select>
+              <span class="material-symbols-rounded sched-select-arrow">expand_more</span>
+            </div>
           </div>
-          <div class="form-group" id="sched-cron-group" style="min-width:120px;">
-            <label style="font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:3px;">Cron Expression</label>
-            <input type="text" id="sched-cron" placeholder="*/30 * * * *" class="input sched-input" style="font-family:monospace;">
+          <div class="sched-field sched-field-cron" id="sched-cron-group">
+            <label class="sched-label">Cron Expression</label>
+            <input type="text" id="sched-cron" placeholder="*/30 * * * *" class="sched-input sched-input-mono">
           </div>
-          <button class="btn btn-primary" onclick="createSchedule()" style="height:34px;">
-            <span class="material-symbols-rounded" style="font-size:16px;vertical-align:-3px;margin-right:4px;">add</span>Add
+          <button class="btn btn-primary sched-add-btn" onclick="createSchedule()">
+            <span class="material-symbols-rounded" style="font-size:16px;">add</span> Add
           </button>
         </div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
-          Format: <code>minute hour day-of-month month day-of-week</code> &nbsp;|&nbsp;
-          Examples: <code>*/5 * * * *</code> (every 5 min), <code>0 9 * * 1-5</code> (weekdays 9am)
+        <div class="sched-help">
+          <span class="material-symbols-rounded" style="font-size:14px;vertical-align:-2px;margin-right:2px;">info</span>
+          Format: <code>minute hour day-of-month month day-of-week</code>
+          <span class="sched-help-sep">&bull;</span>
+          <code>*/5 * * * *</code> every 5 min
+          <span class="sched-help-sep">&bull;</span>
+          <code>0 9 * * 1-5</code> weekdays 9am
         </div>
       </div>
 
       <div class="schedule-list">
-        ${rows || '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px;">No schedules yet. Add one above.</div>'}
+        ${rows || `<div class="sched-empty">
+          <span class="material-symbols-rounded" style="font-size:32px;color:var(--text-muted);margin-bottom:4px;">event_busy</span>
+          <div>No schedules yet</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">Add one above to automate your test runs</div>
+        </div>`}
       </div>
     </div>`;
 }
