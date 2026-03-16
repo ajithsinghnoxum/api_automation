@@ -57,6 +57,10 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Try the Example Project
+
+Ready-to-use test suites are included for [JSONPlaceholder](https://jsonplaceholder.typicode.com). See **[examples/jsonplaceholder/README.md](examples/jsonplaceholder/README.md)** for a step-by-step walkthrough that covers project setup, importing tests, running them, and building your own API config.
+
 ### Run Tests via CLI
 
 ```bash
